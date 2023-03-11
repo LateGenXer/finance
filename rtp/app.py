@@ -1,8 +1,15 @@
+#!/usr/bin/env python3
+#
+# Copyright (c) 2023 LateGenXer.  All rights reserved
+#
+
+import datetime
+import os
+
 import streamlit as st
 import pandas as pd
 import numpy as np
 
-import datetime
 
 st.set_page_config(layout="wide")
 #st.set_page_config(layout="centered")
@@ -10,7 +17,7 @@ st.set_page_config(layout="wide")
 st.title('Retirement Tax Planner')
 
 with st.expander("About..."):
-    st.markdown(open('README.md', 'rt').read())
+    st.markdown(open(os.path.join(os.path.dirname(__file__), 'README.md'), 'rt').read())
 
 if True:
 #with st.sidebar:
