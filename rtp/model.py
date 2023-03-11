@@ -10,7 +10,8 @@ import math
 
 from dataclasses import dataclass, field
 
-import pulp as lp
+#import pulp as lp
+import lp
 
 import uk as UK
 import pt as PT
