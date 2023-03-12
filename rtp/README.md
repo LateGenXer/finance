@@ -70,7 +70,7 @@ This tool makes the following simplifying assumptions:
 
 ## Questions
 
-* **Can would please add support for XYZ?**  Maybe.  If it's relatively straightforward and generally useful I can consider it.  But I have no intention to accommodate the long tail of subtly different personal circumstances out there.  At some point people will need to accept this is a generic tool, and that they need to work out their own calculations, or pay somebody to do it.
+* **Can you please add support for XYZ?**  Maybe.  If it's relatively straightforward and generally useful I can consider it.  But I have no intention to accommodate the long tail of subtly different personal circumstances out there.  At some point people will need to accept this is a generic tool, and that they need to work out their own calculations, or pay somebody to do it.
 
 * **Will you release the source code?**  I'm still mulling over.  FWIW, the key technologies used for this tool were: [Python](https://www.python.org/), [PuLP](https://coin-or.github.io/pulp/), [Pandas](https://pandas.pydata.org/) and [Streamlit](https://streamlit.io/).
 
