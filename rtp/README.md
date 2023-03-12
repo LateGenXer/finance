@@ -46,9 +46,9 @@ This tool makes the following simplifying assumptions:
 
 * The tool enforces a fixed income in _real_ terms (that is, growing with inflation) until both retirees reach 100 year of age.
 
-* Capital Gains Tax (CGT) is _overestimated_.  CGT rate depends on the marginal income tax rate.  This implies a non-linearity which can't be modeled by ordinary linear programming problems.
+* Capital Gains Tax (CGT) is _overestimated_.  CGT rate depends on the marginal income tax rate.  This implies a non-linearity which can't be modeled as an ordinary linear programming problems.
 
-* Equally, income tax after the Personal Allowance disappears (currently £125,140) is overestimated.  This is because the marginal income tax rate drops from 60% back to %45
+* Equally, income tax after the Personal Allowance disappears (currently £125,140) is overestimated.  This is because the marginal income tax rate drops from 60% back to 45%, which can't be accurately modeled as a linear programming problem.
 
 * All pension contributions are assumed to cease at retirement.  Although there can be good and valid reasons to continue contributing into pension pots past retirement, it is difficult to safely/accurately model such contributions without running afoul of the [pension tax-free cash recycling rules](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm133800).
 
