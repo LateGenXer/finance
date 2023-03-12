@@ -911,9 +911,9 @@ def run(params):
         formatters=formatters
     ))
 
-    print(f"Start net worth:       {result.net_worth_start:8,.0f}")
-    print(f"Retirement net income: {result.retirement_income_net:8,.0f}")
-    print(f"End net worth:         {result.net_worth_end:8,.0f}")
-    print(f"Total tax:             {result.total_tax:8,.0f}")
+    print(f"Start net worth:       {result.net_worth_start:10,.0f}")
+    print(f"Retirement net income: {result.retirement_income_net:10,.0f}")
+    print(f"End net worth:         {result.net_worth_end:10,.0f}")
+    print(f"Total tax:             {result.total_tax:10,.0f}")
 
     #df.to_csv('data.csv', index=False, float_format='{:.3f}'.format)
