@@ -170,7 +170,7 @@ with col4:
 
 float_format = '{:,.0f}'
 perc_format = '{:.1%}'
-delta_format = '{:+.0f}'
+delta_format = '{:+,.0f}'
 formatters = {
     'year': '{:}'.format,
     'sipp_delta_1': delta_format,
