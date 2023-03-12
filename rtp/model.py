@@ -393,29 +393,6 @@ def model(
         tfc_1 = 0.25*crystalize_tfc_1
         tfc_2 = 0.25*crystalize_tfc_2
 
-        # Uncrystallised Funds Pension Lump Sum
-        # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm063300
-        #ufpls_1 = lp.LpVariable(f'ufpls_1@{yr}', 0, None if nmpa <= age_1 and age_1 < 75 else 0)
-        #ufpls_2 = lp.LpVariable(f'ufpls_2@{yr}', 0, None if nmpa <= age_2 and age_2 < 75 else 0)
-
-        # Uncrystallised Funds Pension Lump Sum
-        # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm063300
-        #ufpls_1 = lp.LpVariable(f'ufpls_1@{yr}', 0, None if nmpa <= age_1 and age_1 < 75 else 0)
-        #ufpls_2 = lp.LpVariable(f'ufpls_2@{yr}', 0, None if nmpa <= age_2 and age_2 < 75 else 0)
-        #lta_1 -= ufpls_1
-        #lta_2 -= ufpls_2
-        #prob += lta_1 >= 0
-        #prob += lta_2 >= 0
-        #sipp_uf_1 -= ufpls_1
-        #sipp_uf_2 -= ufpls_2
-
-        # Lifetime Allowance Excess Lump Sum
-        # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm084000
-        #laels_1 = lp.LpVariable(f'laels_1@{yr}', 0, None if nmpa <= age_1 and age_1 < 75 else 0)
-        #laels_2 = lp.LpVariable(f'laels_2@{yr}', 0, None if nmpa <= age_2 and age_2 < 75 else 0)
-        #sipp_uf_1 -= laels_1 * (1 - 0.55)
-        #sipp_uf_2 -= laels_2 * (1 - 0.55)
-
         prob += sipp_uf_1 >= 0
         prob += sipp_uf_2 >= 0
 
