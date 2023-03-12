@@ -186,14 +186,14 @@ def model(
 
     # LTA was due to grow with inflation but it's frozen for 5 years
     lta = UK.lta
-    lta *= (1 - 0.025) ** 5
+    lta *= (1 - inflation_rate) ** 5
 
     lta_1 = lta
     lta_2 = lta
 
     sipp_growth_rate_real_1 = sipp_growth_rate_1 - inflation_rate
     sipp_growth_rate_real_2 = sipp_growth_rate_2 - inflation_rate
-    isa_growth_rate_real   = isa_growth_rate   - inflation_rate
+    isa_growth_rate_real    = isa_growth_rate    - inflation_rate
 
     cgt_rate = 0.20
     #cgt_rate = 0.10 #XXX
@@ -230,42 +230,6 @@ def model(
     bak_lta_2 = lta_2
     bak_isa = isa
     bak_gia = gia
-
-    marginal = False
-    if marginal:
-        employee_contribution = 7.0
-        employer_contribution = 10.0
-
-        employee_nic_rate =  2.0/100.0 # marginal
-        employer_nic_rate = 13.8/100.0
-
-        marginal_sipp_1 = lp.LpVariable('marginal_sipp_1', 0.0)
-        marginal_sipp_2 = lp.LpVariable('marginal_sipp_2', 0.0)
-        marginal_isa    = lp.LpVariable('marginal_isa', 0)
-
-        prob += marginal_sipp_1 + marginal_sipp_2 + marginal_isa == 1.000000
-
-        delta_sipp_1 = marginal_sipp_1
-        delta_sipp_2 = marginal_sipp_2
-        delta_isa    = marginal_isa
-
-        delta_sipp_1 *= 1.0 / (1 - marginal_income_tax_1 - employee_nic_rate)
-        delta_sipp_2 *= 1.0 / (1 - marginal_income_tax_2)
-
-        # Consider employers' matching
-        match_benefit_gross = (employee_contribution + employer_contribution) / employee_contribution
-        # Same, but minus employer's and employee's taxes
-        match_benefit_net   = (employee_contribution + employer_contribution*(1 - employer_nic_rate)) / employee_contribution
-
-        if True:
-            delta_sipp_1 *= match_benefit_gross
-            delta_sipp_2 *= match_benefit_net
-            delta_isa    *= match_benefit_net
-
-        sipp_1 += delta_sipp_1
-        sipp_2 += delta_sipp_2
-        isa   += delta_isa
-
 
     sipp_uf_1 = sipp_1
     sipp_uf_2 = sipp_2
@@ -754,7 +718,7 @@ def model(
         lac_1 = lp.value(s.lac_1)
         lac_2 = lp.value(s.lac_2)
         lac = lac_1 + lac_2
-        if not marginal and 0:
+        if False:
             assert math.isclose(lac, lac_, rel_tol=.001, abs_tol=.01)
 
         if verbosity > 0:
@@ -813,11 +777,6 @@ def model(
         result.data.append(rs)
 
     result.net_worth_end = normalize(sipp_uf_1 + sipp_df_1 + sipp_uf_2 + sipp_df_2 + isa + gia, 0)
-
-    if marginal:
-        print('Marginal SIPP 1: %7.0f' % (lp.value(marginal_sipp_1)))
-        print('Marginal SIPP 2: %7.0f' % (lp.value(marginal_sipp_2)))
-        print('Marginal ISA:    %7.0f' % (lp.value(marginal_isa)))
 
     return result
 
