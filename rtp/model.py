@@ -19,6 +19,8 @@ import pt as PT
 from uk import *
 
 
+verbosity = 0
+
 uid = 0
 
 
@@ -109,8 +111,6 @@ def model(
         **kwargs
     ):
 
-    print('====')
-
     result = Result()
 
     result.net_worth_start = normalize(sipp_1 + sipp_2 + isa + gia, 2)
@@ -147,15 +147,6 @@ def model(
 
     gbpeur = 1.13895
 
-    if pt:
-        #retirement_income_net *= (1 - 0.43*0.75)
-        print('Retirement income net: £%.0f' % retirement_income_net)
-        print('Retirement income net: €%.0f' % (retirement_income_net * gbpeur))
-    else:
-        retirement_income_gross = gross_income(retirement_income_net)
-        print('Retirement income net: £%.0f' % retirement_income_net)
-        print('Retirement income gross: £%.0f' % retirement_income_gross)
-
     # TODO: Maximize dividend allowance https://www.gov.uk/tax-on-dividends
 
     # https://eportugal.gov.pt/en/migrantes-viver-e-trabalhar-em-portugal/migrantes-impostos-e-seguranca-social-em-portugal
@@ -164,7 +155,6 @@ def model(
     prob = lp.LpProblem("Retirement")
 
     max_income = retirement_income_net == 0
-    print(repr(retirement_income_net))
     if max_income:
         retirement_income_net = lp.LpVariable("income", 0)
 
@@ -558,10 +548,12 @@ def model(
         }.get(status, "Unexpected")
         raise ValueError(f"Failed to solve the problem ({statusMsg})")
 
-    print('Expected net worth: %7.0f' % lp.value(net_worth))
+    if verbosity > 0:
+        print('Expected net worth: %7.0f' % lp.value(net_worth))
     if max_income:
         result.retirement_income_net = lp.value(retirement_income_net)
-        print('Expected net income: %7.0f' % result.retirement_income_net)
+        if verbosity > 0:
+            print('Expected net income: %7.0f' % result.retirement_income_net)
     else:
         result.retirement_income_net = retirement_income_net
 
@@ -572,7 +564,8 @@ def model(
     isa = bak_isa
     gia = bak_gia
 
-    print('Net worth: %7.0f' % (sipp_1 + sipp_2 + isa + gia))
+    if verbosity > 0:
+        print('Net worth: %7.0f' % (sipp_1 + sipp_2 + isa + gia))
 
     sipp_uf_1 = sipp_1
     sipp_uf_2 = sipp_2
@@ -583,10 +576,11 @@ def model(
 
     sipp_df_1_paid = 0
 
-    print('SIPP 1: %7.0f (UF %7.0f CF %7.0f)' % (sipp_uf_1 + sipp_df_1, sipp_uf_1, sipp_df_1))
-    print('SIPP 2: %7.0f (UF %7.0f CF %7.0f)' % (sipp_uf_2 + sipp_df_2, sipp_uf_2, sipp_df_2))
-    print('ISA:    %7.0f' % isa)
-    print('GIA:    %7.0f' % gia)
+    if verbosity > 0:
+        print('SIPP 1: %7.0f (UF %7.0f CF %7.0f)' % (sipp_uf_1 + sipp_df_1, sipp_uf_1, sipp_df_1))
+        print('SIPP 2: %7.0f (UF %7.0f CF %7.0f)' % (sipp_uf_2 + sipp_df_2, sipp_uf_2, sipp_df_2))
+        print('ISA:    %7.0f' % isa)
+        print('GIA:    %7.0f' % gia)
 
     if max_income:
         retirement_income_net = lp.value(retirement_income_net)
@@ -612,9 +606,10 @@ def model(
         age_2 = yr - dob_2
 
         s = states[yr]
-        if yr == retirement_year and 0:
-            for n, v in s._asdict().items():
-                print(f' {n} = {lp.value(v)}')
+        if verbosity > 1:
+            if yr == retirement_year:
+                for n, v in s._asdict().items():
+                    print(f' {n} = {lp.value(v)}')
 
         lac_ = 0
 
@@ -771,27 +766,28 @@ def model(
         #if not marginal:
         #    assert math.isclose(lac, lac_, rel_tol=.001, abs_tol=.01)
 
-        print(' '.join((
-                '%4u:',
-                'St %5.0f',
-                'SIPP1 [%7.0f %7.0f] (%7.0f) %5.1f%%',
-                'SIPP2 [%7.0f %7.0f] (%6.0f %7.0f) %5.1f%%',
-                'ISA %7.0f (%7.0f)',
-                'GIA %7.0f (%7.0f)',
-                'Inc Gr %6.0f %6.0f Nt %6.0f (%+6.0f)',
-                'Tax %6.0f %4.1f%% %6.0f %4.1f%% %6.0f %4.1f%% %6.0f'
-            )) % (
-                yr,
-                income_state_1 + income_state_2,
-                sipp_uf_1, sipp_df_1,            -tfc_1 - drawdown_1, 100*lta_1/lta,
-                sipp_uf_2, sipp_df_2, contrib_2, -tfc_2 - drawdown_2, 100*lta_2/lta,
-                isa, -drawdown_isa,
-                gia, -drawdown_gia,
-                income_gross_1, income_gross_2, income_net, delta,
-                tax_1, 100 * tax_rate_1,
-                tax_2, 100 * tax_rate_2,
-                cgt, 100 * cgt_rate_, lac
-            ))
+        if verbosity > 0:
+            print(' '.join((
+                    '%4u:',
+                    'St %5.0f',
+                    'SIPP1 [%7.0f %7.0f] (%7.0f) %5.1f%%',
+                    'SIPP2 [%7.0f %7.0f] (%6.0f %7.0f) %5.1f%%',
+                    'ISA %7.0f (%7.0f)',
+                    'GIA %7.0f (%7.0f)',
+                    'Inc Gr %6.0f %6.0f Nt %6.0f (%+6.0f)',
+                    'Tax %6.0f %4.1f%% %6.0f %4.1f%% %6.0f %4.1f%% %6.0f'
+                )) % (
+                    yr,
+                    income_state_1 + income_state_2,
+                    sipp_uf_1, sipp_df_1,            -tfc_1 - drawdown_1, 100*lta_1/lta,
+                    sipp_uf_2, sipp_df_2, contrib_2, -tfc_2 - drawdown_2, 100*lta_2/lta,
+                    isa, -drawdown_isa,
+                    gia, -drawdown_gia,
+                    income_gross_1, income_gross_2, income_net, delta,
+                    tax_1, 100 * tax_rate_1,
+                    tax_2, 100 * tax_rate_2,
+                    cgt, 100 * cgt_rate_, lac
+                ))
         tax = tax_1 + tax_2 + cgt + lac
         result.total_tax += tax
 
@@ -827,9 +823,6 @@ def model(
 
     result.net_worth_end = normalize(sipp_uf_1 + sipp_df_1 + sipp_uf_2 + sipp_df_2 + isa + gia, 0)
 
-    print('Net worth: %7.0f' % (result.net_worth_end,))
-    print('Total tax: %7.0f' % (result.total_tax,))
-
     if marginal:
         print('Marginal SIPP 1: %7.0f' % (lp.value(marginal_sipp_1)))
         print('Marginal SIPP 2: %7.0f' % (lp.value(marginal_sipp_2)))
@@ -837,75 +830,88 @@ def model(
 
     return result
 
+# Columns headers for DataFrame
+column_headers = {
+    'year': 'Year',
+
+    'income_state': 'SP',
+
+    'sipp_uf_1': 'UF1',
+    'sipp_df_1': 'DF1',
+    'sipp_delta_1': '(\u0394)',
+    'lta_ratio_1': 'LTA1',
+    'sipp_uf_2': 'UF2',
+    'sipp_df_2': 'DF2',
+    'sipp_delta_2': '(\u0394)',
+    'lta_ratio_2': 'LTA2',
+
+    'isa': 'ISAs',
+    'isa_delta': '(\u0394)',
+    'gia': 'GIA',
+    'gia_delta': '(\u0394)',
+    'income_gross_1': 'GI1',
+    'income_gross_2': 'GI2',
+    'income_net': 'NI',
+    'income_surplus': 'Error',
+    'income_tax_1': 'IT1',
+    'income_tax_rate_1': '(%)',
+    'income_tax_2': 'IT2',
+    'income_tax_rate_2': '(%)',
+    'cgt': 'CGT',
+    'cgt_rate': '(%)',
+    'lac': 'LAC',
+}
+
 
 def dataframe(data):
     import pandas as pd
 
     df = pd.DataFrame(data)
 
-    column_headers = {
-        'year': 'Year',
-
-        'income_state': 'SP',
-
-        'sipp_uf_1': 'UF1',
-        'sipp_df_1': 'DF1',
-        'sipp_delta_1': '(\u0394)',
-        'lta_ratio_1': 'LTA1',
-        'sipp_uf_2': 'UF2',
-        'sipp_df_2': 'DF2',
-        'sipp_delta_2': '(\u0394)',
-        'lta_ratio_2': 'LTA2',
-
-        'isa': 'ISAs',
-        'isa_delta': '(\u0394)',
-        'gia': 'GIA',
-        'gia_delta': '(\u0394)',
-        'income_gross_1': 'GI1',
-        'income_gross_2': 'GI2',
-        'income_net': 'NI',
-        'income_surplus': 'Error',
-        'income_tax_1': 'IT1',
-        'income_tax_rate_1': '(%)',
-        'income_tax_2': 'IT2',
-        'income_tax_rate_2': '(%)',
-        'cgt': 'CGT',
-        'cgt_rate': '(%)',
-        'lac': 'LAC',
-    }
-
-    float_format = '{:5.0f}'.format
-    perc_format = '{:5.1%}'.format
-    delta_format = '{:+4.0f}'.format
-    formatters = {
-            'year': '{:}'.format,
-            'sipp_delta_1': delta_format,
-            'sipp_delta_2': delta_format,
-            'isa_delta': delta_format,
-            'gia_delta': delta_format,
-            'income_surplus': delta_format,
-            'lta_ratio_1':  perc_format,
-            'lta_ratio_2':  perc_format,
-            'income_tax_rate_1': perc_format,
-            'income_tax_rate_2': perc_format,
-            'cgt_rate':     perc_format,
-    }
-
-    # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_string.html#pandas.DataFrame.to_string
-    if False:
-        print(df.to_string(
-            index=False,
-            columns=column_headers.keys(),
-            header=column_headers.values(),
-            justify='center',
-            float_format=float_format,
-            formatters=formatters
-        ))
-
-    #df.to_csv('retirement_lp.csv', index=False, float_format='{:.3f}'.format)
-
     return df
 
 
 # TODO: IHT
 # https://spectrum-ifa.com/can-i-keep-my-uk-pension-as-a-portuguese-resident/
+
+
+def run(params):
+
+    result = model(**params)
+
+    df = dataframe(result.data)
+
+    # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_string.html#pandas.DataFrame.to_string
+
+    float_format = '{:5.0f}'.format
+    perc_format = '{:5.1%}'.format
+    delta_format = '{:+4.0f}'.format
+    formatters = {
+        'year': '{:}'.format,
+        'sipp_delta_1': delta_format,
+        'sipp_delta_2': delta_format,
+        'isa_delta': delta_format,
+        'gia_delta': delta_format,
+        'income_surplus': delta_format,
+        'lta_ratio_1':  perc_format,
+        'lta_ratio_2':  perc_format,
+        'income_tax_rate_1': perc_format,
+        'income_tax_rate_2': perc_format,
+        'cgt_rate':     perc_format,
+    }
+
+    print(df.to_string(
+        index=False,
+        columns=column_headers.keys(),
+        header=column_headers.values(),
+        justify='center',
+        float_format=float_format,
+        formatters=formatters
+    ))
+
+    print(f"Start net worth:       {result.net_worth_start:8,.0f}")
+    print(f"Retirement net income: {result.retirement_income_net:8,.0f}")
+    print(f"End net worth:         {result.net_worth_end:8,.0f}")
+    print(f"Total tax:             {result.total_tax:8,.0f}")
+
+    #df.to_csv('data.csv', index=False, float_format='{:.3f}'.format)

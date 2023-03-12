@@ -10,11 +10,26 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
+from model import model, column_headers, dataframe
+
 
 st.set_page_config(layout="wide")
 #st.set_page_config(layout="centered")
 
 st.title('Retirement Tax Planner')
+
+# Development state
+try:
+    from devel import state as devel_state
+except ImportError:
+    devel = False
+else:
+    devel = True
+    with st.expander("Devel..."):
+        st.write(devel_state)
+        if 'devel_state' not in st.session_state:
+            st.session_state.update(devel_state)
+            st.session_state.devel_state = True
 
 with st.expander("About..."):
     st.markdown(open(os.path.join(os.path.dirname(__file__), 'README.md'), 'rt').read())
@@ -90,33 +105,28 @@ if True:
 if True:
     st.header('Results')
 
-    if False:
-        df = pd.read_csv('retirement_lp.csv')
-    else:
-        import model
+    params = dict(st.session_state)
 
-        params = dict(st.session_state)
+    perc_xform = lambda x: x*.01
+    state_xforms =  {
+        'inflation_rate': perc_xform,
+        'sipp_growth_rate_1': perc_xform,
+        'sipp_growth_rate_2': perc_xform,
+        'isa_growth_rate': perc_xform,
+        'gia_growth_rate': perc_xform,
+    }
+    for key, xform in state_xforms.items():
+        params[key] = xform(st.session_state[key])
 
-        perc_xform = lambda x: x*.01
-        state_xforms =  {
-            'inflation_rate': perc_xform,
-            'sipp_growth_rate_1': perc_xform,
-            'sipp_growth_rate_2': perc_xform,
-            'isa_growth_rate': perc_xform,
-            'gia_growth_rate': perc_xform,
-        }
-        for key, xform in state_xforms.items():
-            params[key] = xform(st.session_state[key])
+    params['present_year'] = datetime.date.today().year
+    params['pt'] = st.session_state.retirement_country == 'PT'
 
-        params['present_year'] = datetime.date.today().year
-        params['pt'] = st.session_state.retirement_country == 'PT'
+    if devel:
+        with st.expander("Parameters"):
+            st.write(params)
 
-        #with st.expander("Parameters"):
-        #    st.write(params)
-
-        result = model.model(**params)
-
-        df = model.dataframe(result.data)
+    result = model(**params)
+    df = dataframe(result.data)
 
     st.info("All values presented are in _today_'s pounds.", icon="ℹ️")
 
@@ -130,41 +140,16 @@ if True:
     with col4:
         st.metric(label="Total tax", value=f"£{result.total_tax:,.0f}")
 
-    column_headers = {
-        'year': 'Year',
-
-        'income_state': 'SP',
-
-        'sipp_uf_1': 'UF1',
-        'sipp_df_1': 'DF1',
-        'sipp_delta_1': '(\u0394)',
-        'lta_ratio_1': 'LTA1',
-        'sipp_uf_2': 'UF2',
-        'sipp_df_2': 'DF2',
-        'sipp_delta_2': '(\u0394)',
-        'lta_ratio_2': 'LTA2',
-
-        'isa': 'ISAs',
-        'isa_delta': '(\u0394)',
-        'gia': 'GIA',
-        'gia_delta': '(\u0394)',
-        'income_gross_1': 'GI1',
-        'income_gross_2': 'GI2',
-        'income_net': 'NI',
-        'income_surplus': 'Error',
-        'income_tax_1': 'IT1',
-        'income_tax_rate_1': '(%)',
-        'income_tax_2': 'IT2',
-        'income_tax_rate_2': '(%)',
-        'cgt': 'CGT',
-        'cgt_rate': '(%)',
-        'lac': 'LAC',
-    }
-
     float_format = '{:,.0f}'
-    perc_format = '{:5.1%}'
+    perc_format = '{:.1%}'
+    delta_format = '{:+.0f}'
     formatters = {
-            'year': '{:}',
+            'year': '{:}'.format,
+            'sipp_delta_1': delta_format,
+            'sipp_delta_2': delta_format,
+            'isa_delta': delta_format,
+            'gia_delta': delta_format,
+            'income_surplus': delta_format,
             'lta_ratio_1':  perc_format,
             'lta_ratio_2':  perc_format,
             'income_tax_rate_1': perc_format,
@@ -178,7 +163,6 @@ if True:
     #s = pd.io.formats.style.Styler(df, uuid_len=0, cell_ids=False)
     s.hide(axis='index')
     s.format(float_format)
-    #s.format(formatters, precision=0, thousands=' ') #, subset=[df.columns.get_loc(column) for column in formatters.keys()])
     s.format(formatters, subset=list(formatters.keys()))
     s.relabel_index(list(column_headers.values()), axis='columns')
     #s.set_properties(**{'font-size': '8pt'})
