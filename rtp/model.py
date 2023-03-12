@@ -4,11 +4,11 @@
 #
 
 
-import collections
 import os
 import math
 
 from dataclasses import dataclass, field
+from typing import Any
 
 #import pulp as lp
 import lp
@@ -24,24 +24,26 @@ verbosity = 0
 uid = 0
 
 
-State = collections.namedtuple('State', [
-    'contrib_1',
-    'contrib_2',
-    'crystalize_tfc_1',
-    'crystalize_tfc_2',
-    'crystalize_lae_1',
-    'crystalize_lae_2',
-    'drawdown_1',
-    'drawdown_2',
-    'lac_1',
-    'lac_2',
-    'drawdown_isa',
-    'drawdown_gia',
-    'income_state_1',
-    'income_state_2',
-    'income_gross_1',
-    'income_gross_2',
-])
+@dataclass
+class LPState:
+    contrib_1: Any = 0
+    contrib_2: Any = 0
+    crystalize_lta_1: Any = 0
+    crystalize_lta_2: Any = 0
+    crystalize_lae_1: Any = 0
+    crystalize_lae_2: Any = 0
+    lta_1: Any = 0
+    lta_2: Any = 0
+    lac_1: Any = 0
+    lac_2: Any = 0
+    drawdown_1: Any = 0
+    drawdown_2: Any = 0
+    drawdown_isa: Any = 0
+    drawdown_gia: Any = 0
+    income_state_1: Any = 0
+    income_state_2: Any = 0
+    income_gross_1: Any = 0
+    income_gross_2: Any = 0
 
 
 @dataclass
@@ -303,13 +305,12 @@ def model(
         if age_1 == 75:
             # BCE 5A
             # https://moneyengineer.co.uk/13-anticipating-pension-growth-and-bce-5a/
-            if True:
-                loss = lp.LpVariable(f'bce_5a_loss_1', 0)
-                gain = lp.LpVariable(f'bce_5a_gain_1', 0)
-                prob += sipp_df_1_paid - loss + gain == sipp_df_1
-                lac_1 += gain * 0.25
-                sipp_df_1 -= gain * 0.25
-                prob += sipp_df_1 >= 0
+            loss = lp.LpVariable(f'bce_5a_loss_1', 0)
+            gain = lp.LpVariable(f'bce_5a_gain_1', 0)
+            prob += sipp_df_1_paid - loss + gain == sipp_df_1
+            lac_1 += gain * 0.25
+            sipp_df_1 -= gain * 0.25
+            prob += sipp_df_1 >= 0
             # BCE 5B
             cf_1 = lp.LpVariable(f'cf_1@{yr}', 0)
             prob += cf_1 <= lta_1
@@ -320,13 +321,12 @@ def model(
         if age_2 == 75:
             # BCE 5A
             # https://moneyengineer.co.uk/13-anticipating-pension-growth-and-bce-5a/
-            if True:
-                loss = lp.LpVariable(f'bce_5a_loss_2', 0)
-                gain = lp.LpVariable(f'bce_5a_gain_2', 0)
-                prob += sipp_df_2_paid - loss + gain == sipp_df_2
-                lac_2 += gain * 0.25
-                sipp_df_2 -= gain * 0.25
-                prob += sipp_df_2 >= 0
+            loss = lp.LpVariable(f'bce_5a_loss_2', 0)
+            gain = lp.LpVariable(f'bce_5a_gain_2', 0)
+            prob += sipp_df_2_paid - loss + gain == sipp_df_2
+            lac_2 += gain * 0.25
+            sipp_df_2 -= gain * 0.25
+            prob += sipp_df_2 >= 0
             # BCE 5B
             cf_2 = lp.LpVariable(f'cf_2@{yr}', 0)
             prob += cf_2 <= lta_2
@@ -356,15 +356,15 @@ def model(
 
         # Flexible-Access Drawdown
         # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm062701
-        crystalize_tfc_1 = 0
+        crystalize_lta_1 = 0
         crystalize_lae_1 = 0
         if age_1 >= nmpa:
-            crystalize_tfc_1 = lp.LpVariable(f'crystalize_tfc_1@{yr}', 0)
-            lta_1 -= crystalize_tfc_1
+            crystalize_lta_1 = lp.LpVariable(f'crystalize_lta_1@{yr}', 0)
+            lta_1 -= crystalize_lta_1
             prob += lta_1 >= 0
-            sipp_uf_1 -= crystalize_tfc_1
-            sipp_df_1 += 0.75*crystalize_tfc_1
-            sipp_df_1_paid += 0.75*crystalize_tfc_1
+            sipp_uf_1 -= crystalize_lta_1
+            sipp_df_1 += 0.75*crystalize_lta_1
+            sipp_df_1_paid += 0.75*crystalize_lta_1
             crystalize_lae_1 = lp.LpVariable(f'crystalize_lae_1@{yr}', 0)
             sipp_uf_1 -= crystalize_lae_1
             if age_1 < 75:
@@ -374,26 +374,29 @@ def model(
             else:
                 sipp_df_1 += crystalize_lae_1
                 sipp_df_1_paid += crystalize_lae_1
-            crystalize_1 = crystalize_tfc_1 + crystalize_lae_1
-        crystalize_tfc_2 = 0
+            crystalize_1 = crystalize_lta_1 + crystalize_lae_1
+        crystalize_lta_2 = 0
         crystalize_lae_2 = 0
         if age_2 >= nmpa:
-            crystalize_tfc_2 = lp.LpVariable(f'crystalize_tfc_2@{yr}', 0)
-            lta_2 -= crystalize_tfc_2
+            crystalize_lta_2 = lp.LpVariable(f'crystalize_lta_2@{yr}', 0)
+            lta_2 -= crystalize_lta_2
             prob += lta_2 >= 0
-            sipp_uf_2 -= crystalize_tfc_2
-            sipp_df_2 += 0.75*crystalize_tfc_2
+            sipp_uf_2 -= crystalize_lta_2
+            sipp_df_2 += 0.75*crystalize_lta_2
+            sipp_df_2_paid += 0.75*crystalize_lta_2
             crystalize_lae_2 = lp.LpVariable(f'crystalize_lae_2@{yr}', 0)
             sipp_uf_2 -= crystalize_lae_2
             if age_2 < 75:
                 sipp_df_2 += crystalize_lae_2 * (1 - 0.25)
+                sipp_df_2_paid += crystalize_lae_2 * (1 - 0.25)
                 lac_2 += crystalize_lae_2 * 0.25
             else:
                 sipp_df_2 += crystalize_lae_2
-            crystalize_2 = crystalize_tfc_2 + crystalize_lae_2
+                sipp_df_2_paid += crystalize_lae_2
+            crystalize_2 = crystalize_lta_2 + crystalize_lae_2
 
-        tfc_1 = 0.25*crystalize_tfc_1
-        tfc_2 = 0.25*crystalize_tfc_2
+        tfc_1 = 0.25*crystalize_lta_1
+        tfc_2 = 0.25*crystalize_lta_2
 
         prob += sipp_uf_1 >= 0
         prob += sipp_uf_2 >= 0
@@ -483,17 +486,19 @@ def model(
 
         prob += surplus == 0
 
-        states[yr] = State(
+        states[yr] = LPState(
             contrib_1=contrib_1,
             contrib_2=contrib_2,
-            crystalize_tfc_1=crystalize_tfc_1,
-            crystalize_tfc_2=crystalize_tfc_2,
+            crystalize_lta_1=crystalize_lta_1,
+            crystalize_lta_2=crystalize_lta_2,
             crystalize_lae_1=crystalize_lae_1,
             crystalize_lae_2=crystalize_lae_2,
-            drawdown_1=drawdown_1,
-            drawdown_2=drawdown_2,
+            lta_1=lta_1,
+            lta_2=lta_2,
             lac_1=lac_1,
             lac_2=lac_2,
+            drawdown_1=drawdown_1,
+            drawdown_2=drawdown_2,
             drawdown_isa=drawdown_isa,
             drawdown_gia=drawdown_gia,
             income_state_1=income_state_1,
@@ -560,6 +565,7 @@ def model(
     del sipp_2
 
     sipp_df_1_paid = 0
+    sipp_df_2_paid = 0
 
     if verbosity > 0:
         print('SIPP 1: %7.0f (UF %7.0f CF %7.0f)' % (sipp_uf_1 + sipp_df_1, sipp_uf_1, sipp_df_1))
@@ -623,32 +629,32 @@ def model(
             sipp_uf_2 -= surplus_2 * 0.25
             lac_ += surplus_2 * 0.25
 
-        crystalize_tfc_1  = lp.value(s.crystalize_tfc_1)
-        crystalize_tfc_2  = lp.value(s.crystalize_tfc_2)
+        crystalize_lta_1  = lp.value(s.crystalize_lta_1)
+        crystalize_lta_2  = lp.value(s.crystalize_lta_2)
         crystalize_lae_1  = lp.value(s.crystalize_lae_1)
         crystalize_lae_2  = lp.value(s.crystalize_lae_2)
 
         # BCE 1 & BCE 6
-        lta_1 -= crystalize_tfc_1
-        lta_2 -= crystalize_tfc_2
+        lta_1 -= crystalize_lta_1
+        lta_2 -= crystalize_lta_2
 
-        sipp_uf_1 -= crystalize_tfc_1
-        sipp_uf_2 -= crystalize_tfc_2
+        sipp_uf_1 -= crystalize_lta_1
+        sipp_uf_2 -= crystalize_lta_2
         sipp_uf_1 -= crystalize_lae_1
         sipp_uf_2 -= crystalize_lae_2
 
-        tfc_1 = 0.25*crystalize_tfc_1
-        tfc_2 = 0.25*crystalize_tfc_2
+        tfc_1 = 0.25*crystalize_lta_1
+        tfc_2 = 0.25*crystalize_lta_2
 
         sipp_df_1_paid *= 1 - inflation_rate
         sipp_df_2_paid *= 1 - inflation_rate
-        sipp_df_1_paid += 0.75*crystalize_tfc_1
-        sipp_df_2_paid += 0.75*crystalize_tfc_2
+        sipp_df_1_paid += 0.75*crystalize_lta_1
+        sipp_df_2_paid += 0.75*crystalize_lta_2
         sipp_df_1_paid += crystalize_lae_1 * (0.75 if age_1 < 75 else 1)
         sipp_df_2_paid += crystalize_lae_2 * (0.75 if age_2 < 75 else 1)
 
-        sipp_df_1 += 0.75*crystalize_tfc_1
-        sipp_df_2 += 0.75*crystalize_tfc_2
+        sipp_df_1 += 0.75*crystalize_lta_1
+        sipp_df_2 += 0.75*crystalize_lta_2
         sipp_df_1 += crystalize_lae_1 * (0.75 if age_1 < 75 else 1)
         sipp_df_2 += crystalize_lae_2 * (0.75 if age_2 < 75 else 1)
         lac_ += crystalize_lae_1 * (0.25 if age_1 < 75 else 0)
@@ -747,8 +753,8 @@ def model(
         lac_1 = lp.value(s.lac_1)
         lac_2 = lp.value(s.lac_2)
         lac = lac_1 + lac_2
-        #if not marginal:
-        #    assert math.isclose(lac, lac_, rel_tol=.001, abs_tol=.01)
+        if not marginal and 0:
+            assert math.isclose(lac, lac_, rel_tol=.001, abs_tol=.01)
 
         if verbosity > 0:
             print(' '.join((
