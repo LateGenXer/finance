@@ -42,7 +42,7 @@ if True:
 
             with col1:
                 st.subheader('You')
-                st.number_input('Year of birth:', min_value=1980, max_value=2080, step=1, value=1980, key='dob_1')
+                st.number_input('Year of birth:', min_value=1920, max_value=2080, step=1, value=1980, key='dob_1')
                 st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, value=35, key='state_pension_years_1', help=state_pension_years_help)
                 st.number_input('SIPP value:', min_value=0, step=1, value=750000, key='sipp_1')
                 st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=40000, step=1, value=0, key='sipp_contrib_1', help="Until retirement")
@@ -50,7 +50,7 @@ if True:
 
             with col2:
                 st.subheader('Partner')
-                st.number_input('Year of birth:', min_value=1980, max_value=2080, step=1, value=1980, key='dob_2')
+                st.number_input('Year of birth:', min_value=1920, max_value=2080, step=1, value=1980, key='dob_2')
                 st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, value=35, key='state_pension_years_2', help=state_pension_years_help)
                 st.number_input('SIPP value:', min_value=0, step=1, value=125000, key='sipp_2')
                 st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=40000, step=1, value=0, key='sipp_contrib_2', help="Until retirement")
