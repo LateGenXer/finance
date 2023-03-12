@@ -84,6 +84,68 @@ class Result:
     data: list[ResState] = field(default_factory=list)
 
 
+def income_tax_lp(prob, gross_income, income_tax_bands):
+    global uid
+    total = 0
+    tax = 0
+    lbound = 0
+    for ubound, rate in income_tax_bands:
+        if ubound is None:
+            ub = None
+        else:
+            ub = ubound - lbound
+        income_tax_band = lp.LpVariable(f'net_{uid}_{int(rate*1000)}', 0, ub)
+        uid += 1
+        total += income_tax_band
+        tax += income_tax_band * rate
+        lbound = ubound
+    prob += total == gross_income
+    return tax
+
+
+uk_income_tax_bands = [
+    (income_tax_threshold_20,  0.00),
+    (income_tax_threshold_40,  0.20),
+    (               pa_limit,  0.40),
+    (                   None,  0.60), # 0.40 + 0.5*0.40
+    # FIXME: we can't model the 45% tax rate, as it's no longer convex
+]
+
+
+def uk_net_income_lp(prob, gross_income):
+    # Although the following condition is necessary for accurate tax
+    # modeling, but it would effectively leads to maximize the marginal 60%
+    # income tax band.
+    #prob += gross_income <= 100000 + 2*income_tax_threshold_20
+    tax = income_tax_lp(prob, gross_income, uk_income_tax_bands)
+    return gross_income - tax
+
+
+def uk_cgt_lp(prob, cg, cgt_rate):
+    global uid
+    cg_00 = lp.LpVariable(f'cgt_{uid}_00', 0, cgt_allowance*2)
+    cg_20 = lp.LpVariable(f'cgt_{uid}_20', 0)
+    uid += 1
+    prob += cg_00 + cg_20 == cg
+    return cg_20 * cgt_rate
+
+
+def pt_net_income_lp(prob, gross_income):
+    tax = income_tax_lp(prob, gross_income, PT.income_tax_bands)
+    return gross_income - tax
+
+
+def lta_test(lta, crystalized):
+    lta -= crystalized
+    if lta < 0:
+        # Income assumed
+        lac = -lta * 0.25
+        lta = 0
+    else:
+        lac = 0
+    return lta, lac
+
+
 def normalize(x, ndigits=None):
     # https://bugs.python.org/issue45995
     return round(x, ndigits) + 0.0
@@ -161,57 +223,6 @@ def model(
     max_income = retirement_income_net == 0
     if max_income:
         retirement_income_net = lp.LpVariable("income", 0)
-
-    def income_tax_(gross_income, income_tax_bands):
-        global uid
-        total = 0
-        tax = 0
-        lbound = 0
-        for ubound, rate in income_tax_bands:
-            if ubound is None:
-                ub = None
-            else:
-                ub = ubound - lbound
-            income_tax_band = lp.LpVariable(f'net_{uid}_{int(rate*1000)}', 0, ub)
-            uid += 1
-            total += income_tax_band
-            tax += income_tax_band * rate
-            lbound = ubound
-        prob.addConstraint(total == gross_income)
-        return tax
-
-
-    uk_income_tax_bands = [
-        (income_tax_threshold_20,  0.00),
-        (income_tax_threshold_40,  0.20),
-        (               pa_limit,  0.40),
-        (                   None,  0.60), # 0.40 + 0.5*0.40
-        # FIXME: we can't model the 45% tax rate, as it's no longer convex
-    ]
-
-
-    def net_income_(gross_income):
-        global prob
-        # Although the following condition is necessary for accurate tax
-        # modeling, but it would effectively leads to maximize the marginal 60%
-        # income tax band.
-        #prob += gross_income <= 100000 + 2*income_tax_threshold_20
-        tax = income_tax_(gross_income, uk_income_tax_bands)
-        return gross_income - tax
-
-
-    def net_income_pt_(gross_income):
-        tax = income_tax_(gross_income, PT.income_tax_bands)
-        return gross_income - tax
-
-
-    def cgt_(cg):
-        global uid
-        cg_00 = lp.LpVariable(f'cgt_{uid}_00', 0, cgt_allowance*2)
-        cg_20 = lp.LpVariable(f'cgt_{uid}_20', 0)
-        uid += 1
-        prob.addConstraint(cg_00 + cg_20 == cg)
-        return cg_20 * cgt_rate
 
     bak_sipp_1 = sipp_1
     bak_sipp_2 = sipp_2
@@ -446,9 +457,9 @@ def model(
                 income_net_1 = marginal_income_tax_1 * income_gross_1
                 income_net_2 = marginal_income_tax_2 * income_gross_2
             else:
-                income_net_1 = net_income_(income_gross_1)
-                income_net_2 = net_income_(income_gross_2)
-            cgt = cgt_(cg)
+                income_net_1 = uk_net_income_lp(prob, income_gross_1)
+                income_net_2 = uk_net_income_lp(prob, income_gross_2)
+            cgt = uk_cgt_lp(prob, cg, cgt_rate)
         else:
             # PT
             # https://sjb-global.com/portugal
@@ -464,7 +475,7 @@ def model(
                 cgt = 0
             else:
                 # https://www.comparaja.pt/blog/escaloes-irs
-                income_net = net_income_pt_(income_gross * gbpeur) * (1 / gbpeur)
+                income_net = pt_net_income_lp(prob, income_gross * gbpeur) * (1 / gbpeur)
                 cgt = cg * PT.cgt_rate
 
             income_gross_1 = income_gross
@@ -575,16 +586,6 @@ def model(
 
     if max_income:
         retirement_income_net = lp.value(retirement_income_net)
-
-    def lta_test(lta, crystalized):
-        lta -= crystalized
-        if lta < 0:
-            # Income
-            lac = -lta * 0.25
-            lta = 0
-        else:
-            lac = 0
-        return lta, lac
 
     for yr in range(present_year, end_year):
         retirement = yr >= retirement_year
