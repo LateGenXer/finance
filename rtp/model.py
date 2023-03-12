@@ -419,7 +419,7 @@ def model(
         prob += sipp_uf_2 >= 0
 
         drawdown_1    = lp.LpVariable(f'dd_1@{yr}', 0) if age_1 >= nmpa else 0
-        drawdown_2    = lp.LpVariable(f'dd_2@{yr}', 0) if age_1 >= nmpa else 0
+        drawdown_2    = lp.LpVariable(f'dd_2@{yr}', 0) if age_2 >= nmpa else 0
 
         if pt_yr:
             isa_allowance_yr = 0
