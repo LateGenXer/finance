@@ -68,6 +68,8 @@ This tool makes the following simplifying assumptions:
 
 * Sometimes the balances go slightly negative due to rounding errors, causing the stacked area charts to get weird.
 
+* In some cases the Money Purchase Annual Allowance (MPAA) might be exceeded, when regularly contributing more than £4000 until retirement, and the calculator opts for withdrawing pension income before retirement.
+
 ## Questions
 
 * **Can you please add support for XYZ?**  Maybe.  If it's relatively straightforward and generally useful I can consider it.  But I have no intention to accommodate the long tail of subtly different personal circumstances out there.  At some point people will need to accept this is a generic tool, and that they need to work out their own calculations, or pay somebody to do it.
