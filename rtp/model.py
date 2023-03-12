@@ -270,11 +270,13 @@ def model(
     # SIPP contributions
     # https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates#member-contributions
     # Limit post drawdown contributions to %30 over standard contributions to follow TFC recycling rule
-    sipp_contrib_limit = 3600
-    sipp_contrib_pre_1 = lp.LpVariable('sipp_contrib_pre_1', 0, min(sipp_contrib_limit, sipp_contrib_1 * 1.30))
-    sipp_contrib_pre_2 = lp.LpVariable('sipp_contrib_pre_2', 0, min(sipp_contrib_limit, sipp_contrib_2 * 1.30))
-    sipp_contrib_post_1 = lp.LpVariable('sipp_contrib_post_1', 0, max(sipp_contrib_limit, min(state_pension_1, mpaa)))
-    sipp_contrib_post_2 = lp.LpVariable('sipp_contrib_post_2', 0, max(sipp_contrib_limit, min(state_pension_2, mpaa)))
+    sipp_contrib = False
+    if sipp_contrib:
+        sipp_contrib_limit = 3600
+        sipp_contrib_pre_1 = lp.LpVariable('sipp_contrib_pre_1', 0, min(sipp_contrib_limit, sipp_contrib_1 * 1.30))
+        sipp_contrib_pre_2 = lp.LpVariable('sipp_contrib_pre_2', 0, min(sipp_contrib_limit, sipp_contrib_2 * 1.30))
+        sipp_contrib_post_1 = lp.LpVariable('sipp_contrib_post_1', 0, max(sipp_contrib_limit, min(state_pension_1, mpaa)))
+        sipp_contrib_post_2 = lp.LpVariable('sipp_contrib_post_2', 0, max(sipp_contrib_limit, min(state_pension_2, mpaa)))
 
     for yr in range(present_year, end_year):
         pt_yr = pt and yr >= retirement_year
@@ -340,7 +342,7 @@ def model(
         else:
             contrib_1 = 0
             contrib_2 = 0
-            if False: #XXX
+            if sipp_contrib: #XXX
                 if not pt and yr < retirement_year + 5:
                     if age_2 < state_pension_age:
                         contrib_2 = sipp_contrib_pre_2
@@ -770,7 +772,7 @@ def model(
             print(' '.join((
                     '%4u:',
                     'St %5.0f',
-                    'SIPP1 [%7.0f %7.0f] (%7.0f) %5.1f%%',
+                    'SIPP1 [%7.0f %7.0f] (%6.0f %7.0f) %5.1f%%',
                     'SIPP2 [%7.0f %7.0f] (%6.0f %7.0f) %5.1f%%',
                     'ISA %7.0f (%7.0f)',
                     'GIA %7.0f (%7.0f)',
@@ -779,7 +781,7 @@ def model(
                 )) % (
                     yr,
                     income_state_1 + income_state_2,
-                    sipp_uf_1, sipp_df_1,            -tfc_1 - drawdown_1, 100*lta_1/lta,
+                    sipp_uf_1, sipp_df_1, contrib_1  -tfc_1 - drawdown_1, 100*lta_1/lta,
                     sipp_uf_2, sipp_df_2, contrib_2, -tfc_2 - drawdown_2, 100*lta_2/lta,
                     isa, -drawdown_isa,
                     gia, -drawdown_gia,
@@ -798,7 +800,7 @@ def model(
             sipp_uf_2=normalize(sipp_uf_2, 2),
             sipp_df_1=normalize(sipp_df_1, 2),
             sipp_df_2=normalize(sipp_df_2, 2),
-            sipp_delta_1=normalize(          - tfc_1 - drawdown_1, 2),
+            sipp_delta_1=normalize(contrib_1 - tfc_1 - drawdown_1, 2),
             sipp_delta_2=normalize(contrib_2 - tfc_2 - drawdown_2, 2),
             lta_ratio_1=normalize(lta_1/lta, 4),
             lta_ratio_2=normalize(lta_2/lta, 4),
