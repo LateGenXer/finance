@@ -279,7 +279,8 @@ def model(
         sipp_contrib_post_2 = lp.LpVariable('sipp_contrib_post_2', 0, max(sipp_contrib_limit, min(state_pension_2, mpaa)))
 
     for yr in range(present_year, end_year):
-        pt_yr = pt and yr >= retirement_year
+        retirement = yr >= retirement_year
+        pt_yr = retirement and pt
 
         if pt and yr == retirement_year:
             gia += isa
@@ -336,7 +337,7 @@ def model(
         # XXX: FAD income recycling is OK, but PCLS recycling is not
         # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm133800
         # https://techzone.abrdn.com/public/pensions/tech-guide-recycle-tax-free-cash
-        if yr < retirement_year:
+        if not retirement:
             contrib_1 = sipp_contrib_1
             contrib_2 = sipp_contrib_2
         else:
@@ -418,8 +419,9 @@ def model(
         prob += sipp_uf_1 >= 0
         prob += sipp_uf_2 >= 0
 
-        drawdown_1    = lp.LpVariable(f'dd_1@{yr}', 0) if age_1 >= nmpa else 0
-        drawdown_2    = lp.LpVariable(f'dd_2@{yr}', 0) if age_2 >= nmpa else 0
+        # Don't drawdown pension pre-retirement if there's a chance of violating MPAA
+        drawdown_1 = lp.LpVariable(f'dd_1@{yr}', 0) if age_1 >= nmpa and (retirement or sipp_contrib_1 <= mpaa) else 0
+        drawdown_2 = lp.LpVariable(f'dd_2@{yr}', 0) if age_2 >= nmpa and (retirement or sipp_contrib_2 <= mpaa) else 0
 
         if pt_yr:
             isa_allowance_yr = 0
@@ -427,7 +429,7 @@ def model(
             isa_allowance_yr = isa_allowance*2
 
         drawdown_isa = lp.LpVariable(f'dd_isa@{yr}', -isa_allowance_yr)  # Bed & ISA
-        drawdown_gia  = lp.LpVariable(f'dd_gia@{yr}')
+        drawdown_gia = lp.LpVariable(f'dd_gia@{yr}')
 
         sipp_df_1 -= drawdown_1
         sipp_df_2 -= drawdown_2
@@ -598,7 +600,8 @@ def model(
         return lta, lac
 
     for yr in range(present_year, end_year):
-        pt_yr = pt and yr >= retirement_year
+        retirement = yr >= retirement_year
+        pt_yr = retirement and pt
 
         if pt and yr == retirement_year:
             gia += isa

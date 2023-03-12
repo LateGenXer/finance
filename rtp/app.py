@@ -128,13 +128,6 @@ if True:
     result = model(**params)
     df = dataframe(result.data)
 
-    if max(st.session_state.sipp_contrib_1, st.session_state.sipp_contrib_2) > 4000:
-        st.warning('  '.join([
-            'Regular SIPP contributions are larger than MPAA.',
-            'Note the calculator might choose to withdraw income early to avoid LTA, triggering the MPAA, but the MPAA is not yet accurately modelled.',
-            'Bring down the SIPP contributions to 4000 to avoid this.',
-        ]), icon="⚠️")
-
     st.info("All values presented are in _today_'s pounds.", icon="ℹ️")
 
     col1, col2, col3, col4 = st.columns(4)
