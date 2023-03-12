@@ -17,6 +17,7 @@ import uk as UK
 import pt as PT
 
 from uk import *
+from pt import gbpeur
 
 
 verbosity = 0
@@ -201,22 +202,9 @@ def model(
     assert sipp_contrib_1 <= 40000
     assert sipp_contrib_2 <= 40000
 
-    # https://www.expatistan.com/cost-of-living/comparison/london/lisbon
-    # https://www.expatistan.com/cost-of-living/comparison/london/tokyo
-
-    #assert net_income(retirement_income_gross) == retirement_income_net
-
-    # https://www.ftadviser.com/pensions/2018/04/27/actuaries-set-3-5-as-safe-drawdown-rate/
-
     lta_1 = lta
     lta_2 = lta
 
-    gbpeur = 1.13895
-
-    # TODO: Maximize dividend allowance https://www.gov.uk/tax-on-dividends
-
-    # https://eportugal.gov.pt/en/migrantes-viver-e-trabalhar-em-portugal/migrantes-impostos-e-seguranca-social-em-portugal
-    # https://www.expat.hsbc.com/expat-explorer/expat-guides/japan/tax-in-japan/
 
     prob = lp.LpProblem("Retirement")
 
@@ -246,7 +234,7 @@ def model(
     sipp_df_1_paid = 0
     sipp_df_2_paid = 0
 
-    # SIPP contributions
+    # XXX: SIPP contributions
     # https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates#member-contributions
     # Limit post drawdown contributions to %30 over standard contributions to follow TFC recycling rule
     sipp_contrib = False
@@ -426,19 +414,15 @@ def model(
             cgt = uk_cgt_lp(prob, cg, cgt_rate)
         else:
             # PT
-            # https://sjb-global.com/portugal
             income_gross = (income_gross_1 + tfc_1 +
                             income_gross_2 + tfc_2)*0.5
             tfc_2 = tfc_1 = 0
 
             nhr = yr - retirement_year < 10
             if nhr:
-                # https://www.mondaq.com/capital-gains-tax/1234848/moving-to-portugal--tax-planning-and-the-non-habitual-resident-regime#:~:text=Non%2Dhabitual%20residents,source%20dividend%20income.
-                income_tax_rate = 0.10
-                income_net = income_gross * (1.0 - income_tax_rate)
+                income_net = income_gross * (1.0 - PT.nhr_income_tax_rate)
                 cgt = 0
             else:
-                # https://www.comparaja.pt/blog/escaloes-irs
                 income_net = pt_net_income_lp(prob, income_gross * gbpeur) * (1 / gbpeur)
                 cgt = cg * PT.cgt_rate
 
@@ -668,17 +652,9 @@ def model(
 
             nhr = yr - retirement_year < 10
             if nhr:
-                # XXX Correct? https://www.blevinsfranks.com/tax-and-pensions-portugal/#:~:text=Portugal%20at%20all.-,personal%20pensions,-This%20is%20where
-                # XXX ICAE?
-                # - https://www.blacktowerfm.com/benefits-of-life-assurance-in-portugal/
-                # - https://www.blacktowerfm.com/news/tax-compliant-solutions-for-the-portuguese-tax-resident-by-antonio-rosa-regional-manager-lisbon/
-
-                # https://www.mondaq.com/capital-gains-tax/1234848/moving-to-portugal--tax-planning-and-the-non-habitual-resident-regime#:~:text=Non%2Dhabitual%20residents,source%20dividend%20income.
-                income_tax_rate = 0.10
-                income_net = income_gross * (1.0 - income_tax_rate)
+                income_net = income_gross * (1.0 - PT.nhr_income_tax_rate)
                 cgt = 0
             else:
-                # https://www.comparaja.pt/blog/escaloes-irs
                 income_net = PT.net_income_pt(income_gross * gbpeur) / gbpeur
                 cgt = cg * PT.cgt_rate
                 if cg >= 0 and False:
@@ -819,10 +795,6 @@ def dataframe(data):
     df = pd.DataFrame(data)
 
     return df
-
-
-# TODO: IHT
-# https://spectrum-ifa.com/can-i-keep-my-uk-pension-as-a-portuguese-resident/
 
 
 def run(params):

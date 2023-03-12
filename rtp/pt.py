@@ -1,4 +1,4 @@
-# https://www.comparaja.pt/blog/escaloes-irs
+# https://taxsummaries.pwc.com/portugal/individual/taxes-on-personal-income
 income_tax_bands = [
    ( 7479, 0.145),
    (11284, 0.210),
@@ -11,7 +11,12 @@ income_tax_bands = [
    (None,  0.480),
 ]
 
+# https://www.blevinsfranks.com/tax-and-pensions-portugal/#:~:text=pension%20treatment%20under%20non-habitual%20residence
+nhr_income_tax_rate = 0.10
+
 cgt_rate = 0.28
+
+gbpeur = 1.13895
 
 def net_income_pt(gross_income):
     tax = 0
