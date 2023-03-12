@@ -3,6 +3,7 @@
 # Copyright (c) 2023 LateGenXer.  All rights reserved
 #
 
+
 import datetime
 import os
 
@@ -14,11 +15,10 @@ from model import model, column_headers, dataframe
 
 
 st.set_page_config(layout="wide")
-#st.set_page_config(layout="centered")
 
 st.title('Retirement Tax Planner')
 
-# Development state
+# Allow to override initial state on development enviroments
 try:
     from devel import state as devel_state
 except ImportError:
@@ -31,6 +31,34 @@ else:
             st.session_state.update(devel_state)
             st.session_state.devel_state = True
 
+# Default state
+default_state = {
+    "dob_1": 1980,
+    "dob_2": 1980,
+    "state_pension_years_1": 35,
+    "state_pension_years_2": 35,
+    "marginal_income_tax_1": 0.4,
+    "marginal_income_tax_2": 0.2,
+    "sipp_1": 750000,
+    "sipp_2": 125000,
+    "sipp_contrib_1": 0,
+    "sipp_contrib_2": 0,
+    "isa": 125000,
+    "gia": 0,
+    "misc_contrib": 0,
+    "inflation_rate": 2.5,
+    "isa_growth_rate": 5.5,
+    "gia_growth_rate": 5.5,
+    "sipp_growth_rate_1": 5.5,
+    "sipp_growth_rate_2": 5.5,
+    "retirement_country": "UK",
+    "retirement_income_net": 0,
+    "retirement_year": 2045,
+}
+for key, value in default_state.items():
+    st.session_state.setdefault(key, value)
+
+# About
 with st.expander("About..."):
     st.markdown(open(os.path.join(os.path.dirname(__file__), 'README.md'), 'rt').read())
 
@@ -39,9 +67,6 @@ if True:
     st.header('Parameters')
 
     st.warning('Inputs are not stored permanently and will not persist across page reloads!', icon="⚠️")
-
-    # Default state?
-    #st.write(st.session_state)
 
     with st.form(key='my_form'):
 
@@ -57,27 +82,27 @@ if True:
 
             with col1:
                 st.subheader('You')
-                st.number_input('Year of birth:', min_value=1920, max_value=2080, step=1, value=1980, key='dob_1')
-                st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, value=35, key='state_pension_years_1', help=state_pension_years_help)
-                st.number_input('SIPP value:', min_value=0, step=1, value=750000, key='sipp_1')
-                st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=40000, step=1, value=0, key='sipp_contrib_1', help="Until retirement")
-                st.select_slider("Marginal income tax rate:", options=(0.00, 0.20, 0.40, 0.45), value=0.40, format_func='{:.0%}'.format, key="marginal_income_tax_1", help=marginal_income_tax_help)
+                st.number_input('Year of birth:', min_value=1920, max_value=2080, step=1, key='dob_1')
+                st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, key='state_pension_years_1', help=state_pension_years_help)
+                st.number_input('SIPP value:', min_value=0, step=1, key='sipp_1')
+                st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=40000, step=1, key='sipp_contrib_1', help="Until retirement")
+                st.select_slider("Marginal income tax rate:", options=(0.00, 0.20, 0.40, 0.45), format_func='{:.0%}'.format, key="marginal_income_tax_1", help=marginal_income_tax_help)
 
             with col2:
                 st.subheader('Partner')
-                st.number_input('Year of birth:', min_value=1920, max_value=2080, step=1, value=1980, key='dob_2')
-                st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, value=35, key='state_pension_years_2', help=state_pension_years_help)
-                st.number_input('SIPP value:', min_value=0, step=1, value=125000, key='sipp_2')
-                st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=40000, step=1, value=0, key='sipp_contrib_2', help="Until retirement")
-                st.select_slider("Marginal income tax rate:", options=(0.00, 0.20, 0.40, 0.45), value=0.20, format_func='{:.0%}'.format, key="marginal_income_tax_2", help=marginal_income_tax_help)
+                st.number_input('Year of birth:', min_value=1920, max_value=2080, step=1, key='dob_2')
+                st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, key='state_pension_years_2', help=state_pension_years_help)
+                st.number_input('SIPP value:', min_value=0, step=1, key='sipp_2')
+                st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=40000, step=1, key='sipp_contrib_2', help="Until retirement")
+                st.select_slider("Marginal income tax rate:", options=(0.00, 0.20, 0.40, 0.45), format_func='{:.0%}'.format, key="marginal_income_tax_2", help=marginal_income_tax_help)
 
             with col3:
                 st.subheader('Shared')
-                st.number_input('Retirement year:', min_value=2020, max_value=2080, step=1, value=1980 + 65, key='retirement_year')
-                st.number_input('Retirement income (0 for maximum):', min_value=0, step=1000, value=0, key='retirement_income_net', help='Go to https://www.retirementlivingstandards.org.uk/ for guidance.')
-                st.number_input('ISAs value:', min_value=0, step=1, value=125000, key='isa')
-                st.number_input('GIAs value:', min_value=0, step=1, value=0, key='gia')
-                st.number_input('ISAs/GIAs yearly savings:', min_value=0, step=1, value=0, key='misc_contrib', help="Until retirement.  The optimization will automatically maximize the ISA allowance.")
+                st.number_input('Retirement year:', min_value=2020, max_value=2080, step=1, key='retirement_year')
+                st.number_input('Retirement income (0 for maximum):', min_value=0, step=1000, key='retirement_income_net', help='Go to https://www.retirementlivingstandards.org.uk/ for guidance.')
+                st.number_input('ISAs value:', min_value=0, step=1, key='isa')
+                st.number_input('GIAs value:', min_value=0, step=1, key='gia')
+                st.number_input('ISAs/GIAs yearly savings:', min_value=0, step=1, key='misc_contrib', help="Until retirement.  The optimization will automatically maximize the ISA allowance.")
 
         with tab2:
             col1, col2 = st.columns(2)
@@ -85,11 +110,11 @@ if True:
             with col1:
                 max_rate = 10.0
                 growth_rate_format = '%.1f%%'
-                st.slider("Inflation rate:", min_value=0.0, max_value=max_rate, step=0.5, value=2.5, format=growth_rate_format, key="inflation_rate")
-                st.slider("Your SIPP nominal growth rate:", min_value=0.0, max_value=max_rate, step=0.5, value=5.5, format=growth_rate_format, key="sipp_growth_rate_1")
-                st.slider("Partner's SIPP nominal growth rate:", min_value=0.0, max_value=max_rate, step=0.5, value=5.5, format=growth_rate_format, key="sipp_growth_rate_2")
-                st.slider("ISAs nominal growth rate:", min_value=0.0, max_value=max_rate, step=0.5, value=5.5, format=growth_rate_format, key="isa_growth_rate")
-                st.slider("GIAs nominal growth rate:", min_value=0.0, max_value=max_rate, step=0.5, value=5.5, format=growth_rate_format, key="gia_growth_rate")
+                st.slider("Inflation rate:", min_value=0.0, max_value=max_rate, step=0.5, format=growth_rate_format, key="inflation_rate")
+                st.slider("Your SIPP nominal growth rate:", min_value=0.0, max_value=max_rate, step=0.5, format=growth_rate_format, key="sipp_growth_rate_1")
+                st.slider("Partner's SIPP nominal growth rate:", min_value=0.0, max_value=max_rate, step=0.5, format=growth_rate_format, key="sipp_growth_rate_2")
+                st.slider("ISAs nominal growth rate:", min_value=0.0, max_value=max_rate, step=0.5, format=growth_rate_format, key="isa_growth_rate")
+                st.slider("GIAs nominal growth rate:", min_value=0.0, max_value=max_rate, step=0.5, format=growth_rate_format, key="gia_growth_rate")
 
             with col2:
 
