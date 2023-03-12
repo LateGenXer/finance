@@ -18,12 +18,13 @@ cgt_rate = 0.28
 
 gbpeur = 1.13895
 
-def net_income_pt(gross_income):
+def net_income(gross_income, factor=1.0):
     tax = 0
     lbound = 0
     for ubound, rate in income_tax_bands:
         delta = max(gross_income - lbound, 0)
         if ubound is not None:
+            ubound *= factor
             delta = min(delta, ubound - lbound)
         tax += delta * rate
         lbound = ubound

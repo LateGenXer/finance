@@ -85,7 +85,7 @@ class Result:
     data: list[ResState] = field(default_factory=list)
 
 
-def income_tax_lp(prob, gross_income, income_tax_bands):
+def income_tax_lp(prob, gross_income, income_tax_bands, factor=1.0):
     global uid
     total = 0
     tax = 0
@@ -94,6 +94,7 @@ def income_tax_lp(prob, gross_income, income_tax_bands):
         if ubound is None:
             ub = None
         else:
+            ubound *= factor
             ub = ubound - lbound
         income_tax_band = lp.LpVariable(f'net_{uid}_{int(rate*1000)}', 0, ub)
         uid += 1
@@ -131,8 +132,8 @@ def uk_cgt_lp(prob, cg, cgt_rate):
     return cg_20 * cgt_rate
 
 
-def pt_net_income_lp(prob, gross_income):
-    tax = income_tax_lp(prob, gross_income, PT.income_tax_bands)
+def pt_net_income_lp(prob, gross_income, factor=1.0):
+    tax = income_tax_lp(prob, gross_income, PT.income_tax_bands, factor)
     return gross_income - tax
 
 
@@ -415,7 +416,7 @@ def model(
         else:
             # PT
             income_gross = (income_gross_1 + tfc_1 +
-                            income_gross_2 + tfc_2)*0.5
+                            income_gross_2 + tfc_2)
             tfc_2 = tfc_1 = 0
 
             nhr = yr - retirement_year < 10
@@ -423,13 +424,13 @@ def model(
                 income_net = income_gross * (1.0 - PT.nhr_income_tax_rate)
                 cgt = 0
             else:
-                income_net = pt_net_income_lp(prob, income_gross * gbpeur) * (1 / gbpeur)
+                income_net = pt_net_income_lp(prob, income_gross, factor=2.0/gbpeur)
                 cgt = cg * PT.cgt_rate
 
-            income_gross_1 = income_gross
-            income_gross_2 = income_gross
-            income_net_1 = income_net
-            income_net_2 = income_net
+            income_gross_1 = income_gross*0.5
+            income_gross_2 = income_gross*0.5
+            income_net_1 = income_net*0.5
+            income_net_2 = income_net*0.5
 
         tax_1 = income_gross_1 - income_net_1
         tax_2 = income_gross_2 - income_net_2
@@ -646,8 +647,7 @@ def model(
             cgt = max(cg - cgt_allowance*2, 0) * cgt_rate
         else:
             # PT
-            income_gross = (income_gross_1 +
-                            income_gross_2)*0.5
+            income_gross = income_gross_1 + income_gross_2
             tfc_2 = tfc_1 = 0
 
             nhr = yr - retirement_year < 10
@@ -655,19 +655,19 @@ def model(
                 income_net = income_gross * (1.0 - PT.nhr_income_tax_rate)
                 cgt = 0
             else:
-                income_net = PT.net_income_pt(income_gross * gbpeur) / gbpeur
+                income_net = PT.net_income(income_gross, factor=2.0/gbpeur)
                 cgt = cg * PT.cgt_rate
                 if cg >= 0 and False:
                     tax_a = income_gross - income_net
-                    income_gross_b = income_gross + cg/2
-                    income_net_b = PT.net_income_pt(income_gross_b * gbpeur) / gbpeur
+                    income_gross_b = income_gross + cg
+                    income_net_b = PT.net_income(income_gross_b, factor=2.0/gbpeur)
                     tax_b = income_gross_b - income_net_b
                     cgt_alt = tax_b - tax_a
                     if cgt_alt < cgt:
                         cgt = cgt_alt
 
-            income_net_1 = income_net
-            income_net_2 = income_net
+            income_net_1 = income_net*0.5
+            income_net_2 = income_net*0.5
 
         tax_1 = income_gross_1 - income_net_1
         tax_2 = income_gross_2 - income_net_2
