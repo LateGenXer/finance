@@ -39,6 +39,8 @@ State = collections.namedtuple('State', [
     'drawdown_gia',
     'income_state_1',
     'income_state_2',
+    'income_gross_1',
+    'income_gross_2',
 ])
 
 
@@ -496,6 +498,8 @@ def model(
             drawdown_gia=drawdown_gia,
             income_state_1=income_state_1,
             income_state_2=income_state_2,
+            income_gross_1=income_gross_1,
+            income_gross_2=income_gross_2,
         )
 
     #net_worth = (sipp_uf_1 + sipp_uf_2) + (sipp_df_1 + sipp_df_2) + isa + gia
@@ -661,8 +665,8 @@ def model(
 
         sipp_df_1 -= drawdown_1
         sipp_df_2 -= drawdown_2
-        isa   -= drawdown_isa
-        gia    -= drawdown_gia
+        isa       -= drawdown_isa
+        gia       -= drawdown_gia
 
         sipp_uf_1 *= 1.0 + sipp_growth_rate_real_1
         sipp_df_1 *= 1.0 + sipp_growth_rate_real_1
@@ -674,8 +678,8 @@ def model(
         gia *= 1.0 - inflation_rate
 
         # Income and Capital Gain Taxes calculation
-        income_gross_1 = income_state_1 + drawdown_1
-        income_gross_2 = income_state_2 + drawdown_2
+        income_gross_1 = lp.value(s.income_gross_1)
+        income_gross_2 = lp.value(s.income_gross_2)
         if not pt_yr:
             # UK
             if yr < retirement_year:
@@ -687,8 +691,8 @@ def model(
             cgt = max(cg - cgt_allowance*2, 0) * cgt_rate
         else:
             # PT
-            income_gross = (income_gross_1 + tfc_1 +
-                            income_gross_2 + tfc_2)*0.5
+            income_gross = (income_gross_1 +
+                            income_gross_2)*0.5
             tfc_2 = tfc_1 = 0
 
             nhr = yr - retirement_year < 10
@@ -715,8 +719,6 @@ def model(
                     if cgt_alt < cgt:
                         cgt = cgt_alt
 
-            income_gross_1 = income_gross
-            income_gross_2 = income_gross
             income_net_1 = income_net
             income_net_2 = income_net
 
