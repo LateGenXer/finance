@@ -6,6 +6,7 @@
 
 import os
 import math
+import sys
 
 from dataclasses import dataclass, field
 from typing import Any
@@ -174,10 +175,29 @@ def model(
         misc_contrib,
         marginal_income_tax_1,
         marginal_income_tax_2,
-        state_pension_years_1=35,
-        state_pension_years_2=35,
+        state_pension_years_1,
+        state_pension_years_2,
+        N=2,
         **kwargs
     ):
+
+    end_age = 100
+    if N == 1:
+        dob_2 = sys.maxsize
+        sipp_2 = 0
+        sipp_growth_rate_2 = 0
+        sipp_contrib_2 = 0
+        marginal_income_tax_2 = 0
+        state_pension_years_2 = 0
+        end_year = dob_1 + end_age
+    else:
+        end_year = max(dob_1, dob_2) + end_age
+    #end_year = retirement_year + 3
+
+    assert N in (1, 2)
+    income_ratio_1 = float(1    ) / float(N)
+    income_ratio_2 = float(N - 1) / float(N)
+    assert income_ratio_1 + income_ratio_2 == 1.0
 
     result = Result()
 
@@ -226,9 +246,6 @@ def model(
     sipp_df_2 = 0
     del sipp_1
     del sipp_2
-
-    end_year = max(dob_1, dob_2) + 100
-    #end_year = retirement_year + 3
 
     states = {}
 
@@ -372,7 +389,7 @@ def model(
         if pt_yr:
             isa_allowance_yr = 0
         else:
-            isa_allowance_yr = isa_allowance*2
+            isa_allowance_yr = isa_allowance*N
 
         drawdown_isa = lp.LpVariable(f'dd_isa@{yr}', -isa_allowance_yr)  # Bed & ISA
         drawdown_gia = lp.LpVariable(f'dd_gia@{yr}')
@@ -424,13 +441,13 @@ def model(
                 income_net = income_gross * (1.0 - PT.nhr_income_tax_rate)
                 cgt = 0
             else:
-                income_net = pt_net_income_lp(prob, income_gross, factor=2.0/gbpeur)
+                income_net = pt_net_income_lp(prob, income_gross, factor=N/gbpeur)
                 cgt = cg * PT.cgt_rate
 
-            income_gross_1 = income_gross*0.5
-            income_gross_2 = income_gross*0.5
-            income_net_1 = income_net*0.5
-            income_net_2 = income_net*0.5
+            income_gross_1 = income_gross * income_ratio_1
+            income_gross_2 = income_gross * income_ratio_2
+            income_net_1 = income_net * income_ratio_1
+            income_net_2 = income_net * income_ratio_2
 
         tax_1 = income_gross_1 - income_net_1
         tax_2 = income_gross_2 - income_net_2
@@ -655,19 +672,19 @@ def model(
                 income_net = income_gross * (1.0 - PT.nhr_income_tax_rate)
                 cgt = 0
             else:
-                income_net = PT.net_income(income_gross, factor=2.0/gbpeur)
+                income_net = PT.net_income(income_gross, factor=N/gbpeur)
                 cgt = cg * PT.cgt_rate
                 if cg >= 0 and False:
                     tax_a = income_gross - income_net
                     income_gross_b = income_gross + cg
-                    income_net_b = PT.net_income(income_gross_b, factor=2.0/gbpeur)
+                    income_net_b = PT.net_income(income_gross_b, factor=N/gbpeur)
                     tax_b = income_gross_b - income_net_b
                     cgt_alt = tax_b - tax_a
                     if cgt_alt < cgt:
                         cgt = cgt_alt
 
-            income_net_1 = income_net*0.5
-            income_net_2 = income_net*0.5
+            income_net_1 = income_net * income_ratio_1
+            income_net_2 = income_net * income_ratio_2
 
         tax_1 = income_gross_1 - income_net_1
         tax_2 = income_gross_2 - income_net_2
