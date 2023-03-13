@@ -208,9 +208,9 @@ def model(
     state_pension_1 = UK.state_pension_full * state_pension_years_1 / 35
     state_pension_2 = UK.state_pension_full * state_pension_years_2 / 35
 
-    # LTA was due to grow with inflation but it's frozen for 5 years
+    # LTA was due to grow with inflation but it's frozen until 2028
     lta = UK.lta
-    lta *= (1 - inflation_rate) ** 5
+    lta *= (1 - inflation_rate) ** max(2028 - present_year, 0)
 
     lta_1 = lta
     lta_2 = lta
