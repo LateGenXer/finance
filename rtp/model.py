@@ -278,13 +278,6 @@ def model(
     if max_income:
         retirement_income_net = lp.LpVariable("income", 0)
 
-    bak_sipp_1 = sipp_1
-    bak_sipp_2 = sipp_2
-    bak_lta_1 = lta_1
-    bak_lta_2 = lta_2
-    bak_isa = isa
-    bak_gia = gia
-
     sipp_uf_1 = sipp_1
     sipp_uf_2 = sipp_2
     sipp_df_1 = 0
@@ -510,9 +503,6 @@ def model(
             income_gross_2=income_gross_2,
         )
 
-    #net_worth = (sipp_uf_1 + sipp_uf_2) + (sipp_df_1 + sipp_df_2) + isa + gia
-    net_worth = (sipp_uf_1 + sipp_uf_2)*1.001 + (sipp_df_1 + sipp_df_2)*1.0001 + isa*1.00001 + gia
-
     # IHT
     if not pt:
         net_worth = (sipp_uf_1 + sipp_uf_2)*1.001 + (sipp_df_1 + sipp_df_2)*1.0001 + (isa*1.00001 + gia)*(1 - 0.40)
@@ -541,6 +531,8 @@ def model(
         }.get(status, "Unexpected")
         raise ValueError(f"Failed to solve the problem ({statusMsg})")
 
+    result.net_worth_end = normalize(lp.value(sipp_uf_1 + sipp_df_1 + sipp_uf_2 + sipp_df_2 + isa + gia), 0)
+
     if verbosity > 0:
         print('Expected net worth: %7.0f' % lp.value(net_worth))
     if max_income:
@@ -550,20 +542,8 @@ def model(
     else:
         result.retirement_income_net = retirement_income_net
 
-    sipp_1 = bak_sipp_1
-    sipp_2 = bak_sipp_2
-    isa = bak_isa
-    gia = bak_gia
-
     if verbosity > 0:
         print('Net worth: %7.0f' % (sipp_1 + sipp_2 + isa + gia))
-
-    sipp_uf_1 = sipp_1
-    sipp_uf_2 = sipp_2
-    sipp_df_1 = 0
-    sipp_df_2 = 0
-    del sipp_1
-    del sipp_2
 
     if verbosity > 0:
         print('SIPP 1: %7.0f (UF %7.0f CF %7.0f)' % (sipp_uf_1 + sipp_df_1, sipp_uf_1, sipp_df_1))
@@ -727,8 +707,6 @@ def model(
         )
 
         result.data.append(rs)
-
-    result.net_worth_end = normalize(sipp_uf_1 + sipp_df_1 + sipp_uf_2 + sipp_df_2 + isa + gia, 0)
 
     return result
 
