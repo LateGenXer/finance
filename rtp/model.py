@@ -155,6 +155,29 @@ def bce_lac_lp(prob, lta, crystalized):
     return lta, lac
 
 
+# Benefit Crystallisation Event 5
+# https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm088650
+def bce_5a_5b_lp(prob, lta, sipp_uf, sipp_df, sipp_df_paid):
+    global uid
+
+    # BCE 5A
+    # https://moneyengineer.co.uk/13-anticipating-pension-growth-and-bce-5a/
+    df_loss = lp.LpVariable(f'df_loss_{uid}', 0)
+    df_gain = lp.LpVariable(f'df_gain_{uid}', 0)
+    prob += sipp_df_paid - df_loss + df_gain == sipp_df
+    lta, lac_bce_5a = bce_lac_lp(prob, lta, df_gain)
+    sipp_df -= lac_bce_5a
+
+    # BCE 5B
+    # Funds aren't actually crystallized -- just tested and charged.
+    _, lac_bce_5b = bce_lac_lp(prob, lta, sipp_uf)
+    sipp_uf -= lac_bce_5b
+
+    lac = lac_bce_5a + lac_bce_5b
+
+    return lta, sipp_uf, sipp_df, lac
+
+
 def lta_test(lta, crystalized):
     lta -= crystalized
     if lta < 0:
@@ -303,33 +326,11 @@ def model(
         # Benefit Crystallisation Event 5
         # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm088650
         if age_1 == 75:
-            # BCE 5A
-            # https://moneyengineer.co.uk/13-anticipating-pension-growth-and-bce-5a/
-            loss = lp.LpVariable(f'bce_5a_loss_1', 0)
-            gain = lp.LpVariable(f'bce_5a_gain_1', 0)
-            prob += sipp_df_1_paid - loss + gain == sipp_df_1
-            lta_1, lac_bce_5a_1 = bce_lac_lp(prob, lta_1, gain)
-            lac_1 += lac_bce_5a_1
-            sipp_df_1 -= lac_bce_5a_1
-            prob += sipp_df_1 >= 0
-            # BCE 5B
-            _, lac_bce_5b_1 = bce_lac_lp(prob, lta_1, sipp_uf_1)
-            sipp_uf_1 -= lac_bce_5b_1
-            lac_1 += lac_bce_5b_1
+            lta_1, sipp_uf_1, sipp_df_1, lac_1 = \
+                bce_5a_5b_lp(prob, lta_1, sipp_uf_1, sipp_df_1, sipp_df_1_paid)
         if age_2 == 75:
-            # BCE 5A
-            # https://moneyengineer.co.uk/13-anticipating-pension-growth-and-bce-5a/
-            loss = lp.LpVariable(f'bce_5a_loss_2', 0)
-            gain = lp.LpVariable(f'bce_5a_gain_2', 0)
-            prob += sipp_df_2_paid - loss + gain == sipp_df_2
-            lta_2, lac_bce_5a_2 = bce_lac_lp(prob, lta_2, gain)
-            lac_2 += lac_bce_5a_2
-            sipp_df_2 -= lac_bce_5a_2
-            prob += sipp_df_2 >= 0
-            # BCE 5B
-            _, lac_bce_5b_2 = bce_lac_lp(prob, lta_2, sipp_uf_2)
-            sipp_uf_2 -= lac_bce_5b_2
-            lac_2 += lac_bce_5b_2
+            lta_2, sipp_uf_2, sipp_df_2, lac_2 = \
+                bce_5a_5b_lp(prob, lta_2, sipp_uf_2, sipp_df_2, sipp_df_2_paid)
 
         # Bed & SIPP
         # XXX: FAD income recycling is OK, but PCLS recycling is not
