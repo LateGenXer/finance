@@ -138,6 +138,23 @@ def pt_net_income_lp(prob, gross_income, factor=1.0):
     return gross_income - tax
 
 
+def bce_lp(prob, lta):
+    global uid
+    crystalized_lta = lp.LpVariable(f'crystalized_lta_{uid}', 0)
+    crystalized_lae = lp.LpVariable(f'crystalized_lae_{uid}', 0)
+    uid += 1
+    lta -= crystalized_lta
+    prob += lta >= 0
+    return lta, crystalized_lta, crystalized_lae
+
+
+def bce_lac_lp(prob, lta, crystalized):
+    lta, crystalized_lta, crystalized_lae = bce_lp(prob, lta)
+    prob += crystalized_lta + crystalized_lae == crystalized
+    lac = 0.25 * crystalized_lae
+    return lta, lac
+
+
 def lta_test(lta, crystalized):
     lta -= crystalized
     if lta < 0:
@@ -291,32 +308,28 @@ def model(
             loss = lp.LpVariable(f'bce_5a_loss_1', 0)
             gain = lp.LpVariable(f'bce_5a_gain_1', 0)
             prob += sipp_df_1_paid - loss + gain == sipp_df_1
-            lac_1 += gain * 0.25
-            sipp_df_1 -= gain * 0.25
+            lta_1, lac_bce_5a_1 = bce_lac_lp(prob, lta_1, gain)
+            lac_1 += lac_bce_5a_1
+            sipp_df_1 -= lac_bce_5a_1
             prob += sipp_df_1 >= 0
             # BCE 5B
-            cf_1 = lp.LpVariable(f'cf_1@{yr}', 0)
-            prob += cf_1 <= lta_1
-            surplus_1 = sipp_uf_1 - cf_1
-            prob += surplus_1 >= 0
-            sipp_uf_1 -= surplus_1 * 0.25
-            lac_1 += surplus_1 * 0.25
+            _, lac_bce_5b_1 = bce_lac_lp(prob, lta_1, sipp_uf_1)
+            sipp_uf_1 -= lac_bce_5b_1
+            lac_1 += lac_bce_5b_1
         if age_2 == 75:
             # BCE 5A
             # https://moneyengineer.co.uk/13-anticipating-pension-growth-and-bce-5a/
             loss = lp.LpVariable(f'bce_5a_loss_2', 0)
             gain = lp.LpVariable(f'bce_5a_gain_2', 0)
             prob += sipp_df_2_paid - loss + gain == sipp_df_2
-            lac_2 += gain * 0.25
-            sipp_df_2 -= gain * 0.25
+            lta_2, lac_bce_5a_2 = bce_lac_lp(prob, lta_2, gain)
+            lac_2 += lac_bce_5a_2
+            sipp_df_2 -= lac_bce_5a_2
             prob += sipp_df_2 >= 0
             # BCE 5B
-            cf_2 = lp.LpVariable(f'cf_2@{yr}', 0)
-            prob += cf_2 <= lta_2
-            surplus_2 = sipp_uf_2 - cf_2
-            prob += surplus_2 >= 0
-            sipp_uf_2 -= surplus_2 * 0.25
-            lac_2 += surplus_2 * 0.25
+            _, lac_bce_5b_2 = bce_lac_lp(prob, lta_2, sipp_uf_2)
+            sipp_uf_2 -= lac_bce_5b_2
+            lac_2 += lac_bce_5b_2
 
         # Bed & SIPP
         # XXX: FAD income recycling is OK, but PCLS recycling is not
