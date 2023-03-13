@@ -625,7 +625,6 @@ def model(
         else:
             # PT
             income_gross = income_gross_1 + income_gross_2
-            tfc_2 = tfc_1 = 0
 
             nhr = yr - retirement_year < 10
             if nhr:
@@ -649,7 +648,9 @@ def model(
         tax_1 = income_gross_1 - income_net_1
         tax_2 = income_gross_2 - income_net_2
 
-        incomings = income_gross_1 + income_gross_2 + tfc_1 + tfc_2 + drawdown_isa + drawdown_gia
+        incomings = income_gross_1 + income_gross_2  + drawdown_isa + drawdown_gia
+        if not pt_yr:
+            incomings += tfc_1 + tfc_2
         if yr < retirement_year:
             incomings += misc_contrib
         outgoings = tax_1 + tax_2 + cgt
