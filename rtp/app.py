@@ -58,9 +58,16 @@ default_state = {
 for key, value in default_state.items():
     st.session_state.setdefault(key, value)
 
+#
 # About
+#
+
+@st.cache_data(ttl=24*3600)
+def about():
+    return open(os.path.join(os.path.dirname(__file__), 'README.md'), 'rt').read()
+
 with st.expander("About..."):
-    st.markdown(open(os.path.join(os.path.dirname(__file__), 'README.md'), 'rt').read())
+    st.markdown(about())
 
 #
 # Parameters
@@ -153,7 +160,12 @@ if devel:
     with st.expander("Parameters"):
         st.write(params)
 
-result = model(**params)
+# https://docs.streamlit.io/library/advanced-features/caching
+@st.cache_data(ttl=3600, max_entries=1024)
+def run(params):
+    return model(**params)
+
+result = run(params)
 df = dataframe(result.data)
 
 st.info("All values presented are in _today_'s pounds.", icon="ℹ️")
