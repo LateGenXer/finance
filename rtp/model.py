@@ -291,8 +291,8 @@ def model(
 
     states = {}
 
-    sipp_df_1_paid = 0
-    sipp_df_2_paid = 0
+    sipp_df_cost_1 = 0
+    sipp_df_cost_2 = 0
 
     # XXX: SIPP contributions
     # https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates#member-contributions
@@ -320,17 +320,18 @@ def model(
         income_state_1 = state_pension_1 if age_1 >= state_pension_age else 0
         income_state_2 = state_pension_2 if age_2 >= state_pension_age else 0
 
-        lac_1 = 0
-        lac_2 = 0
-
         # Benefit Crystallisation Event 5
         # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm088650
         if age_1 == 75:
             lta_1, sipp_uf_1, sipp_df_1, lac_1 = \
-                bce_5a_5b_lp(prob, lta_1, sipp_uf_1, sipp_df_1, sipp_df_1_paid)
+                bce_5a_5b_lp(prob, lta_1, sipp_uf_1, sipp_df_1, sipp_df_cost_1)
+        else:
+            lac_1 = 0
         if age_2 == 75:
             lta_2, sipp_uf_2, sipp_df_2, lac_2 = \
-                bce_5a_5b_lp(prob, lta_2, sipp_uf_2, sipp_df_2, sipp_df_2_paid)
+                bce_5a_5b_lp(prob, lta_2, sipp_uf_2, sipp_df_2, sipp_df_cost_2)
+        else:
+            lac_2 = 0
 
         # Bed & SIPP
         # XXX: FAD income recycling is OK, but PCLS recycling is not
@@ -361,16 +362,16 @@ def model(
             prob += lta_1 >= 0
             sipp_uf_1 -= crystalize_lta_1
             sipp_df_1 += 0.75*crystalize_lta_1
-            sipp_df_1_paid += 0.75*crystalize_lta_1
+            sipp_df_cost_1 += 0.75*crystalize_lta_1
             crystalize_lae_1 = lp.LpVariable(f'crystalize_lae_1@{yr}', 0)
             sipp_uf_1 -= crystalize_lae_1
             if age_1 < 75:
                 sipp_df_1 += crystalize_lae_1 * (1 - 0.25)
-                sipp_df_1_paid += crystalize_lae_1 * (1 - 0.25)
+                sipp_df_cost_1 += crystalize_lae_1 * (1 - 0.25)
                 lac_1 += crystalize_lae_1 * 0.25
             else:
                 sipp_df_1 += crystalize_lae_1
-                sipp_df_1_paid += crystalize_lae_1
+                sipp_df_cost_1 += crystalize_lae_1
             crystalize_1 = crystalize_lta_1 + crystalize_lae_1
         crystalize_lta_2 = 0
         crystalize_lae_2 = 0
@@ -380,16 +381,16 @@ def model(
             prob += lta_2 >= 0
             sipp_uf_2 -= crystalize_lta_2
             sipp_df_2 += 0.75*crystalize_lta_2
-            sipp_df_2_paid += 0.75*crystalize_lta_2
+            sipp_df_cost_2 += 0.75*crystalize_lta_2
             crystalize_lae_2 = lp.LpVariable(f'crystalize_lae_2@{yr}', 0)
             sipp_uf_2 -= crystalize_lae_2
             if age_2 < 75:
                 sipp_df_2 += crystalize_lae_2 * (1 - 0.25)
-                sipp_df_2_paid += crystalize_lae_2 * (1 - 0.25)
+                sipp_df_cost_2 += crystalize_lae_2 * (1 - 0.25)
                 lac_2 += crystalize_lae_2 * 0.25
             else:
                 sipp_df_2 += crystalize_lae_2
-                sipp_df_2_paid += crystalize_lae_2
+                sipp_df_cost_2 += crystalize_lae_2
             crystalize_2 = crystalize_lta_2 + crystalize_lae_2
 
         tfc_1 = 0.25*crystalize_lta_1
@@ -423,8 +424,8 @@ def model(
         sipp_uf_1 *= 1.0 + sipp_growth_rate_real_1
         sipp_uf_2 *= 1.0 + sipp_growth_rate_real_2
 
-        sipp_df_1_paid *= 1 - inflation_rate
-        sipp_df_2_paid *= 1 - inflation_rate
+        sipp_df_cost_1 *= 1 - inflation_rate
+        sipp_df_cost_2 *= 1 - inflation_rate
 
         sipp_df_1 *= 1.0 + sipp_growth_rate_real_1
         sipp_df_2 *= 1.0 + sipp_growth_rate_real_2
@@ -557,8 +558,8 @@ def model(
     del sipp_1
     del sipp_2
 
-    sipp_df_1_paid = 0
-    sipp_df_2_paid = 0
+    sipp_df_cost_1 = 0
+    sipp_df_cost_2 = 0
 
     if verbosity > 0:
         print('SIPP 1: %7.0f (UF %7.0f CF %7.0f)' % (sipp_uf_1 + sipp_df_1, sipp_uf_1, sipp_df_1))
@@ -597,8 +598,8 @@ def model(
         # BCE 5
         if age_1 == 75:
             # BCE 5A
-            gain_1 = max(sipp_df_1 - sipp_df_1_paid, 0)
-            #print('BCE5A', sipp_df_1_paid, sipp_df_1)
+            gain_1 = max(sipp_df_1 - sipp_df_cost_1, 0)
+            #print('BCE5A', sipp_df_cost_1, sipp_df_1)
             lta_1, lac_5a = lta_test(lta_1, gain_1)
             sipp_df_1 -= lac_5a
             lac_ += lac_5a
@@ -629,12 +630,12 @@ def model(
         tfc_1 = 0.25*crystalize_lta_1
         tfc_2 = 0.25*crystalize_lta_2
 
-        sipp_df_1_paid *= 1 - inflation_rate
-        sipp_df_2_paid *= 1 - inflation_rate
-        sipp_df_1_paid += 0.75*crystalize_lta_1
-        sipp_df_2_paid += 0.75*crystalize_lta_2
-        sipp_df_1_paid += crystalize_lae_1 * (0.75 if age_1 < 75 else 1)
-        sipp_df_2_paid += crystalize_lae_2 * (0.75 if age_2 < 75 else 1)
+        sipp_df_cost_1 *= 1 - inflation_rate
+        sipp_df_cost_2 *= 1 - inflation_rate
+        sipp_df_cost_1 += 0.75*crystalize_lta_1
+        sipp_df_cost_2 += 0.75*crystalize_lta_2
+        sipp_df_cost_1 += crystalize_lae_1 * (0.75 if age_1 < 75 else 1)
+        sipp_df_cost_2 += crystalize_lae_2 * (0.75 if age_2 < 75 else 1)
 
         sipp_df_1 += 0.75*crystalize_lta_1
         sipp_df_2 += 0.75*crystalize_lta_2
