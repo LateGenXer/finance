@@ -28,53 +28,58 @@ uid = 0
 
 @dataclass
 class LPState:
-    contrib_1: Any = 0
-    contrib_2: Any = 0
-    crystalize_lta_1: Any = 0
-    crystalize_lta_2: Any = 0
-    crystalize_lae_1: Any = 0
-    crystalize_lae_2: Any = 0
-    lta_1: Any = 0
-    lta_2: Any = 0
-    lac_1: Any = 0
-    lac_2: Any = 0
-    drawdown_1: Any = 0
-    drawdown_2: Any = 0
-    drawdown_isa: Any = 0
-    drawdown_gia: Any = 0
-    income_state_1: Any = 0
-    income_state_2: Any = 0
-    income_gross_1: Any = 0
-    income_gross_2: Any = 0
+    sipp_uf_1: Any
+    sipp_uf_2: Any
+    sipp_df_1: Any
+    sipp_df_2: Any
+    contrib_1: Any
+    contrib_2: Any
+    tfc_1: Any
+    tfc_2: Any
+    lta_1: Any
+    lta_2: Any
+    lac_1: Any
+    lac_2: Any
+    isa: Any
+    gia: Any
+    cg: Any
+    drawdown_1: Any
+    drawdown_2: Any
+    drawdown_isa: Any
+    drawdown_gia: Any
+    income_state_1: Any
+    income_state_2: Any
+    income_gross_1: Any
+    income_gross_2: Any
 
 
 @dataclass
 class ResState:
     year: int
-    income_state: float = 0
-    sipp_uf_1: float = 0
-    sipp_uf_2: float = 0
-    sipp_df_1: float = 0
-    sipp_df_2: float = 0
-    sipp_delta_1: float = 0
-    sipp_delta_2: float = 0
-    lta_ratio_1: float = 0
-    lta_ratio_2: float = 0
-    isa: float = 0
-    isa_delta: float = 0
-    gia: float = 0
-    gia_delta: float = 0
-    income_gross_1: float = 0
-    income_gross_2: float = 0
-    income_net: float = 0
-    income_surplus: float = 0
-    income_tax_1: float = 0
-    income_tax_2: float = 0
-    income_tax_rate_1: float = 0
-    income_tax_rate_2: float = 0
-    cgt: float = 0
-    cgt_rate: float = 0
-    lac: float = 0
+    income_state: float
+    sipp_uf_1: float
+    sipp_uf_2: float
+    sipp_df_1: float
+    sipp_df_2: float
+    sipp_delta_1: float
+    sipp_delta_2: float
+    lta_ratio_1: float
+    lta_ratio_2: float
+    isa: float
+    isa_delta: float
+    gia: float
+    gia_delta: float
+    income_gross_1: float
+    income_gross_2: float
+    income_net: float
+    income_surplus: float
+    income_tax_1: float
+    income_tax_2: float
+    income_tax_rate_1: float
+    income_tax_rate_2: float
+    cgt: float
+    cgt_rate: float
+    lac: float
 
 
 @dataclass
@@ -169,7 +174,8 @@ def bce_5a_5b_lp(prob, lta, sipp_uf, sipp_df, sipp_df_paid):
     sipp_df -= lac_bce_5a
 
     # BCE 5B
-    # Funds aren't actually crystallized -- just tested and charged.
+    # Funds aren't actually crystallized -- just tested and charged -- so LTA
+    # is not updated.
     _, lac_bce_5b = bce_lac_lp(prob, lta, sipp_uf)
     sipp_uf -= lac_bce_5b
 
@@ -251,9 +257,6 @@ def model(
     # LTA was due to grow with inflation but it's frozen until 2028
     lta = UK.lta
     lta *= (1 - inflation_rate) ** max(2028 - present_year, 0)
-
-    lta_1 = lta
-    lta_2 = lta
 
     sipp_growth_rate_real_1 = sipp_growth_rate_1 - inflation_rate
     sipp_growth_rate_real_2 = sipp_growth_rate_2 - inflation_rate
@@ -451,7 +454,6 @@ def model(
             # PT
             income_gross = (income_gross_1 + tfc_1 +
                             income_gross_2 + tfc_2)
-            tfc_2 = tfc_1 = 0
 
             nhr = yr - retirement_year < 10
             if nhr:
@@ -469,7 +471,9 @@ def model(
         tax_1 = income_gross_1 - income_net_1
         tax_2 = income_gross_2 - income_net_2
 
-        incomings = income_gross_1 + income_gross_2 + tfc_1 + tfc_2 + drawdown_isa + drawdown_gia
+        incomings = income_gross_1 + income_gross_2 + drawdown_isa + drawdown_gia
+        if not pt_yr:
+            incomings += tfc_1 + tfc_2
         if yr < retirement_year:
             incomings += misc_contrib
         outgoings = tax_1 + tax_2 + cgt
@@ -481,16 +485,21 @@ def model(
         prob += surplus == 0
 
         states[yr] = LPState(
+            sipp_uf_1=sipp_uf_1,
+            sipp_uf_2=sipp_uf_2,
+            sipp_df_1=sipp_df_1,
+            sipp_df_2=sipp_df_2,
             contrib_1=contrib_1,
             contrib_2=contrib_2,
-            crystalize_lta_1=crystalize_lta_1,
-            crystalize_lta_2=crystalize_lta_2,
-            crystalize_lae_1=crystalize_lae_1,
-            crystalize_lae_2=crystalize_lae_2,
+            tfc_1=tfc_1,
+            tfc_2=tfc_2,
             lta_1=lta_1,
             lta_2=lta_2,
             lac_1=lac_1,
             lac_2=lac_2,
+            isa=isa,
+            gia=gia,
+            cg=cg,
             drawdown_1=drawdown_1,
             drawdown_2=drawdown_2,
             drawdown_isa=drawdown_isa,
@@ -543,8 +552,6 @@ def model(
 
     sipp_1 = bak_sipp_1
     sipp_2 = bak_sipp_2
-    lta_1 = bak_lta_1
-    lta_2 = bak_lta_2
     isa = bak_isa
     gia = bak_gia
 
@@ -557,9 +564,6 @@ def model(
     sipp_df_2 = 0
     del sipp_1
     del sipp_2
-
-    sipp_df_cost_1 = 0
-    sipp_df_cost_2 = 0
 
     if verbosity > 0:
         print('SIPP 1: %7.0f (UF %7.0f CF %7.0f)' % (sipp_uf_1 + sipp_df_1, sipp_uf_1, sipp_df_1))
@@ -574,98 +578,37 @@ def model(
         retirement = yr >= retirement_year
         pt_yr = retirement and pt
 
-        if pt and yr == retirement_year:
-            gia += isa
-            isa = 0
-
-        age_1 = yr - dob_1
-        age_2 = yr - dob_2
-
         s = states[yr]
         if verbosity > 1:
             if yr == retirement_year:
                 for n, v in s._asdict().items():
                     print(f' {n} = {lp.value(v)}')
 
-        lac_ = 0
+        sipp_uf_1 = lp.value(s.sipp_uf_1)
+        sipp_uf_2 = lp.value(s.sipp_uf_2)
 
-        # Bed & SIPP
-        contrib_1 = lp.value(s.contrib_1)
-        contrib_2 = lp.value(s.contrib_2)
-        sipp_uf_1 += contrib_1
-        sipp_uf_2 += contrib_2
+        sipp_df_1 = lp.value(s.sipp_df_1)
+        sipp_df_2 = lp.value(s.sipp_df_2)
 
-        # BCE 5
-        if age_1 == 75:
-            # BCE 5A
-            gain_1 = max(sipp_df_1 - sipp_df_cost_1, 0)
-            #print('BCE5A', sipp_df_cost_1, sipp_df_1)
-            lta_1, lac_5a = lta_test(lta_1, gain_1)
-            sipp_df_1 -= lac_5a
-            lac_ += lac_5a
-            # BCE 5B
-            lta_1, lac_5b = lta_test(lta_1, sipp_uf_1)
-            sipp_uf_1 -= lac_5b
-            lac_ += lac_5b
-            #print('BCE5', lac_5a, lac_5b)
-        if age_2 == 75:
-            surplus_2 = max(sipp_uf_2 - lta_2, 0)
-            sipp_uf_2 -= surplus_2 * 0.25
-            lac_ += surplus_2 * 0.25
+        tfc_1 = lp.value(s.tfc_1)
+        tfc_2 = lp.value(s.tfc_2)
 
-        crystalize_lta_1  = lp.value(s.crystalize_lta_1)
-        crystalize_lta_2  = lp.value(s.crystalize_lta_2)
-        crystalize_lae_1  = lp.value(s.crystalize_lae_1)
-        crystalize_lae_2  = lp.value(s.crystalize_lae_2)
+        lta_1 = lp.value(s.lta_1)
+        lta_2 = lp.value(s.lta_2)
 
-        # BCE 1 & BCE 6
-        lta_1 -= crystalize_lta_1
-        lta_2 -= crystalize_lta_2
+        isa = lp.value(s.isa)
+        gia = lp.value(s.gia)
 
-        sipp_uf_1 -= crystalize_lta_1
-        sipp_uf_2 -= crystalize_lta_2
-        sipp_uf_1 -= crystalize_lae_1
-        sipp_uf_2 -= crystalize_lae_2
-
-        tfc_1 = 0.25*crystalize_lta_1
-        tfc_2 = 0.25*crystalize_lta_2
-
-        sipp_df_cost_1 *= 1 - inflation_rate
-        sipp_df_cost_2 *= 1 - inflation_rate
-        sipp_df_cost_1 += 0.75*crystalize_lta_1
-        sipp_df_cost_2 += 0.75*crystalize_lta_2
-        sipp_df_cost_1 += crystalize_lae_1 * (0.75 if age_1 < 75 else 1)
-        sipp_df_cost_2 += crystalize_lae_2 * (0.75 if age_2 < 75 else 1)
-
-        sipp_df_1 += 0.75*crystalize_lta_1
-        sipp_df_2 += 0.75*crystalize_lta_2
-        sipp_df_1 += crystalize_lae_1 * (0.75 if age_1 < 75 else 1)
-        sipp_df_2 += crystalize_lae_2 * (0.75 if age_2 < 75 else 1)
-        lac_ += crystalize_lae_1 * (0.25 if age_1 < 75 else 0)
-        lac_ += crystalize_lae_2 * (0.25 if age_2 < 75 else 0)
-
-        drawdown_1    = lp.value(s.drawdown_1)
-        drawdown_2    = lp.value(s.drawdown_2)
+        drawdown_1   = lp.value(s.drawdown_1)
+        drawdown_2   = lp.value(s.drawdown_2)
         drawdown_isa = lp.value(s.drawdown_isa)
-        drawdown_gia  = lp.value(s.drawdown_gia)
+        drawdown_gia = lp.value(s.drawdown_gia)
+
+        cg = lp.value(s.cg)
 
         # State pension
         income_state_1 = s.income_state_1
         income_state_2 = s.income_state_2
-
-        sipp_df_1 -= drawdown_1
-        sipp_df_2 -= drawdown_2
-        isa       -= drawdown_isa
-        gia       -= drawdown_gia
-
-        sipp_uf_1 *= 1.0 + sipp_growth_rate_real_1
-        sipp_df_1 *= 1.0 + sipp_growth_rate_real_1
-        sipp_uf_2 *= 1.0 + sipp_growth_rate_real_2
-        sipp_df_2 *= 1.0 + sipp_growth_rate_real_2
-        isa *= 1.0 + isa_growth_rate_real
-        cg = gia * gia_growth_rate
-        gia += cg
-        gia *= 1.0 - inflation_rate
 
         # Income and Capital Gain Taxes calculation
         income_gross_1 = lp.value(s.income_gross_1)
@@ -728,8 +671,6 @@ def model(
         lac_1 = lp.value(s.lac_1)
         lac_2 = lp.value(s.lac_2)
         lac = lac_1 + lac_2
-        if False:
-            assert math.isclose(lac, lac_, rel_tol=.001, abs_tol=.01)
 
         if verbosity > 0:
             print(' '.join((
