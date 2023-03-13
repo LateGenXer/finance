@@ -33,6 +33,7 @@ else:
 
 # Default state
 default_state = {
+    "joint": False,
     "dob_1": 1980,
     "dob_2": 1980,
     "state_pension_years_1": 35,
@@ -40,10 +41,10 @@ default_state = {
     "marginal_income_tax_1": 0.4,
     "marginal_income_tax_2": 0.2,
     "sipp_1": 750000,
-    "sipp_2": 125000,
+    "sipp_2": 000000,
     "sipp_contrib_1": 0,
-    "sipp_contrib_2": 0,
-    "isa": 125000,
+    "sipp_contrib_2": 3600,
+    "isa": 250000,
     "gia": 0,
     "misc_contrib": 0,
     "inflation_rate": 2.5,
@@ -77,6 +78,7 @@ st.header('Parameters')
 
 st.warning('Inputs are not stored permanently and will not persist across page reloads!', icon="⚠️")
 
+st.checkbox("Joint calculation", key="joint")
 with st.form(key='my_form'):
 
     tab1, tab2 = st.tabs(["Basic", "Advanced"])
@@ -97,13 +99,14 @@ with st.form(key='my_form'):
             st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=40000, step=1, key='sipp_contrib_1', help="Until retirement")
             st.select_slider("Marginal income tax rate:", options=(0.00, 0.20, 0.40, 0.45), format_func='{:.0%}'.format, key="marginal_income_tax_1", help=marginal_income_tax_help)
 
+        single = not st.session_state.joint
         with col2:
             st.subheader('Partner')
-            st.number_input('Year of birth:', min_value=1920, max_value=2080, step=1, key='dob_2')
-            st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, key='state_pension_years_2', help=state_pension_years_help)
-            st.number_input('SIPP value:', min_value=0, step=1, key='sipp_2')
-            st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=40000, step=1, key='sipp_contrib_2', help="Until retirement")
-            st.select_slider("Marginal income tax rate:", options=(0.00, 0.20, 0.40, 0.45), format_func='{:.0%}'.format, key="marginal_income_tax_2", help=marginal_income_tax_help)
+            st.number_input('Year of birth:', min_value=1920, max_value=2080, step=1, key='dob_2', disabled=single)
+            st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, key='state_pension_years_2', disabled=single, help=state_pension_years_help)
+            st.number_input('SIPP value:', min_value=0, step=1, key='sipp_2', disabled=single)
+            st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=40000, step=1, key='sipp_contrib_2', help="Until retirement", disabled=single)
+            st.select_slider("Marginal income tax rate:", options=(0.00, 0.20, 0.40, 0.45), format_func='{:.0%}'.format, key="marginal_income_tax_2", disabled=single, help=marginal_income_tax_help)
 
         with col3:
             st.subheader('Shared')
@@ -133,6 +136,7 @@ with st.form(key='my_form'):
             )
 
     submitted = st.form_submit_button(label='Update', type='primary')
+
 
 #
 # Results
@@ -232,8 +236,11 @@ if True:
     # https://stackoverflow.com/questions/46658232/pandas-convert-column-with-year-integer-to-datetime
     cdf['Year'] = pd.to_datetime(df['year'], format='%Y')
 
-    cdf['SIPP1'] = df['sipp_uf_1'] + df['sipp_df_1']
-    cdf['SIPP2'] = df['sipp_uf_2'] + df['sipp_df_2']
+    if st.session_state.joint:
+        cdf['SIPP1'] = df['sipp_uf_1'] + df['sipp_df_1']
+        cdf['SIPP2'] = df['sipp_uf_2'] + df['sipp_df_2']
+    else:
+        cdf['SIPP '] = df['sipp_uf_1'] + df['sipp_df_1']
     cdf['ISA'] = df['isa']
     cdf['GIA'] = df['gia']
 
@@ -286,8 +293,11 @@ if True:
     # https://stackoverflow.com/questions/46658232/pandas-convert-column-with-year-integer-to-datetime
     cdf['Year'] = pd.to_datetime(df['year'], format='%Y')
 
-    cdf['Income Tax 1'] = df['income_tax_1']
-    cdf['Income Tax 2'] = df['income_tax_2']
+    if st.session_state.joint:
+        cdf['Income Tax 1'] = df['income_tax_1']
+        cdf['Income Tax 2'] = df['income_tax_2']
+    else:
+        cdf['Income Tax'] = df['income_tax_1']
     cdf['Capital Gains Tax'] = df['cgt']
     cdf['Lifetime Allowance Charge'] = df['lac']
 

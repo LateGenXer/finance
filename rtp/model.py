@@ -155,6 +155,7 @@ def normalize(x, ndigits=None):
 
 
 def model(
+        joint,
         dob_1,
         dob_2,
         present_year,
@@ -177,12 +178,15 @@ def model(
         marginal_income_tax_2,
         state_pension_years_1,
         state_pension_years_2,
-        N=2,
         **kwargs
     ):
 
     end_age = 100
-    if N == 1:
+    if joint:
+        N = 2
+        end_year = max(dob_1, dob_2) + end_age
+    else:
+        N = 1
         dob_2 = sys.maxsize
         sipp_2 = 0
         sipp_growth_rate_2 = 0
@@ -190,8 +194,6 @@ def model(
         marginal_income_tax_2 = 0
         state_pension_years_2 = 0
         end_year = dob_1 + end_age
-    else:
-        end_year = max(dob_1, dob_2) + end_age
     #end_year = retirement_year + 3
 
     assert N in (1, 2)
