@@ -611,15 +611,11 @@ def model(
             incomings += misc_contrib
         outgoings = tax_1 + tax_2 + cgt
         if yr >= retirement_year:
-            outgoings += retirement_income_net + contrib_2*(1 - 0.80)
+            outgoings += contrib_2*(1 - 0.80)
         surplus = incomings - outgoings
-
-        income_net = income_net_1 + income_net_2 + tfc_1 + tfc_2 + drawdown_isa + drawdown_gia - cgt
-        if yr < retirement_year:
-            income_net += misc_contrib
-        else:
-            income_net -= contrib_2*(1 - 0.80)
-        delta = surplus
+        income_net = surplus
+        if yr >= retirement_year:
+            surplus -= retirement_income_net
 
         tax_rate_1 = tax_1 / max(income_gross_1, 1)
         tax_rate_2 = tax_2 / max(income_gross_2, 1)
@@ -646,7 +642,7 @@ def model(
                     sipp_uf_2, sipp_df_2, contrib_2, -tfc_2 - drawdown_2, 100*lta_2/lta,
                     isa, -drawdown_isa,
                     gia, -drawdown_gia,
-                    income_gross_1, income_gross_2, income_net, delta,
+                    income_gross_1, income_gross_2, income_net, surplus,
                     tax_1, 100 * tax_rate_1,
                     tax_2, 100 * tax_rate_2,
                     cgt, 100 * cgt_rate_, lac
@@ -672,7 +668,7 @@ def model(
             income_gross_1=income_gross_1,
             income_gross_2=income_gross_2,
             income_net=income_net,
-            income_surplus=normalize(delta, 2),
+            income_surplus=normalize(surplus, 2),
             income_tax_1=tax_1,
             income_tax_2=tax_2,
             income_tax_rate_1=tax_rate_1,
