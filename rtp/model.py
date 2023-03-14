@@ -321,23 +321,6 @@ def model(
         age_1 = yr - dob_1
         age_2 = yr - dob_2
 
-        # State pension
-        income_state_1 = state_pension_1 if age_1 >= state_pension_age else 0
-        income_state_2 = state_pension_2 if age_2 >= state_pension_age else 0
-
-        # Benefit Crystallisation Event 5
-        # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm088650
-        if age_1 == 75:
-            lta_1, sipp_uf_1, sipp_df_1, lac_1 = \
-                bce_5a_5b_lp(prob, lta_1, sipp_uf_1, sipp_df_1, sipp_df_cost_1)
-        else:
-            lac_1 = 0
-        if age_2 == 75:
-            lta_2, sipp_uf_2, sipp_df_2, lac_2 = \
-                bce_5a_5b_lp(prob, lta_2, sipp_uf_2, sipp_df_2, sipp_df_cost_2)
-        else:
-            lac_2 = 0
-
         # Bed & SIPP
         # XXX: FAD income recycling is OK, but PCLS recycling is not
         # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm133800
@@ -356,6 +339,19 @@ def model(
                         contrib_2 = sipp_contrib_post_2
         sipp_uf_1 += contrib_1
         sipp_uf_2 += contrib_2
+
+        # Benefit Crystallisation Event 5
+        # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm088650
+        if age_1 == 75:
+            lta_1, sipp_uf_1, sipp_df_1, lac_1 = \
+                bce_5a_5b_lp(prob, lta_1, sipp_uf_1, sipp_df_1, sipp_df_cost_1)
+        else:
+            lac_1 = 0
+        if age_2 == 75:
+            lta_2, sipp_uf_2, sipp_df_2, lac_2 = \
+                bce_5a_5b_lp(prob, lta_2, sipp_uf_2, sipp_df_2, sipp_df_cost_2)
+        else:
+            lac_2 = 0
 
         # Flexible-Access Drawdown
         if age_1 >= nmpa:
@@ -406,6 +402,10 @@ def model(
         cg = gia * gia_growth_rate
         gia += cg
         gia *= 1.0 - inflation_rate
+
+        # State pension
+        income_state_1 = state_pension_1 if age_1 >= state_pension_age else 0
+        income_state_2 = state_pension_2 if age_2 >= state_pension_age else 0
 
         # Income and Capital Gain Taxes modelling
         income_gross_1 = income_state_1 + drawdown_1
