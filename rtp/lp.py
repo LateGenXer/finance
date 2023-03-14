@@ -120,7 +120,12 @@ class LpAffineExpression:
 
     def __mul__(self, other):
         assert isinstance(other, numbers.Number)
-        return self._unary(lambda a: a * other)
+        if other == 0.0:
+            return 0.0
+        elif other == 1.0:
+            return self
+        else:
+            return self._unary(lambda a: a * other)
 
     def __rmul__(self, other):
         return self * other
