@@ -160,16 +160,17 @@ def bce_lac_lp(prob, lta, crystalized):
     return lta, lac
 
 
-# Benefit Crystallisation Event 5
+# Benefit Crystallisation Event 5A and 5B
 # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm088650
-def bce_5a_5b_lp(prob, lta, sipp_uf, sipp_df, sipp_df_paid):
+def bce_5a_5b_lp(prob, lta, sipp_uf, sipp_df, sipp_df_cost):
     global uid
 
     # BCE 5A
     # https://moneyengineer.co.uk/13-anticipating-pension-growth-and-bce-5a/
     df_loss = lp.LpVariable(f'df_loss_{uid}', 0)
     df_gain = lp.LpVariable(f'df_gain_{uid}', 0)
-    prob += sipp_df_paid - df_loss + df_gain == sipp_df
+    uid += 1
+    prob += sipp_df_cost - df_loss + df_gain == sipp_df
     lta, lac_bce_5a = bce_lac_lp(prob, lta, df_gain)
     sipp_df -= lac_bce_5a
 
@@ -184,15 +185,23 @@ def bce_5a_5b_lp(prob, lta, sipp_uf, sipp_df, sipp_df_paid):
     return lta, sipp_uf, sipp_df, lac
 
 
-def lta_test(lta, crystalized):
-    lta -= crystalized
-    if lta < 0:
-        # Income assumed
-        lac = -lta * 0.25
-        lta = 0
-    else:
-        lac = 0
-    return lta, lac
+# Benefit Crystallisation Event 1 (DD) and 6 (TFC)
+# https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm062701
+def bce_1_6_lp(prob, lta, sipp_uf, sipp_df, sipp_df_cost, age):
+    lac_bce1 = 0
+    assert age >= nmpa
+    lta, crystalized_lta, crystalized_lae = bce_lp(prob, lta)
+    crystalized = crystalized_lta + crystalized_lae
+    sipp_uf -= crystalized
+    prob += sipp_uf >= 0
+    tfc = crystalized_lta * 0.25
+    dd = crystalized - tfc - lac_bce1
+    if age < 75:
+        lac_bce1 = crystalized_lae * 0.25
+        dd -= lac_bce1
+    sipp_df += dd
+    sipp_df_cost += dd
+    return lta, sipp_uf, tfc, sipp_df, sipp_df_cost, lac_bce1
 
 
 def normalize(x, ndigits=None):
@@ -349,51 +358,18 @@ def model(
         sipp_uf_2 += contrib_2
 
         # Flexible-Access Drawdown
-        # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm062701
-        crystalize_lta_1 = 0
-        crystalize_lae_1 = 0
         if age_1 >= nmpa:
-            crystalize_lta_1 = lp.LpVariable(f'crystalize_lta_1@{yr}', 0)
-            lta_1 -= crystalize_lta_1
-            prob += lta_1 >= 0
-            sipp_uf_1 -= crystalize_lta_1
-            sipp_df_1 += 0.75*crystalize_lta_1
-            sipp_df_cost_1 += 0.75*crystalize_lta_1
-            crystalize_lae_1 = lp.LpVariable(f'crystalize_lae_1@{yr}', 0)
-            sipp_uf_1 -= crystalize_lae_1
-            if age_1 < 75:
-                sipp_df_1 += crystalize_lae_1 * (1 - 0.25)
-                sipp_df_cost_1 += crystalize_lae_1 * (1 - 0.25)
-                lac_1 += crystalize_lae_1 * 0.25
-            else:
-                sipp_df_1 += crystalize_lae_1
-                sipp_df_cost_1 += crystalize_lae_1
-            crystalize_1 = crystalize_lta_1 + crystalize_lae_1
-        crystalize_lta_2 = 0
-        crystalize_lae_2 = 0
+            lta_1, sipp_uf_1, tfc_1, sipp_df_1, sipp_df_cost_1, lac_bce1_1 = \
+                bce_1_6_lp(prob, lta_1, sipp_uf_1, sipp_df_1, sipp_df_cost_1, age_1)
+            lac_1 += lac_bce1_1
+        else:
+            tfc_1 = 0
         if age_2 >= nmpa:
-            crystalize_lta_2 = lp.LpVariable(f'crystalize_lta_2@{yr}', 0)
-            lta_2 -= crystalize_lta_2
-            prob += lta_2 >= 0
-            sipp_uf_2 -= crystalize_lta_2
-            sipp_df_2 += 0.75*crystalize_lta_2
-            sipp_df_cost_2 += 0.75*crystalize_lta_2
-            crystalize_lae_2 = lp.LpVariable(f'crystalize_lae_2@{yr}', 0)
-            sipp_uf_2 -= crystalize_lae_2
-            if age_2 < 75:
-                sipp_df_2 += crystalize_lae_2 * (1 - 0.25)
-                sipp_df_cost_2 += crystalize_lae_2 * (1 - 0.25)
-                lac_2 += crystalize_lae_2 * 0.25
-            else:
-                sipp_df_2 += crystalize_lae_2
-                sipp_df_cost_2 += crystalize_lae_2
-            crystalize_2 = crystalize_lta_2 + crystalize_lae_2
-
-        tfc_1 = 0.25*crystalize_lta_1
-        tfc_2 = 0.25*crystalize_lta_2
-
-        prob += sipp_uf_1 >= 0
-        prob += sipp_uf_2 >= 0
+            lta_2, sipp_uf_2, tfc_2, sipp_df_2, sipp_df_cost_2, lac_bce1_2 = \
+                bce_1_6_lp(prob, lta_2, sipp_uf_2, sipp_df_2, sipp_df_cost_2, age_2)
+            lac_2 += lac_bce1_2
+        else:
+            tfc_2 = 0
 
         # Don't drawdown pension pre-retirement if there's a chance of violating MPAA
         drawdown_1 = lp.LpVariable(f'dd_1@{yr}', 0) if age_1 >= nmpa and (retirement or sipp_contrib_1 <= mpaa) else 0
