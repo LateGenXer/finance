@@ -509,23 +509,10 @@ def model(
 
     result.net_worth_end = normalize(lp.value(sipp_uf_1 + sipp_df_1 + sipp_uf_2 + sipp_df_2 + isa + gia), 0)
 
-    if verbosity > 0:
-        print('Expected net worth: %7.0f' % lp.value(net_worth))
     if max_income:
         result.retirement_income_net = lp.value(retirement_income_net)
-        if verbosity > 0:
-            print('Expected net income: %7.0f' % result.retirement_income_net)
     else:
         result.retirement_income_net = retirement_income_net
-
-    if verbosity > 0:
-        print('Net worth: %7.0f' % (sipp_1 + sipp_2 + isa + gia))
-
-    if verbosity > 0:
-        print('SIPP 1: %7.0f (UF %7.0f CF %7.0f)' % (sipp_uf_1 + sipp_df_1, sipp_uf_1, sipp_df_1))
-        print('SIPP 2: %7.0f (UF %7.0f CF %7.0f)' % (sipp_uf_2 + sipp_df_2, sipp_uf_2, sipp_df_2))
-        print('ISA:    %7.0f' % isa)
-        print('GIA:    %7.0f' % gia)
 
     if max_income:
         retirement_income_net = lp.value(retirement_income_net)
@@ -539,6 +526,9 @@ def model(
             if yr == retirement_year:
                 for n, v in s._asdict().items():
                     print(f' {n} = {lp.value(v)}')
+
+        contrib_1 = lp.value(s.contrib_1)
+        contrib_2 = lp.value(s.contrib_2)
 
         sipp_uf_1 = lp.value(s.sipp_uf_1)
         sipp_uf_2 = lp.value(s.sipp_uf_2)
@@ -638,14 +628,15 @@ def model(
                 )) % (
                     yr,
                     income_state_1 + income_state_2,
-                    sipp_uf_1, sipp_df_1, contrib_1  -tfc_1 - drawdown_1, 100*lta_1/lta,
+                    sipp_uf_1, sipp_df_1, contrib_1, -tfc_1 - drawdown_1, 100*lta_1/lta,
                     sipp_uf_2, sipp_df_2, contrib_2, -tfc_2 - drawdown_2, 100*lta_2/lta,
                     isa, -drawdown_isa,
                     gia, -drawdown_gia,
                     income_gross_1, income_gross_2, income_net, surplus,
                     tax_1, 100 * tax_rate_1,
                     tax_2, 100 * tax_rate_2,
-                    cgt, 100 * cgt_rate_, lac
+                    cgt, 100 * cgt_rate_,
+                    lac
                 ))
         tax = tax_1 + tax_2 + cgt + lac
         result.total_tax += tax
