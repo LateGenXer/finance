@@ -166,7 +166,7 @@ if devel:
         st.write(params)
 
 # https://docs.streamlit.io/library/advanced-features/caching
-@st.cache_data(ttl=3600, max_entries=1024)
+#@st.cache_data(ttl=3600, max_entries=1024)
 def run(params):
     return model(**params)
 
