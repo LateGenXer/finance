@@ -224,6 +224,7 @@ def model(
         sipp_growth_rate_2,
         sipp_contrib_1,
         sipp_contrib_2,
+        sipp_extra_contrib,
         isa,
         isa_growth_rate,
         gia,
@@ -302,8 +303,7 @@ def model(
     # XXX: SIPP contributions
     # https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates#member-contributions
     # Limit post drawdown contributions to %30 over standard contributions to follow TFC recycling rule
-    sipp_contrib = False
-    if sipp_contrib:
+    if sipp_extra_contrib:
         sipp_contrib_limit = 3600
         sipp_contrib_pre_1 = lp.LpVariable('sipp_contrib_pre_1', 0, min(sipp_contrib_limit, sipp_contrib_1 * 1.30))
         sipp_contrib_pre_2 = lp.LpVariable('sipp_contrib_pre_2', 0, min(sipp_contrib_limit, sipp_contrib_2 * 1.30))
@@ -348,7 +348,7 @@ def model(
         else:
             contrib_1 = 0
             contrib_2 = 0
-            if sipp_contrib: #XXX
+            if sipp_extra_contrib: #XXX
                 if not pt and yr < retirement_year + 5:
                     if age_2 < state_pension_age:
                         contrib_2 = sipp_contrib_pre_2

@@ -44,6 +44,7 @@ default_state = {
     "sipp_2": 000000,
     "sipp_contrib_1": 0,
     "sipp_contrib_2": 3600,
+    "sipp_extra_contrib": False,
     "isa": 250000,
     "gia": 0,
     "misc_contrib": 0,
