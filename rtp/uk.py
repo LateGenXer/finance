@@ -20,7 +20,8 @@ state_pension_age = 68
 # https://www.gov.uk/government/publications/increasing-normal-minimum-pension-age/increasing-normal-minimum-pension-age
 nmpa = 57
 
-mpaa = 4000
+aa = 60000
+mpaa = 10000
 
 lta = 1073100
 

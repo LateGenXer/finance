@@ -31,6 +31,7 @@ I am not a financial or tax adviser.
 ## Recent changes
 
 * Support single (unmarried) individuals.
+* [Abolition of Lifetime Allowance and increases to Pension Tax Limits](https://www.gov.uk/government/publications/abolition-of-lifetime-allowance-and-increases-to-pension-tax-limits/pension-tax-limits)
 
 ## Features
 

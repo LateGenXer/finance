@@ -38,8 +38,6 @@ class LPState:
     tfc_2: Any
     lta_1: Any
     lta_2: Any
-    lac_1: Any
-    lac_2: Any
     isa: Any
     gia: Any
     cg: Any
@@ -63,8 +61,8 @@ class ResState:
     sipp_df_2: float
     sipp_delta_1: float
     sipp_delta_2: float
-    lta_ratio_1: float
-    lta_ratio_2: float
+    tfc_ratio_1: float
+    tfc_ratio_2: float
     isa: float
     isa_delta: float
     gia: float
@@ -79,7 +77,6 @@ class ResState:
     income_tax_rate_2: float
     cgt: float
     cgt_rate: float
-    lac: float
 
 
 @dataclass
@@ -153,55 +150,18 @@ def bce_lp(prob, lta):
     return lta, crystalized_lta, crystalized_lae
 
 
-def bce_lac_lp(prob, lta, crystalized):
-    lta, crystalized_lta, crystalized_lae = bce_lp(prob, lta)
-    prob += crystalized_lta + crystalized_lae == crystalized
-    lac = 0.25 * crystalized_lae
-    return lta, lac
-
-
-# Benefit Crystallisation Event 5A and 5B
-# https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm088650
-def bce_5a_5b_lp(prob, lta, sipp_uf, sipp_df, sipp_df_cost):
-    global uid
-
-    # BCE 5A
-    # https://moneyengineer.co.uk/13-anticipating-pension-growth-and-bce-5a/
-    df_loss = lp.LpVariable(f'df_loss_{uid}', 0)
-    df_gain = lp.LpVariable(f'df_gain_{uid}', 0)
-    uid += 1
-    prob += sipp_df_cost - df_loss + df_gain == sipp_df
-    lta, lac_bce_5a = bce_lac_lp(prob, lta, df_gain)
-    sipp_df -= lac_bce_5a
-
-    # BCE 5B
-    # Funds aren't actually crystallized -- just tested and charged -- so LTA
-    # is not updated.
-    _, lac_bce_5b = bce_lac_lp(prob, lta, sipp_uf)
-    sipp_uf -= lac_bce_5b
-
-    lac = lac_bce_5a + lac_bce_5b
-
-    return lta, sipp_uf, sipp_df, lac
-
-
 # Benefit Crystallisation Event 1 (DD) and 6 (TFC)
 # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm062701
-def bce_1_6_lp(prob, lta, sipp_uf, sipp_df, sipp_df_cost, age):
-    lac_bce1 = 0
+def bce_1_6_lp(prob, lta, sipp_uf, sipp_df, age):
     assert age >= nmpa
     lta, crystalized_lta, crystalized_lae = bce_lp(prob, lta)
     crystalized = crystalized_lta + crystalized_lae
     sipp_uf -= crystalized
     prob += sipp_uf >= 0
     tfc = crystalized_lta * 0.25
-    dd = crystalized - tfc - lac_bce1
-    if age < 75:
-        lac_bce1 = crystalized_lae * 0.25
-        dd -= lac_bce1
+    dd = crystalized - tfc
     sipp_df += dd
-    sipp_df_cost += dd
-    return lta, sipp_uf, tfc, sipp_df, sipp_df_cost, lac_bce1
+    return lta, sipp_uf, tfc, sipp_df
 
 
 def normalize(x, ndigits=None):
@@ -264,9 +224,7 @@ def model(
     state_pension_1 = UK.state_pension_full * state_pension_years_1 / 35
     state_pension_2 = UK.state_pension_full * state_pension_years_2 / 35
 
-    # LTA was due to grow with inflation but it's frozen until 2028
     lta = UK.lta
-    lta *= (1 - inflation_rate) ** max(2028 - present_year, 0)
 
     sipp_growth_rate_real_1 = sipp_growth_rate_1 - inflation_rate
     sipp_growth_rate_real_2 = sipp_growth_rate_2 - inflation_rate
@@ -275,12 +233,11 @@ def model(
     cgt_rate = 0.20
     #cgt_rate = 0.10 #XXX
 
-    assert sipp_contrib_1 <= 40000
-    assert sipp_contrib_2 <= 40000
+    assert sipp_contrib_1 <= UK.aa
+    assert sipp_contrib_2 <= UK.aa
 
     lta_1 = lta
     lta_2 = lta
-
 
     prob = lp.LpProblem("Retirement")
 
@@ -296,9 +253,6 @@ def model(
     del sipp_2
 
     states = {}
-
-    sipp_df_cost_1 = 0
-    sipp_df_cost_2 = 0
 
     # XXX: SIPP contributions
     # https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates#member-contributions
@@ -340,30 +294,15 @@ def model(
         sipp_uf_1 += contrib_1
         sipp_uf_2 += contrib_2
 
-        # Benefit Crystallisation Event 5
-        # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm088650
-        if age_1 == 75:
-            lta_1, sipp_uf_1, sipp_df_1, lac_1 = \
-                bce_5a_5b_lp(prob, lta_1, sipp_uf_1, sipp_df_1, sipp_df_cost_1)
-        else:
-            lac_1 = 0
-        if age_2 == 75:
-            lta_2, sipp_uf_2, sipp_df_2, lac_2 = \
-                bce_5a_5b_lp(prob, lta_2, sipp_uf_2, sipp_df_2, sipp_df_cost_2)
-        else:
-            lac_2 = 0
-
         # Flexible-Access Drawdown
         if age_1 >= nmpa:
-            lta_1, sipp_uf_1, tfc_1, sipp_df_1, sipp_df_cost_1, lac_bce1_1 = \
-                bce_1_6_lp(prob, lta_1, sipp_uf_1, sipp_df_1, sipp_df_cost_1, age_1)
-            lac_1 += lac_bce1_1
+            lta_1, sipp_uf_1, tfc_1, sipp_df_1 = \
+                bce_1_6_lp(prob, lta_1, sipp_uf_1, sipp_df_1, age_1)
         else:
             tfc_1 = 0
         if age_2 >= nmpa:
-            lta_2, sipp_uf_2, tfc_2, sipp_df_2, sipp_df_cost_2, lac_bce1_2 = \
-                bce_1_6_lp(prob, lta_2, sipp_uf_2, sipp_df_2, sipp_df_cost_2, age_2)
-            lac_2 += lac_bce1_2
+            lta_2, sipp_uf_2, tfc_2, sipp_df_2 = \
+                bce_1_6_lp(prob, lta_2, sipp_uf_2, sipp_df_2, age_2)
         else:
             tfc_2 = 0
 
@@ -391,9 +330,6 @@ def model(
 
         sipp_uf_1 *= 1.0 + sipp_growth_rate_real_1
         sipp_uf_2 *= 1.0 + sipp_growth_rate_real_2
-
-        sipp_df_cost_1 *= 1 - inflation_rate
-        sipp_df_cost_2 *= 1 - inflation_rate
 
         sipp_df_1 *= 1.0 + sipp_growth_rate_real_1
         sipp_df_2 *= 1.0 + sipp_growth_rate_real_2
@@ -464,8 +400,6 @@ def model(
             tfc_2=tfc_2,
             lta_1=lta_1,
             lta_2=lta_2,
-            lac_1=lac_1,
-            lac_2=lac_2,
             isa=isa,
             gia=gia,
             cg=cg,
@@ -611,10 +545,6 @@ def model(
         tax_rate_2 = tax_2 / max(income_gross_2, 1)
         cgt_rate_  = cgt / max(cg, 1)
 
-        lac_1 = lp.value(s.lac_1)
-        lac_2 = lp.value(s.lac_2)
-        lac = lac_1 + lac_2
-
         if verbosity > 0:
             print(' '.join((
                     '%4u:',
@@ -624,7 +554,7 @@ def model(
                     'ISA %7.0f (%7.0f)',
                     'GIA %7.0f (%7.0f)',
                     'Inc Gr %6.0f %6.0f Nt %6.0f (%+6.0f)',
-                    'Tax %6.0f %4.1f%% %6.0f %4.1f%% %6.0f %4.1f%% %6.0f'
+                    'Tax %6.0f %4.1f%% %6.0f %4.1f%% %6.0f %4.1f%%'
                 )) % (
                     yr,
                     income_state_1 + income_state_2,
@@ -635,10 +565,9 @@ def model(
                     income_gross_1, income_gross_2, income_net, surplus,
                     tax_1, 100 * tax_rate_1,
                     tax_2, 100 * tax_rate_2,
-                    cgt, 100 * cgt_rate_,
-                    lac
+                    cgt, 100 * cgt_rate_
                 ))
-        tax = tax_1 + tax_2 + cgt + lac
+        tax = tax_1 + tax_2 + cgt
         result.total_tax += tax
 
         rs = ResState(
@@ -650,8 +579,8 @@ def model(
             sipp_df_2=normalize(sipp_df_2, 2),
             sipp_delta_1=normalize(contrib_1 - tfc_1 - drawdown_1, 2),
             sipp_delta_2=normalize(contrib_2 - tfc_2 - drawdown_2, 2),
-            lta_ratio_1=normalize(lta_1/lta, 4),
-            lta_ratio_2=normalize(lta_2/lta, 4),
+            tfc_ratio_1=normalize(lta_1/lta, 4),
+            tfc_ratio_2=normalize(lta_2/lta, 4),
             isa=isa,
             isa_delta=normalize(-drawdown_isa, 2),
             gia=normalize(gia, 2),
@@ -665,8 +594,7 @@ def model(
             income_tax_rate_1=tax_rate_1,
             income_tax_rate_2=tax_rate_2,
             cgt=cgt,
-            cgt_rate=cgt_rate_,
-            lac=lac
+            cgt_rate=cgt_rate_
         )
 
         result.data.append(rs)
@@ -682,11 +610,11 @@ column_headers = {
     'sipp_uf_1': 'UF1',
     'sipp_df_1': 'DF1',
     'sipp_delta_1': '(\u0394)',
-    'lta_ratio_1': 'LTA1',
+    'tfc_ratio_1': 'TFC1%',
     'sipp_uf_2': 'UF2',
     'sipp_df_2': 'DF2',
     'sipp_delta_2': '(\u0394)',
-    'lta_ratio_2': 'LTA2',
+    'tfc_ratio_2': 'TFC2%',
 
     'isa': 'ISAs',
     'isa_delta': '(\u0394)',
@@ -702,7 +630,6 @@ column_headers = {
     'income_tax_rate_2': '(%)',
     'cgt': 'CGT',
     'cgt_rate': '(%)',
-    'lac': 'LAC',
 }
 
 
@@ -732,8 +659,8 @@ def run(params):
         'isa_delta': delta_format,
         'gia_delta': delta_format,
         'income_surplus': delta_format,
-        'lta_ratio_1':  perc_format,
-        'lta_ratio_2':  perc_format,
+        'tfc_ratio_1':  perc_format,
+        'tfc_ratio_2':  perc_format,
         'income_tax_rate_1': perc_format,
         'income_tax_rate_2': perc_format,
         'cgt_rate':     perc_format,

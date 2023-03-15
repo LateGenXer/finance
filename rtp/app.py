@@ -11,6 +11,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
+from uk import aa
 from model import model, column_headers, dataframe
 
 
@@ -97,7 +98,7 @@ with st.form(key='my_form'):
             st.number_input('Year of birth:', min_value=1920, max_value=2080, step=1, key='dob_1')
             st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, key='state_pension_years_1', help=state_pension_years_help)
             st.number_input('SIPP value:', min_value=0, step=1, key='sipp_1')
-            st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=40000, step=1, key='sipp_contrib_1', help="Until retirement")
+            st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=aa, step=1, key='sipp_contrib_1', help="Until retirement")
             st.select_slider("Marginal income tax rate:", options=(0.00, 0.20, 0.40, 0.45), format_func='{:.0%}'.format, key="marginal_income_tax_1", help=marginal_income_tax_help)
 
         single = not st.session_state.joint
@@ -106,7 +107,7 @@ with st.form(key='my_form'):
             st.number_input('Year of birth:', min_value=1920, max_value=2080, step=1, key='dob_2', disabled=single)
             st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, key='state_pension_years_2', disabled=single, help=state_pension_years_help)
             st.number_input('SIPP value:', min_value=0, step=1, key='sipp_2', disabled=single)
-            st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=40000, step=1, key='sipp_contrib_2', help="Until retirement", disabled=single)
+            st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=aa, step=1, key='sipp_contrib_2', help="Until retirement", disabled=single)
             st.select_slider("Marginal income tax rate:", options=(0.00, 0.20, 0.40, 0.45), format_func='{:.0%}'.format, key="marginal_income_tax_2", disabled=single, help=marginal_income_tax_help)
 
         with col3:
@@ -195,8 +196,8 @@ formatters = {
     'isa_delta': delta_format,
     'gia_delta': delta_format,
     'income_surplus': delta_format,
-    'lta_ratio_1':  perc_format,
-    'lta_ratio_2':  perc_format,
+    'tfc_ratio_1':  perc_format,
+    'tfc_ratio_2':  perc_format,
     'income_tax_rate_1': perc_format,
     'income_tax_rate_2': perc_format,
     'cgt_rate':     perc_format,
@@ -223,10 +224,10 @@ if True:
     # https://matplotlib.org/stable/tutorials/colors/colormaps.html
     s.background_gradient(cmap='Wistia', text_color_threshold=0, subset=['income_gross_1', 'income_gross_2'], vmin=0, vmax=100000)
     s.background_gradient(cmap='Oranges', subset=['income_tax_rate_1', 'income_tax_rate_2', 'cgt_rate'], vmin=0, vmax=1)
-    s.background_gradient(cmap='magma', subset=['lta_ratio_1', 'lta_ratio_2'], vmin=0, vmax=1)
+    s.background_gradient(cmap='magma', subset=['tfc_ratio_1', 'tfc_ratio_2'], vmin=0, vmax=1)
 
     # https://pandas.pydata.org/docs/user_guide/style.html#Bar-charts
-    #s.bar(subset=['lta_ratio_1', 'lta_ratio_2'], align='left', color='#d65f5f', vmin=0, vmax=1)
+    #s.bar(subset=['tfc_ratio_1', 'tfc_ratio_2'], align='left', color='#d65f5f', vmin=0, vmax=1)
 
 # Charts
 if True:
@@ -269,24 +270,6 @@ if True:
             alt.Color("Asset:N", legend=legend),
         )
     )
-    if False:
-        # https://docs.streamlit.io/library/api-reference/charts/st.altair_chart#annotating-charts
-        adf = pd.DataFrame()
-        adf['Year'] = pd.to_datetime(df['year'], format='%Y')
-        adf['LAC'] = df['lac']
-        adf['Event'] = 'LAC'
-        adf = adf[adf['LAC'] > 80]
-        adf['Y'] = 0
-        annotation_layer = (
-            alt.Chart(adf)
-            .mark_text(size=20, text="⬇", dx=-8, dy=-10, align="left")
-            .encode(
-                x="Year:T",
-                y=alt.Y("Y:Q"),
-                tooltip=["Event"],
-            )
-        )
-        chart = chart + annotation_layer
     st.altair_chart(chart, use_container_width=True)
 
     cdf = pd.DataFrame()
@@ -300,7 +283,6 @@ if True:
     else:
         cdf['Income Tax'] = df['income_tax_1']
     cdf['Capital Gains Tax'] = df['cgt']
-    cdf['Lifetime Allowance Charge'] = df['lac']
 
     cdf = cdf.melt('Year', var_name='Tax', value_name='Value')
 
@@ -328,7 +310,7 @@ with st.expander("Abbreviations..."):
 * **GI**: Gross Income
 * **NI**: Net Income
 * **Error**: Error relative to target income; should be zero, unless there are modelling errors.
-* **LTA**: Lifetime Allowance
+* **TFC**: Tax Free Cash (previous known as Lifetime Allowance)
 * **\u0394**: Cash flow, that is, cash going in or out of the pot; excluding growth and tax charges.
 * **IT**: Income Tax
 * **CGT**: Capital Gains Tax
