@@ -310,7 +310,7 @@ with st.expander("Abbreviations..."):
 * **GI**: Gross Income
 * **NI**: Net Income
 * **Error**: Error relative to target income; should be zero, unless there are modelling errors.
-* **TFCA**: Tax Free Cash allowance (25% of the old LTA)
+* **TFC**: Tax Free Cash (25% of the old LTA)
 * **\u0394**: Cash flow, that is, cash going in or out of the pot; excluding growth and tax charges.
 * **IT**: Income Tax
 * **CGT**: Capital Gains Tax
