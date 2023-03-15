@@ -61,6 +61,8 @@ class ResState:
     sipp_df_2: float
     sipp_delta_1: float
     sipp_delta_2: float
+    tfc_1: float
+    tfc_2: float
     tfc_ratio_1: float
     tfc_ratio_2: float
     isa: float
@@ -579,6 +581,8 @@ def model(
             sipp_df_2=normalize(sipp_df_2, 2),
             sipp_delta_1=normalize(contrib_1 - tfc_1 - drawdown_1, 2),
             sipp_delta_2=normalize(contrib_2 - tfc_2 - drawdown_2, 2),
+            tfc_1=normalize(tfc_1, 2),
+            tfc_2=normalize(tfc_2, 2),
             tfc_ratio_1=normalize(lta_1/lta, 4),
             tfc_ratio_2=normalize(lta_2/lta, 4),
             isa=isa,
@@ -608,13 +612,15 @@ column_headers = {
     'income_state': 'SP',
 
     'sipp_uf_1': 'UF1',
+    'tfc_1': 'TFC1',
+    'tfc_ratio_1': 'TFC1%',
     'sipp_df_1': 'DF1',
     'sipp_delta_1': '(\u0394)',
-    'tfc_ratio_1': 'TFC1%',
     'sipp_uf_2': 'UF2',
+    'tfc_2': 'TFC2',
+    'tfc_ratio_2': 'TFC2%',
     'sipp_df_2': 'DF2',
     'sipp_delta_2': '(\u0394)',
-    'tfc_ratio_2': 'TFC2%',
 
     'isa': 'ISAs',
     'isa_delta': '(\u0394)',

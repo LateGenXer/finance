@@ -314,7 +314,6 @@ with st.expander("Abbreviations..."):
 * **\u0394**: Cash flow, that is, cash going in or out of the pot; excluding growth and tax charges.
 * **IT**: Income Tax
 * **CGT**: Capital Gains Tax
-* **LAC**: Lifetime Allowance Charge
 ''')
 
 # https://github.com/streamlit/streamlit/issues/4830#issuecomment-1147878371
