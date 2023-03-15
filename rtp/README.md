@@ -28,6 +28,10 @@ I am not a financial or tax adviser.
   contributing to a pension scheme are all legitimate forms of tax planning."_
   In any doubt, get professional advice, or contact HMRC.
 
+## Recent changes
+
+* Support single (unmarried) individuals.
+
 ## Features
 
 * Joint calculation for married couples.
@@ -41,8 +45,6 @@ This tool makes the following simplifying assumptions:
 * that the CGT allowance is fully used on gains from GIA, while still avoiding [_bed & breakfast rule_](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg13350).
 
 ## Limitations
-
-* No support for single (unmarried) individuals yet.
 
 * The tool enforces a fixed income in _real_ terms (that is, growing with inflation) until both retirees reach 100 year of age.
 
