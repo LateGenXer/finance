@@ -196,8 +196,8 @@ formatters = {
     'isa_delta': delta_format,
     'gia_delta': delta_format,
     'income_surplus': delta_format,
-    'tfc_ratio_1':  perc_format,
-    'tfc_ratio_2':  perc_format,
+    'tfca_ratio_1':  perc_format,
+    'tfca_ratio_2':  perc_format,
     'income_tax_rate_1': perc_format,
     'income_tax_rate_2': perc_format,
     'cgt_rate':     perc_format,
@@ -224,10 +224,10 @@ if True:
     # https://matplotlib.org/stable/tutorials/colors/colormaps.html
     s.background_gradient(cmap='Wistia', text_color_threshold=0, subset=['income_gross_1', 'income_gross_2'], vmin=0, vmax=100000)
     s.background_gradient(cmap='Oranges', subset=['income_tax_rate_1', 'income_tax_rate_2', 'cgt_rate'], vmin=0, vmax=1)
-    s.background_gradient(cmap='magma', subset=['tfc_ratio_1', 'tfc_ratio_2'], vmin=0, vmax=1)
+    s.background_gradient(cmap='magma', subset=['tfca_ratio_1', 'tfca_ratio_2'], vmin=0, vmax=1)
 
     # https://pandas.pydata.org/docs/user_guide/style.html#Bar-charts
-    #s.bar(subset=['tfc_ratio_1', 'tfc_ratio_2'], align='left', color='#d65f5f', vmin=0, vmax=1)
+    #s.bar(subset=['tfca_ratio_1', 'tfca_ratio_2'], align='left', color='#d65f5f', vmin=0, vmax=1)
 
 # Charts
 if True:
@@ -310,7 +310,7 @@ with st.expander("Abbreviations..."):
 * **GI**: Gross Income
 * **NI**: Net Income
 * **Error**: Error relative to target income; should be zero, unless there are modelling errors.
-* **TFC**: Tax Free Cash (previous known as Lifetime Allowance)
+* **TFCA**: Tax Free Cash allowance (25% of the old LTA)
 * **\u0394**: Cash flow, that is, cash going in or out of the pot; excluding growth and tax charges.
 * **IT**: Income Tax
 * **CGT**: Capital Gains Tax

@@ -36,8 +36,8 @@ class LPState:
     contrib_2: Any
     tfc_1: Any
     tfc_2: Any
-    lta_1: Any
-    lta_2: Any
+    tfca_1: Any
+    tfca_2: Any
     isa: Any
     gia: Any
     cg: Any
@@ -63,8 +63,8 @@ class ResState:
     sipp_delta_2: float
     tfc_1: float
     tfc_2: float
-    tfc_ratio_1: float
-    tfc_ratio_2: float
+    tfca_ratio_1: float
+    tfca_ratio_2: float
     isa: float
     isa_delta: float
     gia: float
@@ -142,28 +142,22 @@ def pt_net_income_lp(prob, gross_income, factor=1.0):
     return gross_income - tax
 
 
-def bce_lp(prob, lta):
-    global uid
-    crystalized_lta = lp.LpVariable(f'crystalized_lta_{uid}', 0)
-    crystalized_lae = lp.LpVariable(f'crystalized_lae_{uid}', 0)
-    uid += 1
-    lta -= crystalized_lta
-    prob += lta >= 0
-    return lta, crystalized_lta, crystalized_lae
-
-
 # Benefit Crystallisation Event 1 (DD) and 6 (TFC)
 # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm062701
-def bce_1_6_lp(prob, lta, sipp_uf, sipp_df, age):
+def bce_1_6_lp(prob, tfca, sipp_uf, sipp_df, age):
     assert age >= nmpa
-    lta, crystalized_lta, crystalized_lae = bce_lp(prob, lta)
-    crystalized = crystalized_lta + crystalized_lae
-    sipp_uf -= crystalized
+    global uid
+    crystalized_tfc = lp.LpVariable(f'crystalized_tfc_{uid}', 0)
+    crystalized_inc = lp.LpVariable(f'crystalized_inc_{uid}', 0)
+    uid += 1
+    prob += 3*crystalized_tfc <= crystalized_inc
+    tfca -= crystalized_tfc
+    prob += tfca >= 0
+    sipp_uf -= crystalized_tfc + crystalized_inc
     prob += sipp_uf >= 0
-    tfc = crystalized_lta * 0.25
-    dd = crystalized - tfc
-    sipp_df += dd
-    return lta, sipp_uf, tfc, sipp_df
+    sipp_df += crystalized_inc
+    tfc = crystalized_tfc
+    return tfca, sipp_uf, tfc, sipp_df
 
 
 def normalize(x, ndigits=None):
@@ -226,7 +220,7 @@ def model(
     state_pension_1 = UK.state_pension_full * state_pension_years_1 / 35
     state_pension_2 = UK.state_pension_full * state_pension_years_2 / 35
 
-    lta = UK.lta
+    tfca = UK.tfca
 
     sipp_growth_rate_real_1 = sipp_growth_rate_1 - inflation_rate
     sipp_growth_rate_real_2 = sipp_growth_rate_2 - inflation_rate
@@ -238,8 +232,8 @@ def model(
     assert sipp_contrib_1 <= UK.aa
     assert sipp_contrib_2 <= UK.aa
 
-    lta_1 = lta
-    lta_2 = lta
+    tfca_1 = tfca
+    tfca_2 = tfca
 
     prob = lp.LpProblem("Retirement")
 
@@ -298,13 +292,13 @@ def model(
 
         # Flexible-Access Drawdown
         if age_1 >= nmpa:
-            lta_1, sipp_uf_1, tfc_1, sipp_df_1 = \
-                bce_1_6_lp(prob, lta_1, sipp_uf_1, sipp_df_1, age_1)
+            tfca_1, sipp_uf_1, tfc_1, sipp_df_1 = \
+                bce_1_6_lp(prob, tfca_1, sipp_uf_1, sipp_df_1, age_1)
         else:
             tfc_1 = 0
         if age_2 >= nmpa:
-            lta_2, sipp_uf_2, tfc_2, sipp_df_2 = \
-                bce_1_6_lp(prob, lta_2, sipp_uf_2, sipp_df_2, age_2)
+            tfca_2, sipp_uf_2, tfc_2, sipp_df_2 = \
+                bce_1_6_lp(prob, tfca_2, sipp_uf_2, sipp_df_2, age_2)
         else:
             tfc_2 = 0
 
@@ -400,8 +394,8 @@ def model(
             contrib_2=contrib_2,
             tfc_1=tfc_1,
             tfc_2=tfc_2,
-            lta_1=lta_1,
-            lta_2=lta_2,
+            tfca_1=tfca_1,
+            tfca_2=tfca_2,
             isa=isa,
             gia=gia,
             cg=cg,
@@ -475,8 +469,8 @@ def model(
         tfc_1 = lp.value(s.tfc_1)
         tfc_2 = lp.value(s.tfc_2)
 
-        lta_1 = lp.value(s.lta_1)
-        lta_2 = lp.value(s.lta_2)
+        tfca_1 = lp.value(s.tfca_1)
+        tfca_2 = lp.value(s.tfca_2)
 
         isa = lp.value(s.isa)
         gia = lp.value(s.gia)
@@ -560,8 +554,8 @@ def model(
                 )) % (
                     yr,
                     income_state_1 + income_state_2,
-                    sipp_uf_1, sipp_df_1, contrib_1, -tfc_1 - drawdown_1, 100*lta_1/lta,
-                    sipp_uf_2, sipp_df_2, contrib_2, -tfc_2 - drawdown_2, 100*lta_2/lta,
+                    sipp_uf_1, sipp_df_1, contrib_1, -tfc_1 - drawdown_1, 100*tfca_1/tfca,
+                    sipp_uf_2, sipp_df_2, contrib_2, -tfc_2 - drawdown_2, 100*tfca_2/tfca,
                     isa, -drawdown_isa,
                     gia, -drawdown_gia,
                     income_gross_1, income_gross_2, income_net, surplus,
@@ -583,8 +577,8 @@ def model(
             sipp_delta_2=normalize(contrib_2 - tfc_2 - drawdown_2, 2),
             tfc_1=normalize(tfc_1, 2),
             tfc_2=normalize(tfc_2, 2),
-            tfc_ratio_1=normalize(lta_1/lta, 4),
-            tfc_ratio_2=normalize(lta_2/lta, 4),
+            tfca_ratio_1=normalize(tfca_1/tfca, 4),
+            tfca_ratio_2=normalize(tfca_2/tfca, 4),
             isa=isa,
             isa_delta=normalize(-drawdown_isa, 2),
             gia=normalize(gia, 2),
@@ -613,12 +607,12 @@ column_headers = {
 
     'sipp_uf_1': 'UF1',
     'tfc_1': 'TFC1',
-    'tfc_ratio_1': 'TFC1%',
+    'tfca_ratio_1': '(%)',
     'sipp_df_1': 'DF1',
     'sipp_delta_1': '(\u0394)',
     'sipp_uf_2': 'UF2',
     'tfc_2': 'TFC2',
-    'tfc_ratio_2': 'TFC2%',
+    'tfca_ratio_2': '(%)',
     'sipp_df_2': 'DF2',
     'sipp_delta_2': '(\u0394)',
 
@@ -665,8 +659,8 @@ def run(params):
         'isa_delta': delta_format,
         'gia_delta': delta_format,
         'income_surplus': delta_format,
-        'tfc_ratio_1':  perc_format,
-        'tfc_ratio_2':  perc_format,
+        'tfca_ratio_1':  perc_format,
+        'tfca_ratio_2':  perc_format,
         'income_tax_rate_1': perc_format,
         'income_tax_rate_2': perc_format,
         'cgt_rate':     perc_format,
