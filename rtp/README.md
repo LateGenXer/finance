@@ -77,4 +77,4 @@ This tool makes the following simplifying assumptions:
 
 * **Can I have the source code?**  Source code is available [here](https://github.com/LateGenXer/finance/tree/main/rtp).  The key technologies used for this tool are: [Python](https://www.python.org/), [PuLP](https://coin-or.github.io/pulp/), [Pandas](https://pandas.pydata.org/) and [Streamlit](https://streamlit.io/).
 
-* **How can I contact you?**  Try https://www.reddit.com/user/LateGenXer but no promise.
+* **How can I contact you?**  Try [here](https://github.com/LateGenXer/finance/discussions) but no promise.

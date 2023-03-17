@@ -17,7 +17,23 @@ from uk import aa
 from model import model, column_headers, dataframe
 
 
-st.set_page_config(layout="wide")
+# https://docs.streamlit.io/library/api-reference/utilities/st.set_page_config
+st.set_page_config(
+    page_title="Retirement Tax Planner",
+    page_icon=":pound banknote:",
+    layout="wide",
+    menu_items={
+        "Get help": "https://github.com/LateGenXer/finance/discussions",
+        "Report a Bug": "https://github.com/LateGenXer/finance/issues",
+        "About": """Retirement Tax Planner
+
+https://github.com/LateGenXer/finance/tree/main/rtp
+
+Copyright (c) 2023 LateGenXer.
+
+""",
+    }
+)
 
 st.title('Retirement Tax Planner')
 
