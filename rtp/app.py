@@ -217,8 +217,8 @@ formatters = {
     'isa_delta': delta_format,
     'gia_delta': delta_format,
     'income_surplus': delta_format,
-    'tfca_ratio_1':  perc_format,
-    'tfca_ratio_2':  perc_format,
+    'lta_ratio_1':  perc_format,
+    'lta_ratio_2':  perc_format,
     'income_tax_rate_1': perc_format,
     'income_tax_rate_2': perc_format,
     'cgt_rate':     perc_format,
@@ -245,10 +245,10 @@ if True:
     # https://matplotlib.org/stable/tutorials/colors/colormaps.html
     s.background_gradient(cmap='Wistia', text_color_threshold=0, subset=['income_gross_1', 'income_gross_2'], vmin=0, vmax=100000)
     s.background_gradient(cmap='Oranges', subset=['income_tax_rate_1', 'income_tax_rate_2', 'cgt_rate'], vmin=0, vmax=1)
-    s.background_gradient(cmap='magma', subset=['tfca_ratio_1', 'tfca_ratio_2'], vmin=0, vmax=1)
+    s.background_gradient(cmap='magma', subset=['lta_ratio_1', 'lta_ratio_2'], vmin=0, vmax=1)
 
     # https://pandas.pydata.org/docs/user_guide/style.html#Bar-charts
-    #s.bar(subset=['tfca_ratio_1', 'tfca_ratio_2'], align='left', color='#d65f5f', vmin=0, vmax=1)
+    #s.bar(subset=['lta_ratio_1', 'lta_ratio_2'], align='left', color='#d65f5f', vmin=0, vmax=1)
 
 if not st.session_state.lacs:
     df.drop(columns="lac")
