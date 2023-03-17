@@ -328,10 +328,6 @@ def model(
         sipp_contrib_limit = 3600
         sipp_contrib_limit_1 = min(sipp_contrib_1 * 1.30, sipp_contrib_limit, mpaa)
         sipp_contrib_limit_2 = min(sipp_contrib_2 * 1.30, sipp_contrib_limit, mpaa)
-        sipp_contrib_pre_1 = lp.LpVariable('sipp_contrib_pre_1', 0, sipp_contrib_limit_1)
-        sipp_contrib_pre_2 = lp.LpVariable('sipp_contrib_pre_2', 0, sipp_contrib_limit_2)
-        sipp_contrib_post_1 = lp.LpVariable('sipp_contrib_post_1', 0, sipp_contrib_limit_1)
-        sipp_contrib_post_2 = lp.LpVariable('sipp_contrib_post_2', 0, sipp_contrib_limit_2)
 
     for yr in range(present_year, end_year):
         retirement = yr >= retirement_year
@@ -358,14 +354,10 @@ def model(
             contrib_2 = 0
             if sipp_extra_contrib: #XXX
                 if not pt or yr < retirement_year + 5:
-                    if age_1 < state_pension_age:
-                        contrib_1 = sipp_contrib_pre_1
-                    elif age_1 < 75:
-                        contrib_1 = sipp_contrib_post_1
-                    if age_2 < state_pension_age:
-                        contrib_2 = sipp_contrib_pre_2
-                    elif age_2 < 75:
-                        contrib_2 = sipp_contrib_post_2
+                    if age_1 < 75:
+                        contrib_1 = lp.LpVariable(f'contrib_1@{yr}', 0, sipp_contrib_limit_1)
+                    if age_2 < 75:
+                        contrib_2 = lp.LpVariable(f'contrib_2@{yr}', 0, sipp_contrib_limit_2)
         sipp_uf_1 += contrib_1
         sipp_uf_2 += contrib_2
 
@@ -492,8 +484,8 @@ def model(
         outgoings = tax_1 + tax_2 + cgt
         if yr >= retirement_year:
             outgoings += retirement_income_net
-            outgoings += contrib_1*(1 - 0.80)
-            outgoings += contrib_2*(1 - 0.80)
+            outgoings += contrib_1*0.80
+            outgoings += contrib_2*0.80
 
         surplus = incomings - outgoings
 
@@ -643,8 +635,8 @@ def model(
             incomings += misc_contrib
         outgoings = tax_1 + tax_2 + cgt
         if yr >= retirement_year:
-            outgoings += contrib_1*(1 - 0.80)
-            outgoings += contrib_2*(1 - 0.80)
+            outgoings += contrib_1*0.80
+            outgoings += contrib_2*0.80
         surplus = incomings - outgoings
         income_net = surplus
         if yr >= retirement_year:
