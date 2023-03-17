@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2023 LateGenXer.  All rights reserved
+# Copyright (c) 2023 LateGenXer
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
 #
 
 
