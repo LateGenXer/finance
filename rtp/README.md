@@ -36,7 +36,7 @@ I am not a financial or tax adviser.
 ## Features
 
 * Joint calculation for married couples.
-* Lifetime Allowance Charges modelling, specifically [Benefit Crystallization Events](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm088600) (BCEs) 1, 5A, 5B, and 6.
+* Option to model Lifetime Allowance Charges, specifically [Benefit Crystallization Events](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm088600) (BCEs) 1, 5A, 5B, and 6.
 
 ## Assumptions
 

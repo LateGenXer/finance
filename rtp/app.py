@@ -59,6 +59,7 @@ default_state = {
     "retirement_country": "UK",
     "retirement_income_net": 0,
     "retirement_year": 2045,
+    "lacs": False,
 }
 for key, value in default_state.items():
     st.session_state.setdefault(key, value)
@@ -121,7 +122,7 @@ with st.form(key='my_form'):
             st.number_input('ISAs/GIAs yearly savings:', min_value=0, step=1, key='misc_contrib', help="Until retirement.  The optimization will automatically maximize the ISA allowance.")
 
     with tab2:
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
 
         with col1:
             max_rate = 10.0
@@ -133,7 +134,9 @@ with st.form(key='my_form'):
             st.slider("GIAs nominal growth rate:", min_value=0.0, max_value=max_rate, step=0.5, format=growth_rate_format, key="gia_growth_rate")
 
         with col2:
+            st.checkbox("Lifetime Allowance Charges", key="lacs")
 
+        with col3:
             st.selectbox("Retirement country:", options=("UK", "PT"), index=0, key='retirement_country',
                 help="Country to be tax resident from _retirement year_. " +
                 "Values still always in pounds.  Differences in cost of life not considered."
@@ -231,6 +234,9 @@ if True:
     # https://pandas.pydata.org/docs/user_guide/style.html#Bar-charts
     #s.bar(subset=['tfca_ratio_1', 'tfca_ratio_2'], align='left', color='#d65f5f', vmin=0, vmax=1)
 
+if not st.session_state.lacs:
+    df.drop(columns="lac")
+
 # Charts
 if True:
     import altair as alt
@@ -285,6 +291,8 @@ if True:
     else:
         cdf['Income Tax'] = df['income_tax_1']
     cdf['Capital Gains Tax'] = df['cgt']
+    if st.session_state.lacs:
+        cdf['Lifetime Allowance Charge'] = df['lac']
 
     cdf = cdf.melt('Year', var_name='Tax', value_name='Value')
 
@@ -316,6 +324,7 @@ with st.expander("Abbreviations..."):
 * **\u0394**: Cash flow, that is, cash going in or out of the pot; excluding growth and tax charges.
 * **IT**: Income Tax
 * **CGT**: Capital Gains Tax
+* **LAC**: Lifetime Allowance Charge
 ''')
 
 # https://github.com/streamlit/streamlit/issues/4830#issuecomment-1147878371

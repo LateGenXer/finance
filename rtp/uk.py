@@ -23,6 +23,7 @@ nmpa = 57
 aa = 60000
 mpaa = 10000
 
+lta = 1073100
 tfca = 268275
 
 isa_allowance = 20000
