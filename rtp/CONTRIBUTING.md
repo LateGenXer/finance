@@ -1,3 +1,12 @@
+# Branches
+
+https://lategenxer-rtp.streamlit.app/ servers the tool from the `stable`
+branch.
+
+https://lategenxer-rtp-devel.streamlit.app/ servers the tool from the `main`
+branch.  It often gets broken because Streamlit doesn't always handle code
+chances gracefully.
+
 # Get started
 
 Follow the [Streamlit installation
