@@ -8,10 +8,10 @@
 
 import datetime
 import os
+import json
 
 import streamlit as st
 import pandas as pd
-import numpy as np
 
 from uk import aa
 from model import model, column_headers, dataframe
@@ -98,7 +98,27 @@ with st.expander("About..."):
 
 st.header('Parameters')
 
-st.warning('Inputs are not stored permanently and will not persist across page reloads!', icon="⚠️")
+st.info('Parameters are not stored permanently and will not persist across page reloads, but they can be downloaded/uploaded.', icon="ℹ️")
+
+st.session_state.setdefault('uploaded_hashes', set())
+version = 1
+with st.expander("Upload..."):
+    uploaded_file = st.file_uploader("Upload parameters", type=['json'], help='Upload all parameters from JSON file.', label_visibility='collapsed')
+    if uploaded_file is not None:
+        data = uploaded_file.getvalue()
+        # Avoid reprocessing the uploaded file on re-runs
+        data_hash = hash(data)
+        if data_hash not in st.session_state.uploaded_hashes:
+            st.session_state.uploaded_hashes.add(data_hash)
+            state = json.loads(data)
+            uploaded_version = state.pop('version', 0)
+            if uploaded_version != version:
+                st.warning(f"Expected parameter file version {version} but got {uploaded_version}", icon="⚠️")
+            for key, value in state.items():
+                if key in default_state:
+                    st.session_state[key] = value
+                else:
+                    st.warning(f"Unexpected parameter {key}={value:r}", icon="⚠️")
 
 st.checkbox("Joint calculation", key="joint")
 with st.form(key='my_form'):
@@ -178,6 +198,12 @@ with st.form(key='my_form'):
         ]))
 
     submitted = st.form_submit_button(label='Update', type='primary')
+
+state = {key: value for key, value in st.session_state.items() if key in default_state}
+state['version'] = version
+data = json.dumps(state, sort_keys=True, indent=2)
+timestamp = datetime.datetime.now().isoformat(sep='-', timespec='seconds')
+st.download_button("Download", data, file_name=f"rtp-{timestamp}.json", mime="application/json", help="Download all parameters as a JSON file.", use_container_width=True)
 
 
 #
