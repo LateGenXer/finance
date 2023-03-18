@@ -523,15 +523,11 @@ def model(
             income_gross_2=income_gross_2,
         )
 
-    # IHT
-    if not pt:
-        net_worth = (sipp_uf_1 + sipp_uf_2)*1.001 + (sipp_df_1 + sipp_df_2)*1.0001 + (isa*1.00001 + gia)*(1 - 0.40)
-    else:
-        net_worth = (sipp_uf_1 + sipp_uf_2)*1.001 + (sipp_df_1 + sipp_df_2)*1.0001 + (isa*1.00001 + gia)
-
     if max_income:
         prob.setObjective(-retirement_income_net)
     else:
+        # TODO: IHT
+        net_worth = sipp_uf_1 + sipp_uf_2 + sipp_df_1 + sipp_df_2 + isa + gia
         prob.setObjective(-net_worth)
 
     prob.checkDuplicateVars()
