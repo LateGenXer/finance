@@ -356,7 +356,7 @@ def model(
                 if not pt or yr < retirement_year + 5:
                     if age_1 < 75:
                         contrib_1 = lp.LpVariable(f'contrib_1@{yr}', 0, sipp_contrib_limit_1)
-                    if age_2 < 75:
+                    if age_2 < 75 and joint:
                         contrib_2 = lp.LpVariable(f'contrib_2@{yr}', 0, sipp_contrib_limit_2)
         sipp_uf_1 += contrib_1
         sipp_uf_2 += contrib_2
