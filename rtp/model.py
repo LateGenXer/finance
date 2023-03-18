@@ -271,7 +271,6 @@ def model(
         state_pension_years_2,
         lacs,
         lump_sum,
-        **kwargs
     ):
 
     end_age = 100

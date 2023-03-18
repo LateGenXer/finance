@@ -186,7 +186,7 @@ with st.form(key='my_form'):
 
 st.header('Results')
 
-params = dict(st.session_state)
+params = {key: value for key, value in st.session_state.items() if key in default_state}
 
 perc_xform = lambda x: x*.01
 state_xforms =  {
@@ -200,7 +200,7 @@ for key, xform in state_xforms.items():
     params[key] = xform(st.session_state[key])
 
 params['present_year'] = datetime.date.today().year
-params['pt'] = st.session_state.retirement_country == 'PT'
+params['pt'] = params.pop('retirement_country') == 'PT'
 
 if devel:
     with st.expander("Parameters"):
