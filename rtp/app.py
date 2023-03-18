@@ -102,7 +102,7 @@ st.warning('Inputs are not stored permanently and will not persist across page r
 st.checkbox("Joint calculation", key="joint")
 with st.form(key='my_form'):
 
-    tab1, tab2 = st.tabs(["Basic", "Advanced"])
+    tab1, tab2, tab3 = st.tabs(["Basic", "Advanced", "Experimental"])
 
     with tab1:
 
@@ -157,6 +157,18 @@ with st.form(key='my_form'):
                 help="Country to be tax resident from _retirement year_. " +
                 "Values still always in pounds.  Differences in cost of life not considered."
             )
+
+    with tab3:
+        st.warning("These are experimental features which might lead to misleading results.  Carefully read the help before changing any of these parameters!", icon="⚠️")
+
+        st.checkbox("Allow extra SIPP contributions", key="sipp_extra_contrib", help='\n'.join([
+            "Allow additional SIPP contributions funded by unearned income, on top of regular contributions.",
+            "",
+            "Care is taken to follow the [pension tax-free cash recycling rules](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm133800) by limiting total contributions to 130% of the regular contributions.",
+            "This is not necessarily optimal, but is easy to model and it should be resonably safe.",
+            "",
+            "Still contributions should be checked with utmost care and advice taken before following such plan.",
+        ]))
 
     submitted = st.form_submit_button(label='Update', type='primary')
 

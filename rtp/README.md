@@ -32,6 +32,7 @@ I am not a financial or tax adviser.
 
 * Support single (unmarried) individuals.
 * [Abolition of Lifetime Allowance and increases to Pension Tax Limits](https://www.gov.uk/government/publications/abolition-of-lifetime-allowance-and-increases-to-pension-tax-limits/pension-tax-limits)
+* Allow contributing into pension after retirement (experimental.)
 
 ## Features
 
@@ -52,8 +53,6 @@ This tool makes the following simplifying assumptions:
 * Capital Gains Tax (CGT) is _overestimated_.  CGT rate depends on the marginal income tax rate.  This implies a non-linearity which can't be modeled as an ordinary linear programming problems.
 
 * Equally, income tax after the Personal Allowance disappears (currently £125,140) is overestimated.  This is because the marginal income tax rate drops from 60% back to 45%, which can't be accurately modeled as a linear programming problem.
-
-* All pension contributions are assumed to cease at retirement.  Although there can be good and valid reasons to continue contributing into pension pots past retirement, it is difficult to safely/accurately model such contributions without running afoul of the [pension tax-free cash recycling rules](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm133800).
 
 * It cannot model post-retirement scenarios.
 
