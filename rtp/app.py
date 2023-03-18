@@ -248,10 +248,22 @@ formatters = {
 df = df[column_headers.keys()]
 
 s = df.style
+
 s.hide(axis='index')
+
 s.format(float_format)
 s.format(formatters, subset=list(formatters.keys()))
+
 s.relabel_index(list(column_headers.values()), axis='columns')
+
+hidden_columns = []
+if not st.session_state.joint:
+    hidden_columns += [name for name in column_headers.keys() if name.endswith('_2')]
+if not st.session_state.lacs:
+    hidden_columns += ['lac']
+if hidden_columns:
+    s.hide(axis='columns', subset=hidden_columns)
+
 s.set_properties(**{'font-size': '10pt'})
 s.set_table_styles([
     {'selector': 'td', 'props': 'text-align: right; padding:0px 2px 0px 2px;'}
@@ -270,9 +282,6 @@ if True:
 
     # https://pandas.pydata.org/docs/user_guide/style.html#Bar-charts
     #s.bar(subset=['lta_ratio_1', 'lta_ratio_2'], align='left', color='#d65f5f', vmin=0, vmax=1)
-
-if not st.session_state.lacs:
-    df.drop(columns="lac")
 
 # Charts
 if True:
