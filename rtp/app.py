@@ -214,6 +214,8 @@ formatters = {
     'year': '{:}'.format,
     'sipp_delta_1': delta_format,
     'sipp_delta_2': delta_format,
+    'contrib_1': delta_format,
+    'contrib_2': delta_format,
     'isa_delta': delta_format,
     'gia_delta': delta_format,
     'income_surplus': delta_format,
@@ -231,7 +233,7 @@ s.hide(axis='index')
 s.format(float_format)
 s.format(formatters, subset=list(formatters.keys()))
 s.relabel_index(list(column_headers.values()), axis='columns')
-#s.set_properties(**{'font-size': '8pt'})
+s.set_properties(**{'font-size': '10pt'})
 s.set_table_styles([
     {'selector': 'td', 'props': 'text-align: right; padding:0px 2px 0px 2px;'}
 ])

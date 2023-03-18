@@ -65,6 +65,8 @@ class ResState:
     sipp_df_2: float
     sipp_delta_1: float
     sipp_delta_2: float
+    contrib_1: float
+    contrib_2: float
     tfc_1: float
     tfc_2: float
     lta_ratio_1: float
@@ -634,7 +636,7 @@ def model(
         tax_1 = income_gross_1 - income_net_1
         tax_2 = income_gross_2 - income_net_2
 
-        incomings = income_gross_1 + income_gross_2  + drawdown_isa + drawdown_gia
+        incomings = income_gross_1 + income_gross_2 + drawdown_isa + drawdown_gia
         if not pt_yr:
             incomings += tfc_1 + tfc_2
         if yr < retirement_year:
@@ -689,8 +691,10 @@ def model(
             sipp_uf_2=normalize(sipp_uf_2, 2),
             sipp_df_1=normalize(sipp_df_1, 2),
             sipp_df_2=normalize(sipp_df_2, 2),
-            sipp_delta_1=normalize(contrib_1 - tfc_1 - drawdown_1, 2),
-            sipp_delta_2=normalize(contrib_2 - tfc_2 - drawdown_2, 2),
+            contrib_1=normalize(contrib_1, 2),
+            contrib_2=normalize(contrib_2, 2),
+            sipp_delta_1=normalize(-drawdown_1, 2),
+            sipp_delta_2=normalize(-drawdown_2, 2),
             tfc_1=normalize(tfc_1, 2),
             tfc_2=normalize(tfc_2, 2),
             lta_ratio_1=normalize(lta_1/lta, 4),
@@ -723,14 +727,16 @@ column_headers = {
     'income_state': 'SP',
 
     'sipp_uf_1': 'UF1',
+    'contrib_1': '(+\u0394)',
+    'tfc_1': 'TFC1',
     'sipp_df_1': 'DF1',
     'sipp_delta_1': '(\u0394)',
-    'tfc_1': 'TFC1',
     'lta_ratio_1': '(%)',
     'sipp_uf_2': 'UF2',
+    'contrib_2': '(+\u0394)',
+    'tfc_2': 'TFC2',
     'sipp_df_2': 'DF2',
     'sipp_delta_2': '(\u0394)',
-    'tfc_2': 'TFC2',
     'lta_ratio_2': '(%)',
 
     'isa': 'ISAs',
@@ -774,6 +780,8 @@ def run(params):
         'year': '{:}'.format,
         'sipp_delta_1': delta_format,
         'sipp_delta_2': delta_format,
+        'contrib_1': delta_format,
+        'contrib_2': delta_format,
         'isa_delta': delta_format,
         'gia_delta': delta_format,
         'income_surplus': delta_format,
