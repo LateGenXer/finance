@@ -33,6 +33,7 @@ I am not a financial or tax adviser.
 * Support single (unmarried) individuals.
 * [Abolition of Lifetime Allowance and increases to Pension Tax Limits](https://www.gov.uk/government/publications/abolition-of-lifetime-allowance-and-increases-to-pension-tax-limits/pension-tax-limits)
 * Allow contributing into pension after retirement (experimental.)
+* Allow to analyse how to best allocate a lump sump (experimental.)
 
 ## Features
 

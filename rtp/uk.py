@@ -21,6 +21,7 @@ state_pension_age = 68
 nmpa = 57
 
 aa = 60000
+aa_taper = 10000
 mpaa = 10000
 
 lta = 1073100

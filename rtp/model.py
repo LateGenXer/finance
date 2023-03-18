@@ -95,6 +95,10 @@ class Result:
     net_worth_end: float = 0
     total_tax: float = 0
     data: list[ResState] = field(default_factory=list)
+    ls_sipp_1: float = 0
+    ls_sipp_2: float = 0
+    ls_isa: float = 0
+    ls_gia: float = 0
 
 
 def income_tax_lp(prob, gross_income, income_tax_bands, factor=1.0):
@@ -231,6 +235,15 @@ def normalize(x, ndigits=None):
     return round(x, ndigits) + 0.0
 
 
+def aa_lbound(marginal_income_tax):
+    return {
+        0.00: 3600,
+        0.20: income_tax_threshold_20,
+        0.40: min(income_tax_threshold_40, UK.aa),
+        0.45: UK.aa_taper,
+    }[marginal_income_tax]
+
+
 def model(
         joint,
         dob_1,
@@ -257,6 +270,7 @@ def model(
         state_pension_years_1,
         state_pension_years_2,
         lacs,
+        lump_sum,
         **kwargs
     ):
 
@@ -307,6 +321,24 @@ def model(
     max_income = retirement_income_net == 0
     if max_income:
         retirement_income_net = lp.LpVariable("income", 0)
+
+    # XXX: Lump sum analysis
+    if lump_sum:
+        aa_1 = max(aa_lbound(marginal_income_tax_1), sipp_contrib_1)
+        aa_2 = max(aa_lbound(marginal_income_tax_2), sipp_contrib_2) if joint else 0
+        ls_sipp_1 = lp.LpVariable("ls_sipp_1", 0)
+        ls_sipp_2 = lp.LpVariable("ls_sipp_2", 0)
+        ls_isa    = lp.LpVariable("ls_isa", 0, N*isa_allowance)
+        ls_gia    = lp.LpVariable("ls_gia", 0)
+        prob += ls_sipp_1 + ls_sipp_2 + ls_isa + ls_gia == lump_sum
+        ls_sipp_gross_1 = ls_sipp_1 * (1.0 / (1.0 - max(marginal_income_tax_1, 0.20)))
+        ls_sipp_gross_2 = ls_sipp_2 * (1.0 / (1.0 - max(marginal_income_tax_2, 0.20)))
+        prob += sipp_contrib_1 + ls_sipp_gross_1 <= aa_1
+        prob += sipp_contrib_2 + ls_sipp_gross_2 <= aa_2
+        sipp_1 += ls_sipp_gross_1
+        sipp_2 += ls_sipp_gross_2
+        isa    += ls_isa
+        gia    += ls_gia
 
     sipp_uf_1 = sipp_1
     sipp_uf_2 = sipp_2
@@ -710,6 +742,12 @@ def model(
 
         result.data.append(rs)
 
+    if lump_sum:
+        result.ls_sipp_1 = lp.value(ls_sipp_1)
+        result.ls_sipp_2 = lp.value(ls_sipp_2)
+        result.ls_isa    = lp.value(ls_isa)
+        result.ls_gia    = lp.value(ls_gia)
+
     return result
 
 # Columns headers for DataFrame
@@ -793,9 +831,16 @@ def run(params):
         formatters=formatters
     ))
 
+    #df.to_csv('data.csv', index=False, float_format='{:.3f}'.format)
+
     print(f"Start net worth:       {result.net_worth_start:10,.0f}")
     print(f"Retirement net income: {result.retirement_income_net:10,.0f}")
     print(f"End net worth:         {result.net_worth_end:10,.0f}")
     print(f"Total tax:             {result.total_tax:10,.0f}")
 
-    #df.to_csv('data.csv', index=False, float_format='{:.3f}'.format)
+    if result.ls_sipp_1 + result.ls_sipp_2 + result.ls_isa + result.ls_gia:
+        print(f"Lump sump allocation:")
+        print(f"  SIPP1: {result.ls_sipp_1:8.0f}")
+        print(f"  SIPP2: {result.ls_sipp_2:8.0f}")
+        print(f"  ISA:   {result.ls_isa:8.0f}")
+        print(f"  GIA:   {result.ls_gia:8.0f}")

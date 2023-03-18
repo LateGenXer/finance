@@ -76,6 +76,7 @@ default_state = {
     "retirement_income_net": 0,
     "retirement_year": 2045,
     "lacs": False,
+    "lump_sum": 0,
 }
 for key, value in default_state.items():
     st.session_state.setdefault(key, value)
@@ -168,6 +169,12 @@ with st.form(key='my_form'):
             "This is not necessarily optimal, but is easy to model and it should be resonably safe.",
             "",
             "Still contributions should be checked with utmost care and advice taken before following such plan.",
+        ]))
+
+        st.number_input('Lump sum:', min_value=0, step=1, key='lump_sum', help='\n'.join([
+            'Determine how to best allocate a lump sum.',
+            '',
+            'Results are crude because Annual Allowance is not accurately known, being inferred from the marginal income tax rates set in the _Basic_ tab.'
         ]))
 
     submitted = st.form_submit_button(label='Update', type='primary')
@@ -270,6 +277,29 @@ if not st.session_state.lacs:
 # Charts
 if True:
     import altair as alt
+
+    if st.session_state.lump_sum:
+        st.subheader("Lump Sum")
+        st.warning("This might be a crude estimation because Annual Allowance limits are not precisely known/modelled.", icon="⚠️")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric(label="SIPP 1", value=f"£{result.ls_sipp_1:,.0f}")
+            st.metric(label="SIPP 2", value=f"£{result.ls_sipp_2:,.0f}")
+            st.metric(label="ISA",    value=f"£{result.ls_isa:,.0f}")
+            st.metric(label="GIA",    value=f"£{result.ls_gia:,.0f}")
+        with col2:
+            # https://altair-viz.github.io/gallery/pie_chart.html
+            source = pd.DataFrame({"Asset": ["SIPP1", "SIPP2", "ISA", "GIA"], "Value": [
+                result.ls_sipp_1, result.ls_sipp_2, result.ls_isa, result.ls_gia
+            ]})
+
+            chart = alt.Chart(source).mark_arc().encode(
+                theta=alt.Theta(field="Value", type="quantitative"),
+                color=alt.Color(field="Asset", type="nominal"),
+            )
+            st.altair_chart(chart, use_container_width=True)
+
+    st.subheader("Time series")
 
     cdf = pd.DataFrame()
 
