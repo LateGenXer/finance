@@ -13,7 +13,7 @@ import json
 import streamlit as st
 import pandas as pd
 
-from uk import aa
+from uk import aa, uiaa
 from model import model, column_headers, dataframe
 
 
@@ -62,7 +62,7 @@ default_state = {
     "sipp_1": 750000,
     "sipp_2": 000000,
     "sipp_contrib_1": 0,
-    "sipp_contrib_2": 3600,
+    "sipp_contrib_2": uiaa,
     "sipp_extra_contrib": False,
     "isa": 250000,
     "gia": 0,

@@ -20,12 +20,15 @@ state_pension_age = 68
 # https://www.gov.uk/government/publications/increasing-normal-minimum-pension-age/increasing-normal-minimum-pension-age
 nmpa = 57
 
-aa = 60000
+# https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates
+uiaa     =  3600     # Unearned income annual allowance
+aa       = 60000
 aa_taper = 10000
-mpaa = 10000
+mpaa     = 10000
 
 lta = 1073100
 tfca = 268275
+assert tfca * 4 == lta
 
 isa_allowance = 20000
 

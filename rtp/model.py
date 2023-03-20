@@ -237,7 +237,7 @@ def normalize(x, ndigits=None):
 
 def aa_lbound(marginal_income_tax):
     return {
-        0.00: 3600,
+        0.00: UK.uiaa,
         0.20: income_tax_threshold_20,
         0.40: min(income_tax_threshold_40, UK.aa),
         0.45: UK.aa_taper,
@@ -356,7 +356,7 @@ def model(
     # Limit post drawdown contributions to %30 over standard contributions to follow TFC recycling rule
     if sipp_extra_contrib:
         # Pension income is not classed as earned income, therefore one's limited to the 3600 limit
-        sipp_contrib_limit = 3600
+        sipp_contrib_limit = UK.uiaa
         sipp_contrib_limit_1 = min(sipp_contrib_1 * 1.30, sipp_contrib_limit, mpaa)
         sipp_contrib_limit_2 = min(sipp_contrib_2 * 1.30, sipp_contrib_limit, mpaa)
 
