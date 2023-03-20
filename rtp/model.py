@@ -480,8 +480,8 @@ def model(
         if not pt_yr:
             # UK
             if yr < retirement_year:
-                income_net_1 = marginal_income_tax_1 * income_gross_1
-                income_net_2 = marginal_income_tax_2 * income_gross_2
+                income_net_1 = income_gross_1 * (1.0 - marginal_income_tax_1)
+                income_net_2 = income_gross_2 * (1.0 - marginal_income_tax_2)
             else:
                 income_net_1 = uk_net_income_lp(prob, income_gross_1)
                 income_net_2 = uk_net_income_lp(prob, income_gross_2)
@@ -627,8 +627,8 @@ def model(
         if not pt_yr:
             # UK
             if yr < retirement_year:
-                income_net_1 = marginal_income_tax_1 * income_gross_1
-                income_net_2 = marginal_income_tax_2 * income_gross_2
+                income_net_1 = income_gross_1 * (1.0 - marginal_income_tax_1)
+                income_net_2 = income_gross_2 * (1.0 - marginal_income_tax_2)
             else:
                 income_net_1 = net_income(income_gross_1)
                 income_net_2 = net_income(income_gross_2)
