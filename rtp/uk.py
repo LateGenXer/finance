@@ -33,7 +33,7 @@ assert tfca * 4 == lta
 isa_allowance = 20000
 
 
-def net_income(gross_income):
+def income_tax(gross_income):
     # https://www.gov.uk/income-tax-rates/income-over-100000
     personal_allowance = max(income_tax_threshold_20 - max(gross_income - pa_limit, 0)*0.5, 0)
     taxable_income = max(gross_income - personal_allowance, 0)
@@ -56,8 +56,7 @@ def net_income(gross_income):
         print(40, taxable_income_40 * 0.40)
         print(45, taxable_income_45 * 0.45)
 
-    net_income = gross_income - tax
-    return net_income
+    return tax
 
 
 def gross_income(net_income_):
@@ -94,7 +93,7 @@ def gross_income(net_income_):
 
 # Test
 def test_income_tax(gross_income_):
-    nt_income = net_income(gross_income_)
+    nt_income = gross_income_ - income_tax(gross_income_)
     gr_income = gross_income(nt_income)
     assert math.isclose(gross_income_, gr_income)
 

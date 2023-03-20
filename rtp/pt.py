@@ -18,7 +18,7 @@ cgt_rate = 0.28
 
 gbpeur = 1.13895
 
-def net_income(gross_income, factor=1.0):
+def income_tax(gross_income, factor=1.0):
     tax = 0
     lbound = 0
     for ubound, rate in income_tax_bands:
@@ -29,4 +29,4 @@ def net_income(gross_income, factor=1.0):
         tax += delta * rate
         lbound = ubound
     assert tax <= gross_income
-    return gross_income - tax
+    return tax
