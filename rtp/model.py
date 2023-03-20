@@ -271,6 +271,8 @@ def model(
         state_pension_years_2,
         lacs,
         lump_sum,
+        aa_1,
+        aa_2,
     ):
 
     end_age = 100
@@ -323,10 +325,8 @@ def model(
 
     # XXX: Lump sum analysis
     if lump_sum:
-        aa_1 = max(aa_lbound(marginal_income_tax_1), sipp_contrib_1)
-        aa_2 = max(aa_lbound(marginal_income_tax_2), sipp_contrib_2) if joint else 0
         ls_sipp_1 = lp.LpVariable("ls_sipp_1", 0)
-        ls_sipp_2 = lp.LpVariable("ls_sipp_2", 0)
+        ls_sipp_2 = lp.LpVariable("ls_sipp_2", 0, None if joint else 0)
         ls_isa    = lp.LpVariable("ls_isa", 0, N*isa_allowance)
         ls_gia    = lp.LpVariable("ls_gia", 0)
         prob += ls_sipp_1 + ls_sipp_2 + ls_isa + ls_gia == lump_sum

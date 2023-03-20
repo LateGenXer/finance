@@ -77,6 +77,8 @@ default_state = {
     "retirement_year": 2045,
     "lacs": False,
     "lump_sum": 0,
+    "aa_1": aa,
+    "aa_2": uiaa,
 }
 for key, value in default_state.items():
     st.session_state.setdefault(key, value)
@@ -182,20 +184,26 @@ with st.form(key='my_form'):
     with tab3:
         st.warning("These are experimental features which might lead to misleading results.  Carefully read the help before changing any of these parameters!", icon="⚠️")
 
-        st.checkbox("Allow extra SIPP contributions", key="sipp_extra_contrib", help='\n'.join([
-            "Allow additional SIPP contributions funded by unearned income, on top of regular contributions.",
-            "",
-            "Care is taken to follow the [pension tax-free cash recycling rules](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm133800) by limiting total contributions to 130% of the regular contributions.",
-            "This is not necessarily optimal, but is easy to model and it should be resonably safe.",
-            "",
-            "Still contributions should be checked with utmost care and advice taken before following such plan.",
-        ]))
+        col1, col2 = st.columns(2)
 
-        st.number_input('Lump sum:', min_value=0, step=1, key='lump_sum', help='\n'.join([
-            'Determine how to best allocate a lump sum.',
-            '',
-            'Results are crude because Annual Allowance is not accurately known, being inferred from the marginal income tax rates set in the _Basic_ tab.'
-        ]))
+        with col1:
+            st.checkbox("Allow extra SIPP contributions", key="sipp_extra_contrib", help='\n'.join([
+                "Allow additional SIPP contributions funded by unearned income, on top of regular contributions.",
+                "",
+                "Care is taken to follow the [pension tax-free cash recycling rules](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm133800) by limiting total contributions to 130% of the regular contributions.",
+                "This is not necessarily optimal, but is easy to model and it should be resonably safe.",
+                "",
+                "Still contributions should be checked with utmost care and advice taken before following such plan.",
+            ]))
+
+        with col2:
+            st.number_input('Lump sum:', min_value=0, step=1, key='lump_sum', help='\n'.join([
+                'Determine how to best allocate a lump sum.',
+                '',
+                'Results are crude because Annual Allowance is not accurately known, being inferred from the marginal income tax rates set in the _Basic_ tab.'
+            ]))
+            st.number_input('Your Annual Allowance:', min_value=0, max_value=aa, step=100, key='aa_1')
+            st.number_input('Partner\'s Annual Allowance:', min_value=0, max_value=aa, step=100, key='aa_2', help="Until retirement", disabled=single)
 
     submitted = st.form_submit_button(label='Update', type='primary')
 
