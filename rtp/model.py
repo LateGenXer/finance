@@ -145,8 +145,6 @@ def uk_cgt_lp(prob, cg, cgt_rate):
     uid += 1
     prob += cg_00 + cg_20 == cg
     tax = cg_20 * cgt_rate
-    # XXX: Add a residual amount to stabilize results.
-    tax += (2.0 ** -14) * cg_00
     return tax
 
 
@@ -475,6 +473,14 @@ def model(
         cg = gia * gia_growth_rate
         gia += cg
         gia *= 1.0 / (1.0 + inflation_rate)
+
+        # Introduce a tiny bias towards SIPPs uncrystalized funds and against
+        # GIAs to stabilize results, and prevent redundant money flows that
+        # arise when the optimal solution is not unique
+        eps = 2**-14
+        sipp_uf_1 *= 1.0 + eps
+        sipp_uf_2 *= 1.0 + eps
+        gia *= 1.0 - eps
 
         # State pension
         income_state_1 = state_pension_1 if age_1 >= state_pension_age else 0

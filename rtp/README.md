@@ -30,6 +30,7 @@ I am not a financial or tax adviser.
 
 ## Recent changes
 
+* Stablize results by avoiding multiple optimal solutions.
 * Allow to download/upload parameters.
 * Allow to analyse how to best allocate a lump sump (experimental.)
 * Allow contributing into pension after retirement (experimental.)
@@ -64,11 +65,6 @@ This tool makes the following simplifying assumptions:
   IHT.
 
 ## Known issues
-
-* When there are multiple optimal solutions the solution found is chosen
-  somewhat arbitrarily, almost randomly.  For example, when two pots are equal
-  from a tax perspective, or when withdrawing money sooner or later makes no
-  net difference.
 
 * Sometimes the balances go slightly negative due to rounding errors, causing the stacked area charts to get weird.
 
