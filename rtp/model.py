@@ -144,7 +144,10 @@ def uk_cgt_lp(prob, cg, cgt_rate):
     cg_20 = lp.LpVariable(f'cgt_{uid}_20', 0)
     uid += 1
     prob += cg_00 + cg_20 == cg
-    return cg_20 * cgt_rate
+    tax = cg_20 * cgt_rate
+    # XXX: Add a residual amount to stabilize results.
+    tax += (2.0 ** -14) * cg_00
+    return tax
 
 
 def pt_income_tax_lp(prob, gross_income, factor=1.0):
