@@ -242,6 +242,11 @@ def aa_lbound(marginal_income_tax):
     }[marginal_income_tax]
 
 
+# https://www.investopedia.com/terms/i/inflation_adjusted_return.asp
+def inflation_ajusted_return(return_rate, inflation_rate):
+    return (1.0 + return_rate) / (1.0 + inflation_rate) - 1.0
+
+
 def model(
         joint,
         dob_1,
@@ -302,9 +307,9 @@ def model(
 
     lta = UK.lta
 
-    sipp_growth_rate_real_1 = sipp_growth_rate_1 - inflation_rate
-    sipp_growth_rate_real_2 = sipp_growth_rate_2 - inflation_rate
-    isa_growth_rate_real    = isa_growth_rate    - inflation_rate
+    sipp_growth_rate_real_1 = inflation_ajusted_return(sipp_growth_rate_1, inflation_rate)
+    sipp_growth_rate_real_2 = inflation_ajusted_return(sipp_growth_rate_2, inflation_rate)
+    isa_growth_rate_real    = inflation_ajusted_return(isa_growth_rate,    inflation_rate)
 
     cgt_rate = 0.20
     #cgt_rate = 0.10 #XXX
@@ -457,8 +462,8 @@ def model(
         sipp_uf_1 *= 1.0 + sipp_growth_rate_real_1
         sipp_uf_2 *= 1.0 + sipp_growth_rate_real_2
 
-        sipp_df_cost_1 *= 1 - inflation_rate
-        sipp_df_cost_2 *= 1 - inflation_rate
+        sipp_df_cost_1 *= 1.0 / (1.0 + inflation_rate)
+        sipp_df_cost_2 *= 1.0 / (1.0 + inflation_rate)
 
         sipp_df_1 *= 1.0 + sipp_growth_rate_real_1
         sipp_df_2 *= 1.0 + sipp_growth_rate_real_2
@@ -466,7 +471,7 @@ def model(
         isa *= 1.0 + isa_growth_rate_real
         cg = gia * gia_growth_rate
         gia += cg
-        gia *= 1.0 - inflation_rate
+        gia *= 1.0 / (1.0 + inflation_rate)
 
         # State pension
         income_state_1 = state_pension_1 if age_1 >= state_pension_age else 0
