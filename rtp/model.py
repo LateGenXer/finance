@@ -198,7 +198,6 @@ def bce_5a_5b_lp(prob, lta, sipp_uf, sipp_df, sipp_df_cost):
 # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm062701
 def bce_1_6_lp(prob, lta, sipp_uf, sipp_df, sipp_df_cost, age):
     lac_bce1 = 0
-    assert age >= nmpa
     lta, crystalized_lta, crystalized_lae = bce_lp(prob, lta)
     crystalized = crystalized_lta + crystalized_lae
     sipp_uf -= crystalized
@@ -214,7 +213,6 @@ def bce_1_6_lp(prob, lta, sipp_uf, sipp_df, sipp_df_cost, age):
 
 
 def tfc_lp(prob, lta, sipp_uf, sipp_df, age):
-    assert age >= nmpa
     global uid
     crystalized_tfc = lp.LpVariable(f'crystalized_tfc_{uid}', 0)
     crystalized_inc = lp.LpVariable(f'crystalized_inc_{uid}', 0)
@@ -364,6 +362,9 @@ def model(
         sipp_contrib_limit_1 = min(sipp_contrib_1 * 1.30, sipp_contrib_limit, mpaa)
         sipp_contrib_limit_2 = min(sipp_contrib_2 * 1.30, sipp_contrib_limit, mpaa)
 
+    nmpa_1 = nmpa(dob_1)
+    nmpa_2 = nmpa(dob_2)
+
     for yr in range(present_year, end_year):
         retirement = yr >= retirement_year
         pt_yr = retirement and pt
@@ -411,13 +412,13 @@ def model(
                 lac_2 = 0
 
             # Flexible-Access Drawdown
-            if age_1 >= nmpa:
+            if age_1 >= nmpa_1:
                 lta_1, sipp_uf_1, tfc_1, sipp_df_1, sipp_df_cost_1, lac_bce1_1 = \
                     bce_1_6_lp(prob, lta_1, sipp_uf_1, sipp_df_1, sipp_df_cost_1, age_1)
                 lac_1 += lac_bce1_1
             else:
                 tfc_1 = 0
-            if age_2 >= nmpa:
+            if age_2 >= nmpa_2:
                 lta_2, sipp_uf_2, tfc_2, sipp_df_2, sipp_df_cost_2, lac_bce1_2 = \
                     bce_1_6_lp(prob, lta_2, sipp_uf_2, sipp_df_2, sipp_df_cost_2, age_2)
                 lac_2 += lac_bce1_2
@@ -425,12 +426,12 @@ def model(
                 tfc_2 = 0
         else:
             # Flexible-Access Drawdown
-            if age_1 >= nmpa:
+            if age_1 >= nmpa_1:
                 lta_1, sipp_uf_1, tfc_1, sipp_df_1 = \
                     tfc_lp(prob, lta_1, sipp_uf_1, sipp_df_1, age_1)
             else:
                 tfc_1 = 0
-            if age_2 >= nmpa:
+            if age_2 >= nmpa_2:
                 lta_2, sipp_uf_2, tfc_2, sipp_df_2 = \
                     tfc_lp(prob, lta_2, sipp_uf_2, sipp_df_2, age_2)
             else:
@@ -439,8 +440,8 @@ def model(
             lac_2 = 0
 
         # Don't drawdown pension pre-retirement if there's a chance of violating MPAA
-        drawdown_1 = lp.LpVariable(f'dd_1@{yr}', 0) if age_1 >= nmpa and (retirement or sipp_contrib_1 <= mpaa) else 0
-        drawdown_2 = lp.LpVariable(f'dd_2@{yr}', 0) if age_2 >= nmpa and (retirement or sipp_contrib_2 <= mpaa) else 0
+        drawdown_1 = lp.LpVariable(f'dd_1@{yr}', 0) if age_1 >= nmpa_1 and (retirement or sipp_contrib_1 <= mpaa) else 0
+        drawdown_2 = lp.LpVariable(f'dd_2@{yr}', 0) if age_2 >= nmpa_2 and (retirement or sipp_contrib_2 <= mpaa) else 0
 
         if pt_yr:
             isa_allowance_yr = 0
@@ -483,8 +484,8 @@ def model(
         gia *= 1.0 - eps
 
         # State pension
-        income_state_1 = state_pension_1 if age_1 >= state_pension_age else 0
-        income_state_2 = state_pension_2 if age_2 >= state_pension_age else 0
+        income_state_1 = state_pension_1 if age_1 >= state_pension_age(dob_1) else 0
+        income_state_2 = state_pension_2 if age_2 >= state_pension_age(dob_2) else 0
 
         # Income and Capital Gain Taxes modelling
         income_gross_1 = income_state_1 + drawdown_1

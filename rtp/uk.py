@@ -18,7 +18,25 @@ state_pension_full = 185.15 * weeks_per_year
 state_pension_age = 68
 
 # https://www.gov.uk/government/publications/increasing-normal-minimum-pension-age/increasing-normal-minimum-pension-age
-nmpa = 57
+# https://adviser.royallondon.com/technical-central/pensions/benefit-options/increase-in-normal-minimum-pension-age-in-2028/
+def nmpa(dob):
+    if dob + 55 <= 2028:
+        return 55
+    elif dob + 57 <= 2044:
+        return 57
+    else:
+        # XXX: Not set in stone
+        return 58
+
+# https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/310231/spa-timetable.pdf
+# XXX rough approximation
+def state_pension_age(dob):
+    if dob + 66 <= 2028:
+        return 66
+    elif dob + 67 < 2044:
+        return 67
+    else:
+        return 68
 
 # https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates
 uiaa     =  3600     # Unearned income annual allowance
