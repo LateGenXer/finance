@@ -84,7 +84,7 @@ def toAffine(x):
     if isinstance(x, LpAffineExpression):
         return x
     if isinstance(x, LpVariable):
-        return LpAffineExpression({x: 1.0}, 0.0)
+        return LpAffineExpression({x: 1}, 0)
     if isinstance(x, numbers.Number):
         return LpAffineExpression({}, x)
     raise ValueError(x)
@@ -113,7 +113,7 @@ class LpAffineExpression:
         other = toAffine(other)
         AX = self.AX.copy()
         for x, a in other.AX.items():
-            AX[x] = op(AX.get(x, 0.0), a)
+            AX[x] = op(AX.get(x, 0), a)
         b = op(self.b, other.b)
         return LpAffineExpression(AX, b)
 
@@ -130,13 +130,13 @@ class LpAffineExpression:
         return other + -self
 
     def __neg__(self):
-        return toAffine(0.0) - self
+        return toAffine(0) - self
 
     def __mul__(self, other):
         assert isinstance(other, numbers.Number)
-        if other == 0.0:
-            return 0.0
-        elif other == 1.0:
+        if other == 0:
+            return 0
+        elif other == 1:
             return self
         else:
             return self._unary(lambda a: a * other)
