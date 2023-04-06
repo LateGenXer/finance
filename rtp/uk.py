@@ -1,3 +1,6 @@
+"""UK tax constants and functions."""
+
+
 import math
 
 
@@ -107,20 +110,3 @@ def gross_income(net_income_):
     gross_income += income_tax_band_45 / 0.55
 
     return gross_income
-
-
-# Test
-def test_income_tax(gross_income_):
-    nt_income = gross_income_ - income_tax(gross_income_)
-    gr_income = gross_income(nt_income)
-    assert math.isclose(gross_income_, gr_income)
-
-test_income_tax(income_tax_threshold_20*0.5)
-test_income_tax(income_tax_threshold_20)
-test_income_tax(income_tax_threshold_20*0.5 + income_tax_threshold_40*0.5)
-test_income_tax(income_tax_threshold_40)
-test_income_tax(100000)
-test_income_tax(100000 + income_tax_threshold_20)
-test_income_tax(100000 + 2*income_tax_threshold_20)
-test_income_tax(income_tax_threshold_45)
-test_income_tax(income_tax_threshold_45*2)

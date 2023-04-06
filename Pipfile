@@ -8,6 +8,7 @@ streamlit = "*"
 pulp = "*"
 matplotlib = "*"
 scipy = "*"
+pytest = "*"
 
 [dev-packages]
 

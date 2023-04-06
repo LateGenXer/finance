@@ -355,18 +355,3 @@ def COIN_CMD(msg=0):
 
 def listSolvers(onlyAvailable):
     return ['GLPK_CMD', 'PULP_CBC_CMD', 'COIN_CMD']
-
-
-if __name__ == '__main__':
-    #from pulp import *
-
-    x = LpVariable("x", 0, 3)
-    y = LpVariable("y", 0, None)
-    prob = LpProblem("myProblem", LpMinimize)
-    #prob += x + y <= 2
-    prob += 1000 - x >= 0
-    #prob += x + y == 2
-    prob += -x # + y
-    #prob.setObjective(-4*x + y)
-    status = prob.solve()
-    print(f'x={value(x)} y={value(y)}')
