@@ -344,12 +344,17 @@ def value(x):
         return x.value
 
 
+def GLPK_CMD(msg=0):
+    return msg
+
+def PULP_CBC_CMD(msg=0):
+    return msg
+
 def COIN_CMD(msg=0):
     return msg
 
-
-def GLPK_CMD(msg=0):
-    return msg
+def listSolvers(onlyAvailable):
+    return ['GLPK_CMD', 'PULP_CBC_CMD', 'COIN_CMD']
 
 
 if __name__ == '__main__':

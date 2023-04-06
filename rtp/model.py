@@ -13,8 +13,10 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any
 
-#import pulp as lp
-import lp
+if int(os.environ.get('PULP', '0')) != 0:
+    import pulp as lp
+else:
+    import lp
 
 import uk as UK
 import pt as PT
@@ -569,8 +571,13 @@ def model(
 
     #prob.writeLP('retirement.lp')
 
-    solver = lp.COIN_CMD(msg=0)
-    #solver = lp.GLPK_CMD()
+    solvers = lp.listSolvers(onlyAvailable=True)
+    if 'PULP_CBC_CMD' in solvers:
+        solver = lp.PULP_CBC_CMD(msg=0)
+    else:
+        assert 'COIN_CMD' in solvers
+        solver = lp.COIN_CMD(msg=0)
+
     status = prob.solve(solver)
     if status != lp.LpStatusOptimal:
         statusMsg = {
