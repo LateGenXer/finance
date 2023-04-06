@@ -6,8 +6,9 @@
 
 
 """
-Wrapper around scipy.optimize.linprog with similar interface to PuLP.
+Wrapper around scipy.optimize.linprog with interface compatible to PuLP.
 
+PuLP has an easy to use interface, but in practice results are not reliable nor results are fast.
 """
 
 
@@ -21,12 +22,18 @@ from scipy.sparse import csr_array
 from scipy.optimize import linprog
 
 
+LpContinuous = 'Continuous'
+LpInteger = 'Integer'
+LpBinary = 'Binary'
+
+
 class LpVariable:
 
-    def __init__(self, name, lbound=None, ubound=None):
+    def __init__(self, name, lowBound=None, upBound=None, cat=LpContinuous):
         self.name = name
-        self.lbound = lbound
-        self.ubound = ubound
+        self.lbound = lowBound
+        self.ubound = upBound
+        self.cat = cat
         self.index = None
         self.value = None
 
@@ -177,10 +184,10 @@ LpStatusOptimal = 1
 
 class LpProblem:
 
-    def __init__(self, name=None, sense=LpMinimize):
+    def __init__(self, name="NoName", sense=LpMinimize):
         self.constraints = []
         self.objective = None
-        assert sense == LpMinimize
+        self.sense = sense
         self.vd = {}
 
     def addConstraint(self, constraint):
@@ -272,10 +279,12 @@ class LpProblem:
         b_eq = np.array(b_eq, dtype=dtype)
 
         bounds = [None] * n
+        integrality = np.zeros(shape=(n,), dtype=np.uint8)
         for x, i in variables.items():
             if msg:
                 print(f'{x.lbound} <= {x.name} <= {x.ubound}')
             bounds[i] = (x.lbound, x.ubound)
+            integrality[i] = 0 if x.cat == LpContinuous else 1
 
         if msg:
             print(f'argmin({self.objective})')
@@ -283,15 +292,14 @@ class LpProblem:
         for x, a in self.objective.AX.items():
             i = variables[x]
             c[i] = a
+        if self.sense == LpMaximize:
+            c = -c
 
-        method = 'highs-ipm'
+        if np.amax(integrality) == 0:
+            integrality = None
+
+        method = 'highs'
         options = {}
-        method = 'highs-ds'
-        options = {}
-        #method = 'highs'
-        #options = {}
-        #method='interior-point'
-        #options = None
 
         if msg:
             print(variables)
@@ -301,10 +309,11 @@ class LpProblem:
             print(f'b_eq: {b_eq}')
             print(f'c: {c}')
             print(f'bounds: {bounds}')
+            print(f'integrality: {integrality}')
 
         st = time.perf_counter()
         res = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds,
-                      method=method, options=options)
+                      method=method, options=options, integrality=integrality)
         et = time.perf_counter()
         if msg:
             print(f'{et - st:.3f} seconds')
@@ -312,6 +321,7 @@ class LpProblem:
         if res.status == 0:
             for x, i in variables.items():
                 x.value = res.x[i]
+                assert x.name not in self.vd
                 self.vd[x.name] = x
         else:
             print(res.message)
