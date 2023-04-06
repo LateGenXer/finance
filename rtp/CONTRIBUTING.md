@@ -1,11 +1,11 @@
 # Branches
 
-https://lategenxer-rtp.streamlit.app/ servers the tool from the `stable`
+https://lategenxer-rtp.streamlit.app/ serves the tool from the `stable`
 branch.
 
-https://lategenxer-rtp-devel.streamlit.app/ servers the tool from the `main`
+https://lategenxer-rtp-devel.streamlit.app/ serves the tool from the `main`
 branch.  It often gets broken because Streamlit doesn't always handle code
-chances gracefully.
+updates gracefully.
 
 # Get started
 
@@ -13,7 +13,7 @@ Follow the [Streamlit installation
 guide](https://docs.streamlit.io/library/get-started/installation), using
 `pipenv` as environment management tool.
 
-Run as
+Serve the calculator locally by running
 
 ```shell
 pipenv run streamlit run rtp/app.py
@@ -41,5 +41,5 @@ state = {
 
 ```
 
-See `default_state` in `rtp/app.py` for the definitive reference of what state
-parameters there are.
+See the `default_state` dictionary in `rtp/app.py` for the definitive reference of what state
+parameters are there.
