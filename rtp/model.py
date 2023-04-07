@@ -142,7 +142,7 @@ def uk_income_tax_lp(prob, gross_income):
 
 def uk_cgt_lp(prob, cg, cgt_rate):
     global uid
-    cg_00 = lp.LpVariable(f'cgt_{uid}_00', 0, cgt_allowance*2)
+    cg_00 = lp.LpVariable(f'cgt_{uid}_00', 0, cgt_allowance)
     cg_20 = lp.LpVariable(f'cgt_{uid}_20', 0)
     uid += 1
     prob += cg_00 + cg_20 == cg
@@ -497,10 +497,40 @@ def model(
             if yr < retirement_year:
                 tax_1 = income_gross_1 * marginal_income_tax_1
                 tax_2 = income_gross_2 * marginal_income_tax_2
+                cgt_rate_1 = 0.20 if marginal_income_tax_1 > 0.20 else 0.10
+                cgt_rate_2 = 0.20 if marginal_income_tax_2 > 0.20 else 0.10
+                cg_1 = lp.LpVariable(f'cg_1@{yr}', 0)
+                cg_2 = lp.LpVariable(f'cg_2@{yr}', 0)
+                prob += cg_1 + cg_2 == cg
+                cgt_1 = uk_cgt_lp(prob, cg_1, cgt_rate_1)
+                cgt_2 = uk_cgt_lp(prob, cg_2, cgt_rate_2)
             else:
                 tax_1 = uk_income_tax_lp(prob, income_gross_1)
                 tax_2 = uk_income_tax_lp(prob, income_gross_2)
-            cgt = uk_cgt_lp(prob, cg, cgt_rate)
+                basic_1 = lp.LpVariable(f'basic_1@{yr}', 0, 1, cat='Binary')
+                basic_2 = lp.LpVariable(f'basic_2@{yr}', 0, 1, cat='Binary')
+                cg_lo_1 = lp.LpVariable(f'cg_lo_1@{yr}', 0)
+                cg_lo_2 = lp.LpVariable(f'cg_lo_2@{yr}', 0)
+                cg_hi_1 = lp.LpVariable(f'cg_hi_1@{yr}', 0)
+                cg_hi_2 = lp.LpVariable(f'cg_hi_2@{yr}', 0)
+                prob += cg_lo_1 + cg_hi_1 + cg_lo_2 + cg_hi_2 == cg
+
+                large = 2**30
+
+                prob += income_gross_1 + cg_lo_1 <= income_tax_threshold_40 + (1 - basic_1)*large
+                prob += income_gross_2 + cg_lo_2 <= income_tax_threshold_40 + (1 - basic_2)*large
+
+                prob += cg_hi_1 <= basic_1*large
+                prob += cg_hi_2 <= basic_2*large
+
+                cgt_lo_1 = uk_cgt_lp(prob, cg_lo_1, 0.10)
+                cgt_lo_2 = uk_cgt_lp(prob, cg_lo_2, 0.10)
+                cgt_hi_1 = uk_cgt_lp(prob, cg_hi_1, 0.20)
+                cgt_hi_2 = uk_cgt_lp(prob, cg_hi_2, 0.20)
+                cgt_1 = cgt_lo_1 + cgt_hi_1
+                cgt_2 = cgt_lo_2 + cgt_hi_2
+
+            cgt = cgt_1 + cgt_2
         else:
             # PT
             income_gross = (income_gross_1 + tfc_1 +
