@@ -132,12 +132,52 @@ uk_income_tax_bands = [
 ]
 
 
+milp = False
+
+
+def uk_income_tax_milp(prob, gross_income):
+    global uid
+    income_tax_band_00 = lp.LpVariable(f'net_{uid}_00', 0, income_tax_threshold_20)
+    income_tax_band_20 = lp.LpVariable(f'net_{uid}_20', 0, income_tax_threshold_40 - income_tax_threshold_20)
+    income_tax_band_40 = lp.LpVariable(f'net_{uid}_40', 0, pa_limit - income_tax_threshold_40)
+    income_tax_band_60 = lp.LpVariable(f'net_{uid}_60', 0, 2*income_tax_threshold_20)
+    income_tax_band_45 = lp.LpVariable(f'net_{uid}_45', 0)
+
+    highest = lp.LpVariable(f'highest_{uid}', 0, 1, cat='Binary')
+
+    uid += 1
+
+    prob += income_tax_band_00 \
+          + income_tax_band_20 \
+          + income_tax_band_40 \
+          + income_tax_band_60 \
+          + income_tax_band_45 == gross_income
+
+    if False:
+        # This fails with CBC
+        prob += income_tax_band_00 >= highest * (income_tax_threshold_20)
+        prob += income_tax_band_20 >= highest * (income_tax_threshold_40 - income_tax_threshold_20)
+        prob += income_tax_band_40 >= highest * (pa_limit - income_tax_threshold_40)
+        prob += income_tax_band_60 >= highest * (2*income_tax_threshold_20)
+    else:
+        prob += income_tax_band_00 + income_tax_band_20 + income_tax_band_40 + income_tax_band_60 \
+             >= (pa_limit + 2*income_tax_threshold_20) * highest
+
+    prob += income_tax_band_45 <= highest * 2**30
+
+    tax = income_tax_band_20 * 0.20 \
+        + income_tax_band_40 * 0.40 \
+        + income_tax_band_60 * 0.60 \
+        + income_tax_band_45 * 0.45
+
+    return tax
+
+
 def uk_income_tax_lp(prob, gross_income):
-    # Although the following condition is necessary for accurate tax
-    # modeling, but it would effectively leads to maximize the marginal 60%
-    # income tax band.
-    #prob += gross_income <= 100000 + 2*income_tax_threshold_20
-    return income_tax_lp(prob, gross_income, uk_income_tax_bands)
+    if milp:
+        return uk_income_tax_milp(prob, gross_income)
+    else:
+        return income_tax_lp(prob, gross_income, uk_income_tax_bands)
 
 
 def uk_cgt_lp(prob, cg, cgt_rate):
