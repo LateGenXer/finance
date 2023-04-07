@@ -8,16 +8,15 @@ import math
 income_tax_threshold_20 =  12570
 income_tax_threshold_40 =  50270
 pa_limit                = 100000
-if False:
-    income_tax_threshold_45 = 150000           # 2022/2023
-else:
-    income_tax_threshold_45 = pa_limit + 2*income_tax_threshold_20 # 2023/2024
-    assert income_tax_threshold_45 == 125140
+income_tax_threshold_45 = pa_limit + 2*income_tax_threshold_20 # 2023/2024
+assert income_tax_threshold_45 == 125140
 
 cgt_allowance = 3000
 
 weeks_per_year = 365.25/7
-state_pension_full = 185.15 * weeks_per_year
+
+# https://www.gov.uk/government/publications/benefit-and-pension-rates-2023-to-2024/benefit-and-pension-rates-2023-to-2024#state-pension
+state_pension_full = 203.85 * weeks_per_year
 state_pension_age = 68
 
 # https://www.gov.uk/government/publications/increasing-normal-minimum-pension-age/increasing-normal-minimum-pension-age
