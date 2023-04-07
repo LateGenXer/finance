@@ -44,25 +44,25 @@ class LpVariable:
         return f'<{self.name}>'
 
     def __add__(self, other):
-        return toAffine(self) + other
+        return LpAffineExpression(self) + other
 
     def __radd__(self, other):
-        return toAffine(self) + other
+        return LpAffineExpression(self) + other
 
     def __sub__(self, other):
-        return toAffine(self) - other
+        return LpAffineExpression(self) - other
 
     def __rsub__(self, other):
-        return other - toAffine(self)
+        return other - LpAffineExpression(self)
 
     def __neg__(self):
-        return -toAffine(self)
+        return -LpAffineExpression(self)
 
     def __mul__(self, other):
-        return toAffine(self) * other
+        return LpAffineExpression(self) * other
 
     def __rmul__(self, other):
-        return other * toAffine(self)
+        return other * LpAffineExpression(self)
 
     def __hash__(self):
         return id(self)
@@ -71,33 +71,45 @@ class LpVariable:
         if isinstance(other, LpVariable):
             return self is other
         else:
-            return toAffine(self) == other
+            return LpAffineExpression(self) == other
 
     def __le__(self, other):
-        return toAffine(self) <= other
+        return LpAffineExpression(self) <= other
 
     def __ge__(self, other):
-        return toAffine(self) >= other
-
-
-def toAffine(x):
-    if isinstance(x, LpAffineExpression):
-        return x
-    if isinstance(x, LpVariable):
-        return LpAffineExpression({x: 1}, 0)
-    if isinstance(x, numbers.Number):
-        return LpAffineExpression({}, x)
-    raise ValueError(x)
+        return LpAffineExpression(self) >= other
 
 
 class LpAffineExpression:
 
-    def __init__(self, AX, b):
+    def __init__(self, e=None, constant=0):
+        if e is None:
+            assert constant == 0
+            AX = {}
+            b = constant
+        elif isinstance(e, LpAffineExpression):
+            assert constant == 0
+            AX = e.AX.copy()
+            b = e.b
+        elif isinstance(e, LpVariable):
+            assert constant == 0
+            AX = {e: 1}
+            b = constant
+        elif isinstance(e, dict):
+            for x, a in e.items():
+                assert isinstance(x, LpVariable)
+                assert isinstance(a, numbers.Number)
+            assert isinstance(constant, numbers.Number)
+            AX = e
+            b = constant
+        elif isinstance(e, numbers.Number):
+            assert constant == 0
+            AX = {}
+            b = e
+
         assert isinstance(AX, dict)
-        for x, a in AX.items():
-            assert isinstance(x, LpVariable)
-            assert isinstance(a, numbers.Number)
         assert isinstance(b, numbers.Number)
+
         self.AX = AX
         self.b = b
 
@@ -110,7 +122,7 @@ class LpAffineExpression:
         return LpAffineExpression(AX, b)
 
     def _binary(self, other, op):
-        other = toAffine(other)
+        other = LpAffineExpression(other)
         AX = self.AX.copy()
         for x, a in other.AX.items():
             AX[x] = op(AX.get(x, 0), a)
@@ -130,7 +142,7 @@ class LpAffineExpression:
         return other + -self
 
     def __neg__(self):
-        return toAffine(0) - self
+        return LpAffineExpression(0) - self
 
     def __mul__(self, other):
         assert isinstance(other, numbers.Number)
@@ -175,11 +187,11 @@ class LpConstraint:
 
 LpMinimize, LpMaximize = range(2)
 
-LpStatusUndefined = -3
-LpStatusUnbounded = -2
+LpStatusUndefined  = -3
+LpStatusUnbounded  = -2
 LpStatusInfeasible = -1
-LpStatusNotSolved = 0
-LpStatusOptimal = 1
+LpStatusNotSolved  =  0
+LpStatusOptimal    =  1
 
 
 class LpProblem:
@@ -196,7 +208,7 @@ class LpProblem:
 
     def setObjective(self, objective):
         if isinstance(objective, LpVariable):
-            objective = toAffine(objective)
+            objective = LpAffineExpression(objective)
         else:
             assert isinstance(objective, LpAffineExpression)
         assert self.objective is None
