@@ -534,30 +534,32 @@ def model(
 
         prob += surplus == 0
 
+        # Take LpAffineExpression copies into state as subsequent += and -=
+        # operations modify them in-place.
         states[yr] = LPState(
-            sipp_uf_1=sipp_uf_1,
-            sipp_uf_2=sipp_uf_2,
-            sipp_df_1=sipp_df_1,
-            sipp_df_2=sipp_df_2,
-            contrib_1=contrib_1,
-            contrib_2=contrib_2,
-            tfc_1=tfc_1,
-            tfc_2=tfc_2,
-            lta_1=lta_1,
-            lta_2=lta_2,
-            lac_1=lac_1,
-            lac_2=lac_2,
-            isa=isa,
-            gia=gia,
-            cg=cg,
-            drawdown_1=drawdown_1,
-            drawdown_2=drawdown_2,
-            drawdown_isa=drawdown_isa,
-            drawdown_gia=drawdown_gia,
+            sipp_uf_1=lp.LpAffineExpression(sipp_uf_1),
+            sipp_uf_2=lp.LpAffineExpression(sipp_uf_2),
+            sipp_df_1=lp.LpAffineExpression(sipp_df_1),
+            sipp_df_2=lp.LpAffineExpression(sipp_df_2),
+            contrib_1=lp.LpAffineExpression(contrib_1),
+            contrib_2=lp.LpAffineExpression(contrib_2),
+            tfc_1=lp.LpAffineExpression(tfc_1),
+            tfc_2=lp.LpAffineExpression(tfc_2),
+            lta_1=lp.LpAffineExpression(lta_1),
+            lta_2=lp.LpAffineExpression(lta_2),
+            lac_1=lp.LpAffineExpression(lac_1),
+            lac_2=lp.LpAffineExpression(lac_2),
+            isa=lp.LpAffineExpression(isa),
+            gia=lp.LpAffineExpression(gia),
+            cg=lp.LpAffineExpression(cg),
+            drawdown_1=lp.LpAffineExpression(drawdown_1),
+            drawdown_2=lp.LpAffineExpression(drawdown_2),
+            drawdown_isa=lp.LpAffineExpression(drawdown_isa),
+            drawdown_gia=lp.LpAffineExpression(drawdown_gia),
             income_state_1=income_state_1,
             income_state_2=income_state_2,
-            income_gross_1=income_gross_1,
-            income_gross_2=income_gross_2,
+            income_gross_1=lp.LpAffineExpression(income_gross_1),
+            income_gross_2=lp.LpAffineExpression(income_gross_2),
         )
 
     if max_income:
