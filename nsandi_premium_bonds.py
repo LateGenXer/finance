@@ -3,6 +3,12 @@
 # SPDX-License-Identifier: Unlicense
 #
 
+#
+# See also:
+# - https://premiumbondsprizes.com/
+# - https://www.moneysavingexpert.com/savings/premium-bonds-calculator/
+#
+
 
 import sys
 import random
@@ -17,19 +23,19 @@ from math import *
 odds = 1/24000
 
 # https://www.nsandi.com/get-to-know-us/monthly-prize-allocation
-# Data from May 2023 draw estimate
+# Data from May 2023 draw
 prizes = [
     ( 1000000, 	       2 ),
-    (  100000, 	      62 ),
+    (  100000, 	      63 ),
     (   50000, 	     125 ),
     (   25000, 	     250 ),
-    (   10000, 	     622 ),
-    (    5000, 	    1246 ),
-    (    1000, 	   13259 ),
-    (     500, 	   39777 ),
+    (   10000, 	     625 ),
+    (    5000, 	    1254 ),
+    (    1000, 	   13326 ),
+    (     500, 	   39978 ),
     (     100, 	 1410123 ),
     (      50, 	 1410123 ),
-    (      25, 	 2147004 ),
+    (      25, 	 2157937 ),
 ]
 prizes.reverse()
 
