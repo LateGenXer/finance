@@ -245,7 +245,12 @@ if devel:
 def run(params):
     return model(**params)
 
-result = run(params)
+try:
+    result = run(params)
+except ValueError as ex:
+    st.error(str(ex))
+    st.stop()
+
 df = dataframe(result.data)
 
 st.info("All values presented are in _today_'s pounds.", icon="ℹ️")
