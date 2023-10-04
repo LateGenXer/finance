@@ -16,7 +16,7 @@ nhr_income_tax_rate = 0.10
 
 cgt_rate = 0.28
 
-gbpeur = 1.13895
+gbpeur = 1.1538
 
 def income_tax(gross_income, factor=1.0):
     tax = 0
