@@ -30,6 +30,7 @@ I am not a financial or tax adviser.
 
 ## Recent changes
 
+* Drop Portuguese NHR regime
 * Stablize results by avoiding multiple optimal solutions.
 * Allow to download/upload parameters.
 * Allow to analyse how to best allocate a lump sump (experimental.)
