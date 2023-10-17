@@ -8,11 +8,8 @@ income_tax_bands = [
    (38632, 0.370),
    (50483, 0.435),
    (78834, 0.450),
-   (None,  0.480),
+   ( None, 0.480),
 ]
-
-# https://www.blevinsfranks.com/tax-and-pensions-portugal/#:~:text=pension%20treatment%20under%20non-habitual%20residence
-nhr_income_tax_rate = 0.10
 
 cgt_rate = 0.28
 

@@ -506,13 +506,8 @@ def model(
             income_gross = (income_gross_1 + tfc_1 +
                             income_gross_2 + tfc_2)
 
-            nhr = yr - retirement_year < 10
-            if nhr:
-                tax = income_gross * PT.nhr_income_tax_rate
-                cgt = 0
-            else:
-                tax = pt_income_tax_lp(prob, income_gross, factor=N/gbpeur)
-                cgt = cg * PT.cgt_rate
+            tax = pt_income_tax_lp(prob, income_gross, factor=N/gbpeur)
+            cgt = cg * PT.cgt_rate
 
             income_gross_1 = income_gross * income_ratio_1
             income_gross_2 = income_gross * income_ratio_2
@@ -654,20 +649,15 @@ def model(
             # PT
             income_gross = income_gross_1 + income_gross_2
 
-            nhr = yr - retirement_year < 10
-            if nhr:
-                tax = income_gross * PT.nhr_income_tax_rate
-                cgt = 0
-            else:
-                tax = PT.income_tax(income_gross, factor=N/gbpeur)
-                cgt = cg * PT.cgt_rate
-                if cg >= 0 and False:
-                    tax_a = tax
-                    income_gross_b = income_gross + cg
-                    tax_b = PT.income_tax(income_gross_b, factor=N/gbpeur)
-                    cgt_alt = tax_b - tax_a
-                    if cgt_alt < cgt:
-                        cgt = cgt_alt
+            tax = PT.income_tax(income_gross, factor=N/gbpeur)
+            cgt = cg * PT.cgt_rate
+            if cg >= 0 and False:
+                tax_a = tax
+                income_gross_b = income_gross + cg
+                tax_b = PT.income_tax(income_gross_b, factor=N/gbpeur)
+                cgt_alt = tax_b - tax_a
+                if cgt_alt < cgt:
+                    cgt = cgt_alt
 
             tax_1 = tax * income_ratio_1
             tax_2 = tax * income_ratio_2
