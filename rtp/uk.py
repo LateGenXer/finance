@@ -8,11 +8,8 @@ import math
 income_tax_threshold_20 =  12570
 income_tax_threshold_40 =  50270
 pa_limit                = 100000
-if False:
-    income_tax_threshold_45 = 150000           # 2022/2023
-else:
-    income_tax_threshold_45 = pa_limit + 2*income_tax_threshold_20 # 2023/2024
-    assert income_tax_threshold_45 == 125140
+income_tax_threshold_45 = pa_limit + 2*income_tax_threshold_20 # 2023/2024
+assert income_tax_threshold_45 == 125140
 
 cgt_allowance = 3000
 
