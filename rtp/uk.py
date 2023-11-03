@@ -11,11 +11,24 @@ pa_limit                = 100000
 income_tax_threshold_45 = pa_limit + 2*income_tax_threshold_20 # 2023/2024
 assert income_tax_threshold_45 == 125140
 
-cgt_allowance = 3000
+# https://www.gov.uk/government/publications/the-personal-allowance-and-basic-rate-limit-for-income-tax-and-certain-national-insurance-contributions-nics-thresholds-from-6-april-2026-to-5-apr/income-tax-personal-allowance-and-the-basic-rate-limit-and-certain-national-insurance-contributions-thresholds-from-6-april-2026-to-5-april-2028
+_inflation_rate = .035
+_inflation_adjustment = (1 + _inflation_rate) ** -4
+income_tax_threshold_20 = int(income_tax_threshold_20 * _inflation_adjustment)
+income_tax_threshold_40 = int(income_tax_threshold_40 * _inflation_adjustment)
+pa_limit                = int(pa_limit * _inflation_adjustment)
+income_tax_threshold_45 = pa_limit + 2*income_tax_threshold_20 # 2023/2024
+
+
+# https://www.gov.uk/capital-gains-tax/allowances
+# https://www.gov.uk/government/publications/reducing-the-annual-exempt-amount-for-capital-gains-tax
+cgt_allowance = 3000 # 2024/2025
+
 
 weeks_per_year = 365.25/7
 state_pension_full = 185.15 * weeks_per_year
 state_pension_age = 68
+
 
 # https://www.gov.uk/government/publications/increasing-normal-minimum-pension-age/increasing-normal-minimum-pension-age
 # https://adviser.royallondon.com/technical-central/pensions/benefit-options/increase-in-normal-minimum-pension-age-in-2028/
@@ -28,6 +41,7 @@ def nmpa(dob):
         # XXX: Not set in stone
         return 58
 
+
 # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/310231/spa-timetable.pdf
 # XXX rough approximation
 def state_pension_age(dob):
@@ -37,6 +51,7 @@ def state_pension_age(dob):
         return 67
     else:
         return 68
+
 
 # https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates
 uiaa     =  3600     # Unearned income annual allowance
@@ -87,7 +102,7 @@ def gross_income(net_income_):
     income -= income_tax_band_00
     income_tax_band_20 = min(income, (income_tax_threshold_40 - income_tax_threshold_20)*0.80)
     income -= income_tax_band_20
-    income_tax_band_40 = min(income, (100000                  - income_tax_threshold_40)*0.60)
+    income_tax_band_40 = min(income, (pa_limit                - income_tax_threshold_40)*0.60)
     income -= income_tax_band_40
     income_tax_band_60 = min(income, 2*income_tax_threshold_20*0.40)
     income -= income_tax_band_60

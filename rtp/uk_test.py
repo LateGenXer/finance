@@ -8,9 +8,9 @@ from uk import *
     income_tax_threshold_20,
     income_tax_threshold_20 // 2 + income_tax_threshold_40 // 2,
     income_tax_threshold_40,
-    100000,
-    100000 + income_tax_threshold_20,
-    100000 + income_tax_threshold_20 * 2,
+    pa_limit,
+    pa_limit + income_tax_threshold_20,
+    pa_limit + income_tax_threshold_20 * 2,
     income_tax_threshold_45,
     income_tax_threshold_45 * 2,
 ])

@@ -134,9 +134,9 @@ uk_income_tax_bands = [
 
 def uk_income_tax_lp(prob, gross_income):
     # Although the following condition is necessary for accurate tax
-    # modeling, but it would effectively leads to maximize the marginal 60%
-    # income tax band.
-    #prob += gross_income <= 100000 + 2*income_tax_threshold_20
+    # modeling, but it would effectively lead to the maximization of the
+    # marginal 60% income tax band.
+    #prob += gross_income <= pa_limit + 2*income_tax_threshold_20
     return income_tax_lp(prob, gross_income, uk_income_tax_bands)
 
 
