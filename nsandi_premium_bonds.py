@@ -20,22 +20,22 @@ from math import *
 
 
 # https://www.nsandi.com/products/premium-bonds
-odds = 1/24000
+odds = 1/21000
 
 # https://www.nsandi.com/get-to-know-us/monthly-prize-allocation
-# Data from May 2023 draw
+# Data from October 2023 draw
 prizes = [
     ( 1000000, 	       2 ),
-    (  100000, 	      63 ),
-    (   50000, 	     125 ),
-    (   25000, 	     250 ),
-    (   10000, 	     625 ),
-    (    5000, 	    1254 ),
-    (    1000, 	   13326 ),
-    (     500, 	   39978 ),
-    (     100, 	 1410123 ),
-    (      50, 	 1410123 ),
-    (      25, 	 2157937 ),
+    (  100000, 	      90 ),
+    (   50000, 	     181 ),
+    (   25000, 	     360 ),
+    (   10000, 	     902 ),
+    (    5000, 	    1803 ),
+    (    1000, 	   18834 ),
+    (     500, 	   56502 ),
+    (     100, 	 2339946 ),
+    (      50, 	 2339946 ),
+    (      25, 	 1027651 ),
 ]
 prizes.reverse()
 
