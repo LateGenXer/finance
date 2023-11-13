@@ -30,6 +30,7 @@ I am not a financial or tax adviser.
 
 ## Recent changes
 
+* Avoid compounding CGT.
 * Adjust income tax thresholds in real terms for being frozen in nominal terms until 2027/2028.
 * Drop Portuguese NHR regime
 * Stablize results by avoiding multiple optimal solutions.

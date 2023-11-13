@@ -299,6 +299,48 @@ class DCP:
         return tfc
 
 
+class GIA:
+
+    def __init__(self, prob, balance, growth_rate, inflation_rate):
+        self.prob = prob
+
+        self.assets = [balance]
+
+        self.growth_rate = growth_rate
+        self.inflation_rate = inflation_rate
+        self.growth_rate_real = inflation_ajusted_return(self.growth_rate, self.inflation_rate)
+
+    def flow(self):
+        global uid
+
+        total = 0
+        gains = 0
+
+        for yr in range(len(self.assets)):
+            proceeds = lp.LpVariable(f'gia_proceeds_{uid}_{yr}', 0)
+            self.assets[yr] -= proceeds
+            self.prob += self.assets[yr] >= 0
+            total += proceeds
+            gains += proceeds * (1.0 - (1.0 + self.growth_rate) ** -yr)
+
+        purchase = lp.LpVariable(f'gia_purchase_{uid}', 0)
+        self.assets.insert(0, purchase)
+
+        uid += 1
+
+        return total - purchase, gains
+
+    def grow(self):
+        for yr in range(1, len(self.assets)):
+            self.assets[yr] *= 1.0 + self.growth_rate_real
+
+    def value(self):
+        total = 0
+        for balance in self.assets:
+            total += balance
+        return total
+
+
 def model(
         joint,
         dob_1,
@@ -397,8 +439,16 @@ def model(
     nmpa_1 = nmpa(dob_1)
     nmpa_2 = nmpa(dob_2)
 
+    # Introduce a tiny bias towards SIPPs uncrystalized funds and against
+    # GIAs to stabilize results, and prevent redundant money flows that
+    # arise when the optimal solution is not unique
+    eps = 2**-14
+    gia_growth_rate -= eps
+
     sipp_1 = DCP(prob=prob, uf=sipp_1, growth_rate_real = sipp_growth_rate_real_1, inflation_rate=inflation_rate, lta=lta, lacs=lacs, nmpa=nmpa_1)
     sipp_2 = DCP(prob=prob, uf=sipp_2, growth_rate_real = sipp_growth_rate_real_2, inflation_rate=inflation_rate, lta=lta, lacs=lacs, nmpa=nmpa_2)
+
+    gia = GIA(prob=prob, balance=gia, growth_rate=gia_growth_rate, inflation_rate=inflation_rate)
 
     states = {}
 
@@ -416,7 +466,7 @@ def model(
         pt_yr = retirement and pt
 
         if pt and yr == retirement_year:
-            gia += isa
+            gia.assets[0] += isa
             isa = 0
 
         age_1 = yr - dob_1
@@ -457,26 +507,15 @@ def model(
             isa_allowance_yr = isa_allowance*N
 
         drawdown_isa = lp.LpVariable(f'dd_isa@{yr}', -isa_allowance_yr)  # Bed & ISA
-        drawdown_gia = lp.LpVariable(f'dd_gia@{yr}')
-
         isa       -= drawdown_isa
-        gia       -= drawdown_gia
-
         prob += isa >= 0
-        prob += gia >= 0
-
         isa *= 1.0 + isa_growth_rate_real
-        cg = gia * gia_growth_rate
-        gia += cg
-        gia *= 1.0 / (1.0 + inflation_rate)
 
-        # Introduce a tiny bias towards SIPPs uncrystalized funds and against
-        # GIAs to stabilize results, and prevent redundant money flows that
-        # arise when the optimal solution is not unique
-        eps = 2**-14
+        drawdown_gia, cg = gia.flow()
+        gia.grow()
+
         sipp_1.uf *= 1.0 + eps
         sipp_2.uf *= 1.0 + eps
-        gia *= 1.0 - eps
 
         # State pension
         income_state_1 = state_pension_1 if age_1 >= state_pension_age(dob_1) else 0
@@ -536,7 +575,7 @@ def model(
             lac_1=lac_1,
             lac_2=lac_2,
             isa=isa,
-            gia=gia,
+            gia=gia.value(),
             cg=cg,
             drawdown_1=drawdown_1,
             drawdown_2=drawdown_2,
@@ -552,7 +591,7 @@ def model(
         prob.setObjective(-retirement_income_net)
     else:
         # TODO: IHT
-        net_worth = sipp.uf_1 + sipp.uf_2 + sipp.df_1 + sipp.df_2 + isa + gia
+        net_worth = sipp.uf_1 + sipp.uf_2 + sipp.df_1 + sipp.df_2 + isa + gia.value()
         prob.setObjective(-net_worth)
 
     prob.checkDuplicateVars()
@@ -577,7 +616,7 @@ def model(
         }.get(status, "Unexpected")
         raise ValueError(f"Failed to solve the problem ({statusMsg})")
 
-    result.net_worth_end = normalize(lp.value(sipp_1.uf + sipp_1.df + sipp_2.uf + sipp_2.df + isa + gia), 0)
+    result.net_worth_end = normalize(lp.value(sipp_1.uf + sipp_1.df + sipp_2.uf + sipp_2.df + isa + gia.value()), 0)
 
     if max_income:
         result.retirement_income_net = lp.value(retirement_income_net)
