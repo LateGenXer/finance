@@ -25,8 +25,9 @@ income_tax_threshold_45 = pa_limit + 2*income_tax_threshold_20 # 2023/2024
 cgt_allowance = 3000 # 2024/2025
 
 
+# https://www.gov.uk/new-state-pension/what-youll-get
 weeks_per_year = 365.25/7
-state_pension_full = 185.15 * weeks_per_year
+state_pension_full = 221.20 * weeks_per_year
 state_pension_age = 68
 
 
