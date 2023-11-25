@@ -591,7 +591,7 @@ def model(
         prob.setObjective(-retirement_income_net)
     else:
         # TODO: IHT
-        net_worth = sipp.uf_1 + sipp.uf_2 + sipp.df_1 + sipp.df_2 + isa + gia.value()
+        net_worth = sipp_1.uf + sipp_2.uf + sipp_1.df + sipp_2.df + isa + gia.value()
         prob.setObjective(-net_worth)
 
     prob.checkDuplicateVars()
