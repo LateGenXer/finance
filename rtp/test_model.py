@@ -14,7 +14,7 @@ import model
 @pytest.mark.parametrize('joint', [False, True])
 def test_model(joint, lacs, retirement_country, retirement_income_net, lump_sum):
     params = {
-        "joint": False,
+        "joint": joint,
         "dob_1": 1980,
         "dob_2": 1981,
         "state_pension_years_1": 35,
