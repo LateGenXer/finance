@@ -123,7 +123,7 @@ with st.expander("Upload..."):
                     st.warning(f"Unexpected parameter {key}={value:r}", icon="⚠️")
 
 st.checkbox("Joint calculation", key="joint")
-with st.form(key='my_form'):
+with st.form(key='form'):
 
     tab1, tab2, tab3 = st.tabs(["Basic", "Advanced", "Experimental"])
 

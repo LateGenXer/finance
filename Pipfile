@@ -9,6 +9,7 @@ pulp = "*"
 matplotlib = "*"
 scipy = "*"
 pytest = "*"
+coverage = "*"
 
 [dev-packages]
 
