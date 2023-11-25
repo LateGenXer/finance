@@ -11,8 +11,9 @@ import model
 @pytest.mark.parametrize('retirement_income_net', [0, 10000])
 @pytest.mark.parametrize('retirement_country', ['UK', 'PT'])
 @pytest.mark.parametrize('lacs', [False, True])
+@pytest.mark.parametrize('sipp_extra_contrib', [False, True])
 @pytest.mark.parametrize('joint', [False, True])
-def test_model(joint, lacs, retirement_country, retirement_income_net, lump_sum):
+def test_model(joint, sipp_extra_contrib, lacs, retirement_country, retirement_income_net, lump_sum):
     params = {
         "joint": joint,
         "dob_1": 1980,
@@ -25,7 +26,7 @@ def test_model(joint, lacs, retirement_country, retirement_income_net, lump_sum)
         "sipp_2": 000000,
         "sipp_contrib_1": 0,
         "sipp_contrib_2": uk.uiaa,
-        "sipp_extra_contrib": False,
+        "sipp_extra_contrib": sipp_extra_contrib,
         "isa": 250000,
         "gia": 0,
         "misc_contrib": 0,
