@@ -57,6 +57,9 @@ class LpVariable:
     def __rmul__(self, other):
         return other * toAffine(self)
 
+    def __truediv__(self, other):
+        return toAffine(self) / other
+
     def __hash__(self):
         return id(self)
 
@@ -136,6 +139,13 @@ class LpAffineExpression:
 
     def __rmul__(self, other):
         return self * other
+
+    def __truediv__(self, other):
+        assert isinstance(other, numbers.Number)
+        if other == 1.0:
+            return self
+        else:
+            return self._unary(lambda a: a / other)
 
     def __eq__(self, other):
         return LpConstraint(self - other, EQ)
