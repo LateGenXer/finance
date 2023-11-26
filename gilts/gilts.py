@@ -32,7 +32,18 @@ import scipy.optimize as optimize
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import pulp as lp
+
+if int(os.environ.get('PULP', '0')) != 0:
+    import pulp as lp
+else:
+    # XXX move lp into a shared folder
+    # https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
+    import importlib.util
+    _spec = importlib.util.spec_from_file_location('lp', os.path.join(os.path.dirname(__file__), '..', 'rtp', 'lp.py'))
+    lp = importlib.util.module_from_spec(_spec)
+    sys.modules['lp'] = lp
+    _spec.loader.exec_module(lp)
+    del _spec
 
 from xirr import *
 from ukbankholidays import next_business_day, prev_business_day
