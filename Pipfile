@@ -10,6 +10,8 @@ matplotlib = "*"
 scipy = "*"
 pytest = "*"
 coverage = "*"
+xlrd = "*"
+xlsxwriter = "*"
 
 [dev-packages]
 
