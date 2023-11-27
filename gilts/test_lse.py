@@ -6,6 +6,7 @@
 
 
 import datetime
+import os.path
 
 import pytest
 
@@ -23,13 +24,20 @@ def test_lookup_tidm(isin, tidm):
 @pytest.mark.parametrize('tidm', ['TR68'])
 def test_get_instrument_data(tidm):
     data = lse.get_instrument_data(tidm)
-    assert isinstance(data['lastprice'], float)
-    assert isinstance(data['lastclose'], float)
+    assert isinstance(data['lastprice'], (float, int))
+    assert isinstance(data['lastclose'], (float, int))
+
+
+def test_get_latest_gilt_prices():
+    dt, content = lse.get_latest_gilt_prices()
+    for instrument in content:
+        assert 'isin' in instrument
+        assert 'tidm' in instrument
+        assert isinstance(instrument['lastprice'], (float, int))
 
 
 @pytest.mark.parametrize('cls', [
     lse.GiltPrices,
-    lse.CachedPrices,
     lse.TradewebClosePrices,
 ])
 def test_prices(cls):

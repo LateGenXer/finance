@@ -8,19 +8,19 @@
 #
 
 
-import atexit
 import csv
 import datetime
 import email.utils
 import logging
 import os.path
-import pickle
 import re
 import requests
 import sys
 import pprint
 
 import caching
+
+from download import download
 
 
 __all__ = [
@@ -63,7 +63,7 @@ def lookup_tidm(isin):
 
 @caching.cache_data(ttl=15*60)
 def get_instrument_data(tidm):
-    logger.info(f'Getting {tidm} instrument data', stack_info=True)
+    logger.info(f'Getting {tidm} instrument data')
     url = f'https://api.londonstockexchange.com/api/gw/lse/instruments/alldata/{tidm}'
     r = requests.get(url, headers=_headers, stream=False)
     assert r.ok
@@ -124,113 +124,40 @@ class Prices:
         raise NotImplementedError
 
 
-class CachedPrices(Prices):
-
-    def __init__(self):
-        Prices.__init__(self)
-        self._init_tidms()
-        self._init_data()
-        self.datetime = datetime.datetime(1980, 1, 1, 0, 0, 0)
-
-    def _init_tidms(self):
-        self.tidms = {}
-
-        try:
-            self.stream = open(_tidm_csv, 'r+b')
-        except FileNotFoundError:
-            self.stream = open(_tidm_csv, 'wb')
-        else:
-            for line in self.stream:
-                line = line.decode('ascii')
-                line = line.rstrip('\r\n')
-                isin, tidm = line.split(',')
-                self.tidms[isin] = tidm
-
-    def _init_data(self):
-        try:
-            stream = open('lse.pickle', 'rb')
-        except FileNotFoundError:
-            self.data = {}
-        else:
-            self.data = pickle.load(stream)
-
-        self.data_dirty = False
-        atexit.register(self._cleanup)
-
-    def lookup_tidm(self, isin):
-        try:
-            return self.tidms[isin]
-        except KeyError:
-            pass
-
-        tidm = lookup_tidm(self, isin)
-
-        self.stream.write(f'{isin},{tidm}\n'.encode('ascii'))
-        self.stream.flush()
-
-        return tidm
-
-    def get_price(self, tidm):
-        #try:
-        #    return self.data[tidm]
-        #except KeyError:
-        #    pass
-
-        obj = get_instrument_data(tidm)
-        logger.debug(pprint.pformat(obj, indent=2))
-
-        self.data[tidm] = obj
-        self.data_dirty = True
-
-        self.datetime = datetime.datetime.fromisoformat(obj['lastclosedate'])
-
-        return obj['lastprice']
-
-    def get_prices_date(self):
-        return self.datetime
-
-    def _cleanup(self):
-        if self.data_dirty:
-            pickle.dump(self.data, open('lse.pickle', 'wb'))
-
-
 class GiltPrices(Prices):
 
-    def __init__(self, ttl=15*60):
-        Prices.__init__(self)
-        self.ttl = datetime.timedelta(seconds=ttl)
-        self.datetime = datetime.datetime.now().astimezone() - 2*self.ttl
+    def __init__(self, filename=None):
+        if filename is None:
+            filename = os.path.join(os.path.dirname(__file__), 'gilts-closing-prices.csv')
+            download('https://lategenxer.github.io/finance/gilts-closing-prices.csv', filename)
+
         self.tidms = {}
         self.prices = {}
 
-    def _refresh(self):
-        now = datetime.datetime.now().astimezone()
-        if now < self.datetime + self.ttl:
-            return
-        self.datetime, content = get_latest_gilt_prices()
-        assert now < self.datetime + self.ttl
-        for price in content:
-            isin = price['isin']
-            tidm = price['tidm']
+        from zoneinfo import ZoneInfo
+        tzinfo = ZoneInfo("Europe/London")
+
+        for entry in csv.DictReader(open(filename, 'rt')):
+            date = datetime.date.fromisoformat(entry['date'])
+
+            # https://www.lsegissuerservices.com/spark/lse-whitepaper-trading-insights
+            self.datetime = datetime.datetime(date.year, date.month, date.day, 16, 35, 0, tzinfo=tzinfo)
+
+            isin = entry['isin']
+            tidm = entry['tidm']
+            price = float(entry['price'])
+
             self.tidms[isin] = tidm
             self.prices[tidm] = price
 
     def lookup_tidm(self, isin):
-        try:
-            return self.tidms[isin]
-        except KeyError:
-            pass
-        self._refresh()
         return self.tidms[isin]
 
     def get_price(self, tidm):
-        self._refresh()
-        price = self.prices[tidm]
-        return float(price['lastprice'])
+        return self.prices[tidm]
 
     def get_prices_date(self):
-        # LSE prices have a 15min lag
-        return self.datetime - datetime.timedelta(minutes=15)
+        return self.datetime
 
 
 class TradewebClosePrices(Prices):
