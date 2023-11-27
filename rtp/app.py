@@ -22,6 +22,7 @@ st.set_page_config(
     page_title="Retirement Tax Planner",
     page_icon=":pound banknote:",
     layout="wide",
+    initial_sidebar_state="collapsed",
     menu_items={
         "Get help": "https://github.com/LateGenXer/finance/discussions",
         "Report a Bug": "https://github.com/LateGenXer/finance/issues",

@@ -17,6 +17,7 @@ st.set_page_config(
     page_title="LateGenXer's financial tools.",
     page_icon=":pound banknote:",
     layout="centered",
+    initial_sidebar_state="expanded",
     menu_items={
         "Get help": "https://github.com/LateGenXer/finance/discussions",
         "Report a Bug": "https://github.com/LateGenXer/finance/issues",
