@@ -523,7 +523,7 @@ class BondLadder:
 
             consumption_dates = [d for d, v in self.schedule]
 
-            income = -accrued_interest
+            income = quantity * -accrued_interest
             for d, amount in cash_flows[:-1]:
                 if self.lag:
                     while consumption_dates and consumption_dates[0] <= d:
