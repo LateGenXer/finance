@@ -709,8 +709,8 @@ class BondLadder:
             cf.income   = index_ratio * lp.value(cf.income)
 
         df = pd.DataFrame(data=cash_flows)
-        #df = df.drop(df[df.incoming < .005].index)
-        #df = df.drop(df[df.outgoing < .005].index)
+        df = df.drop(df[df.incoming < .005].index)
+        df = df.drop(df[df.outgoing < .005].index)
         df = df.rename(columns=str.title)
         self.cash_flow_df = df
 
