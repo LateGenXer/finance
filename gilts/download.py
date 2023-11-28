@@ -6,6 +6,7 @@
 #
 
 
+import logging
 import os.path
 import posixpath
 import shutil
@@ -16,6 +17,14 @@ import urllib.request
 import email.message
 import email.utils
 import http
+
+
+__all__ = [
+    'download',
+]
+
+
+logger = logging.getLogger('download')
 
 
 def download(url, filename=None, ttl=0, content_type=None, verbose=False):
@@ -57,6 +66,7 @@ def download(url, filename=None, ttl=0, content_type=None, verbose=False):
         params = msg.get_params()
         src_content_type = params[0][0]
         if src_content_type != content_type:
+            logger.warning(f'{url}: unexpected content-type {src_content_type}')
             raise ValueError(f'Expected {content_type}, got {src_content_type}')
 
     src_mtime = src.headers.get('Last-Modified')
@@ -74,7 +84,7 @@ def download(url, filename=None, ttl=0, content_type=None, verbose=False):
                 src.close()
                 return
 
-    sys.stderr.write(f'Downloading {url}...\n')
+    logger.warning(f'Downloading {url} to {os.path.relpath(filename)}')
     head, tail = os.path.split(filename)
     tmp_filename = os.path.join(head, '.' + tail)
     dst = open(tmp_filename, 'wb')

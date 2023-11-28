@@ -9,6 +9,7 @@ import csv
 import datetime
 import io
 import os.path
+import logging
 import re
 import sys
 import urllib.request
@@ -20,6 +21,9 @@ from download import download
 import caching
 
 from pprint import pp
+
+
+logger = logging.getLogger('rpi')
 
 
 _months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
@@ -71,6 +75,7 @@ def parse(filename, verbosity=0, ignore_date=False):
             day = int(mo.group('day'))
             next_release = datetime.date(year, month, day)
             if datetime.datetime.utcnow().date() > next_release:
+                logger.warning(f'{filename} has been superseded on {next_release}')
                 raise OutOfDateError
         mo = _monthly_re.match(date)
         if not mo:

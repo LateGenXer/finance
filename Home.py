@@ -5,11 +5,17 @@
 #
 
 
-import importlib
-import os.path
-import sys
+import logging
 
 import streamlit as st
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(name)s %(levelname)s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    force=True,
+)
 
 
 # https://docs.streamlit.io/library/api-reference/utilities/st.set_page_config

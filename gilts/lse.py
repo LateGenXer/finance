@@ -46,6 +46,7 @@ _tidm_re = re.compile(r'^https://www\.londonstockexchange\.com/stock/(?P<tidm>\w
 
 @caching.cache_data(ttl=24*3600)
 def lookup_tidm(isin):
+    logger.warning(f'Looking up TIDM of {isin}')
     # https://www.londonstockexchange.com/live-markets/market-data-dashboard/price-explorer?categories=BONDS&subcategories=14
     url = f'https://api.londonstockexchange.com/api/gw/lse/search?worlds=quotes&q={isin}'
     r = requests.get(url, headers=_headers, stream=False)
@@ -62,6 +63,7 @@ def lookup_tidm(isin):
 
 @caching.cache_data(ttl=15*60)
 def get_instrument_data(tidm):
+    logger.warning(f'Getting {tidm} instrument data', stack_info=True)
     url = f'https://api.londonstockexchange.com/api/gw/lse/instruments/alldata/{tidm}'
     r = requests.get(url, headers=_headers, stream=False)
     assert r.ok
@@ -76,7 +78,7 @@ _tidm_csv = os.path.join(os.path.dirname(__file__), 'tidm.csv')
 def get_latest_gilt_prices():
     '''Get the latest gilt prices with a single request'''
 
-    logger.warning('Getting gilt prices from LSE...\n')
+    logger.warning('Getting gilt prices from LSE')
 
     # https://www.londonstockexchange.com/live-markets/market-data-dashboard/price-explorer?issuers=TRIH&categories=BONDS
     # https://www.londonstockexchange.com/live-markets/market-data-dashboard/price-explorer?issuers=TRIH&categories=BONDS&page=2
