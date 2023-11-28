@@ -50,7 +50,6 @@ def test_next_business_day(d0, d1):
     assert next_business_day(d0) == d1
 
 
-@pytest.mark.skip(reason="unreliable")
 def test_write():
     from ukbankholidays import _write
     try:
