@@ -11,17 +11,26 @@
 import logging
 
 
+__all__ = [
+    'cache_data',
+]
+
+
 logger = logging.getLogger('caching')
 logger.setLevel(logging.DEBUG)
 
 
-stub_use_count = 0
-
-
-# Stub for streamlit.cache_data.  Replaced with the real function when running
-# under Streamlit.
+# Stub for streamlit.cache_data.
 def cache_data(ttl=None):
     logger.debug('cache_date wrapper called', stack_info=True)
-    global stub_use_count
-    stub_use_count += 1
     return lambda fn: fn
+
+
+# Use Streamlit's cache_data when serving
+try:
+    from streamlit import runtime
+except ImportError:
+    pass
+else:
+    if runtime.exists():
+        from streamlit import cache_data

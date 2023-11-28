@@ -41,11 +41,6 @@ Copyright (c) 2023 LateGenXer.
 )
 
 
-import caching
-if "PYTEST_CURRENT_TEST" not in os.environ:
-    assert caching.stub_use_count == 0
-    caching.cache_data = st.cache_data
-
 import lse
 import rpi
 
