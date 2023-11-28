@@ -75,13 +75,18 @@ def download(url, filename=None, ttl=0, content_type=None, verbose=False):
                 return
 
     sys.stderr.write(f'Downloading {url}...\n')
-    if dst_exists:
-        os.unlink(filename)
-    dst = open(filename, 'wb')
+    head, tail = os.path.split(filename)
+    tmp_filename = os.path.join(head, '.' + tail)
+    dst = open(tmp_filename, 'wb')
     shutil.copyfileobj(src, dst)
     dst.close()
-    os.utime(filename, (src_mtime, src_mtime))
+    os.utime(tmp_filename, (src_mtime, src_mtime))
     src.close()
+    try:
+        os.rename(tmp_filename, filename)
+    except FileExistsError:
+        assert sys.platform != 'linux'
+        shutil.move(tmp_filename, filename)
 
 
 if __name__ == '__main__':
