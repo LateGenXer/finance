@@ -97,11 +97,8 @@ def get_latest_gilt_prices():
     url ='https://api.londonstockexchange.com/api/v1/components/refresh'
     r = requests.post(url, headers=headers, json=payload)
     assert r.ok
-    if False:
-        # XXX: this creates troubles with timezones
-        date = email.utils.parsedate_to_datetime(r.headers['Date'])
-    else:
-        date = datetime.datetime.now()
+    # This can create troubles with timezones
+    date = email.utils.parsedate_to_datetime(r.headers['Date'])
     obj = r.json()
     for item in obj[0]['content']:
         if item['name'] == 'priceexplorersearch':
@@ -202,12 +199,12 @@ class GiltPrices(Prices):
     def __init__(self, ttl=15*60):
         Prices.__init__(self)
         self.ttl = datetime.timedelta(seconds=ttl)
-        self.datetime = datetime.datetime.now() - 2*self.ttl
+        self.datetime = datetime.datetime.now().astimezone() - 2*self.ttl
         self.tidms = {}
         self.prices = {}
 
     def _refresh(self):
-        now = datetime.datetime.now()
+        now = datetime.datetime.now().astimezone()
         if now < self.datetime + self.ttl:
             return
         self.datetime, content = get_latest_gilt_prices()
@@ -222,16 +219,18 @@ class GiltPrices(Prices):
         try:
             return self.tidms[isin]
         except KeyError:
-            self._refresh()
+            pass
+        self._refresh()
         return self.tidms[isin]
 
     def get_price(self, tidm):
         self._refresh()
         price = self.prices[tidm]
-        return price['lastprice']
+        return float(price['lastprice'])
 
     def get_prices_date(self):
-        return self.datetime
+        # LSE prices have a 15min lag
+        return self.datetime - datetime.timedelta(minutes=15)
 
 
 class TradewebClosePrices(Prices):
@@ -271,15 +270,13 @@ class TradewebClosePrices(Prices):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s', level=logging.INFO)
-    logger.setLevel(logging.DEBUG)
-    #prices = GiltPrices()
-    prices = CachedPrices()
+    prices = GiltPrices()
     if len(sys.argv) == 1:
         for isin, tidm in csv.reader(open(_tidm_csv, 'rt')):
             tidm = prices.lookup_tidm(isin)
             price = prices.get_price(tidm)
-            print(f'{tidm} {price}')
+            print(f'{tidm:4} {price:6.2f}')
     else:
         for tidm in sys.argv[1:]:
             price = prices.get_price(tidm)
-            print(f'{tidm} {price}')
+            print(f'{tidm:4} {price:6.2f}')

@@ -14,6 +14,8 @@ import os
 import operator
 import sys
 
+from zoneinfo import ZoneInfo
+
 import streamlit as st
 import pandas as pd
 
@@ -179,7 +181,10 @@ with tab1:
 
     st.warning("A bond ladder is not necessarily the best strategy. Read [here](https://www.fidelity.com/learning-center/investment-products/fixed-income-bonds/bond-investment-strategies) to know more.", icon="⚠️")
 
-    st.info(f'Using prices obtained on {prices.get_prices_date().isoformat(sep=" ", timespec="minutes")}', icon="ℹ️")
+    prices_date = prices.get_prices_date()
+    prices_date = prices_date.astimezone(ZoneInfo("Europe/London"))
+    prices_date = prices_date.strftime("%Y-%m-%d %H:%M %Z")
+    st.info(f'Using prices from {prices_date}', icon="ℹ️")
     if index_linked:
         st.info(f'Using published RPI series untill {rpi_series.last_date().strftime("%B %Y")}', icon="ℹ️")
 
