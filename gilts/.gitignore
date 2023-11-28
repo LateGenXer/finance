@@ -4,9 +4,4 @@
 !Tradeweb_FTSE_ClosePrices_20231117.csv
 !ukbankholidays.csv
 
-*.pickle
-
-*.xls
-*.xlsx
-
 *.xml
