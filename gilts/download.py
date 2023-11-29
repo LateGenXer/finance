@@ -84,7 +84,7 @@ def download(url, filename=None, ttl=0, content_type=None, verbose=False):
                 src.close()
                 return
 
-    logger.warning(f'Downloading {url} to {os.path.relpath(filename)}')
+    logger.info(f'Downloading {url} to {os.path.relpath(filename)}')
     head, tail = os.path.split(filename)
     tmp_filename = os.path.join(head, '.' + tail)
     dst = open(tmp_filename, 'wb')
