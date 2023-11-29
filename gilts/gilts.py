@@ -411,7 +411,8 @@ def yearly(date):
     return date.replace(year=date.year + 1)
 
 def monthly(date):
-    return date.replace(year=date.year + date.month // 12, month=date.month % 12 + 1)
+    # XXX Deal more graceuflly with variable number of days per month
+    return date.replace(year=date.year + date.month // 12, month=date.month % 12 + 1, day=min(date.day, 28))
 
 
 def schedule(count, amount=10000, frequency=yearly, start=None):
