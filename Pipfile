@@ -5,15 +5,15 @@ name = "pypi"
 
 [packages]
 streamlit = "*"
-pulp = "*"
 matplotlib = "*"
 scipy = "*"
-pytest = "*"
-coverage = "*"
 xlrd = "*"
 xlsxwriter = "*"
 
 [dev-packages]
+coverage = "*"
+pulp = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.10"
