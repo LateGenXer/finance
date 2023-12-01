@@ -37,10 +37,9 @@ jobs:
         uses: actions/checkout@v3
       - name: Setup Pages
         uses: actions/configure-pages@v3
-      - name: Create barebones site
+      - name: Create bare-bones site
         run: |
           mkdir _site
-          echo '<!DOCTYPE html><html><head></head><body></body></html>' > _site/index.html
       - name: Download Gilts in Issue from DMO
         run: gilts/download.py 'https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A' _site/dmo-D1A.xml text/xml
       - name: Upload artifact
