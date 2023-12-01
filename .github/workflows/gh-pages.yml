@@ -8,6 +8,7 @@ on:
     branches:
       - main
     paths:
+      - .github/workflows/gh-pages.yml
       - gilts/download.py
   # Allows one to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -41,12 +42,11 @@ jobs:
           mkdir _site
           echo '<!DOCTYPE html><html><head></head><body></body></html>' > _site/index.html
       - name: Download Gilts in Issue from DMO
-        run: gilts/download.py 'https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A' dmo-D1A.xml text/xml
+        run: gilts/download.py 'https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A' _site/dmo-D1A.xml text/xml
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          # Upload entire repository
-          path: '.'
+          path: '_site'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
