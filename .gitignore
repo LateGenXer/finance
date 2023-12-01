@@ -130,5 +130,7 @@ dmypy.json
 
 *.pickle
 
-.xls
-.xlsx
+*.xls
+*.xlsx
+
+*.xml

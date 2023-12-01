@@ -334,7 +334,10 @@ class Issued:
     @staticmethod
     def load_xml():
         filename = os.path.join(os.path.dirname(__file__), 'dmo-D1A.xml')
-        download('https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A', filename, ttl=12*3600, content_type='text/xml')
+        # Cache of https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A
+        # updated daily by .github/workflows/gh-pages.yml to avoid Captchas on
+        # more frequent downloads.
+        download('https://lategenxer.github.io/finance/dmo-D1A.xml', filename, ttl=1800)
         stream = open(filename, 'rt')
         tree = xml.etree.ElementTree.parse(stream)
         root = tree.getroot()
