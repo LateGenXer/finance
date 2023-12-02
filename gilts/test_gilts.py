@@ -28,7 +28,8 @@ def test_ex_divind_date(coupon_date, xd_date):
 
 @pytest.fixture
 def issued():
-    return Issued(entries=Issued.load_csv())
+    filename = os.path.join(os.path.dirname(__file__), 'dmo-D1A-20231201.xml')
+    return Issued(filename)
 
 
 @pytest.fixture

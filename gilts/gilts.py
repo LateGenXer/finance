@@ -289,10 +289,17 @@ class IndexLinkedGilt(Gilt):
 
 
 class Issued:
+    # https://www.dmo.gov.uk/data/
 
-    def __init__(self, entries=None):
-        if entries is None:
-            entries = self.load_xml()
+    def __init__(self, filename=None):
+        if filename is None:
+            filename = os.path.join(os.path.dirname(__file__), 'dmo-D1A.xml')
+            # Cache of https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A
+            # updated daily by .github/workflows/gh-pages.yml to avoid Captchas on
+            # more frequent downloads.
+            download('https://lategenxer.github.io/finance/dmo-D1A.xml', filename, ttl=1800)
+
+        entries = self.load_xml(filename)
 
         self.all = []
         for entry in entries:
@@ -313,13 +320,10 @@ class Issued:
                 kwargs['base_rpi'] = float(entry['BASE_RPI_87'])
                 gilt = IndexLinkedGilt(**kwargs)
 
-            # Check ex-divdend dates match when loading DMO's XML
-            try:
+            # Check ex-divdend dates match when testing
+            if "PYTEST_CURRENT_TEST" in os.environ:
                 current_xd_date = datetime.datetime.fromisoformat(entry['CURRENT_EX_DIV_DATE']).date()
                 close_date = datetime.datetime.fromisoformat(entry['CLOSE_OF_BUSINESS_DATE']).date()
-            except KeyError:
-                pass
-            else:
                 settlement_date = next_business_day(close_date)
                 _, next_coupon_date = gilt.prev_next_coupon_date(settlement_date)
                 assert gilt.ex_dividend_date(next_coupon_date) == current_xd_date
@@ -330,25 +334,13 @@ class Issued:
 
         self.isin = {gilt.isin: gilt for gilt in self.all}
 
-    # https://www.dmo.gov.uk/data/
     @staticmethod
-    def load_xml():
-        filename = os.path.join(os.path.dirname(__file__), 'dmo-D1A.xml')
-        # Cache of https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A
-        # updated daily by .github/workflows/gh-pages.yml to avoid Captchas on
-        # more frequent downloads.
-        download('https://lategenxer.github.io/finance/dmo-D1A.xml', filename, ttl=1800)
+    def load_xml(filename):
         stream = open(filename, 'rt')
         tree = xml.etree.ElementTree.parse(stream)
         root = tree.getroot()
         for node in root:
             yield node.attrib
-
-    @staticmethod
-    def load_csv():
-        filename = os.path.join(os.path.dirname(__file__), 'dmo-D1A.csv')
-        stream = open(filename, 'rt')
-        return csv.DictReader(stream)
 
     _coupon_re = re.compile(r'^(?P<unit>[0-9]+) ?(?P<fraction>|½|¼|¾|[1357]/8) ?%$')
     _fractions = {
