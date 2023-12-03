@@ -1,6 +1,11 @@
 name: build
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  schedule:
+    # Run regularly with fresh data
+    - cron: '0 6,18 * * *'
 
 env:
   FORCE_COLOR: 3
