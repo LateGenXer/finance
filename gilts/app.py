@@ -47,6 +47,7 @@ import lse
 import rpi
 
 from gilts import Issued, BondLadder, schedule, monthly, yearly, yield_curve
+from ukbankholidays import next_business_day
 
 
 #
@@ -64,12 +65,16 @@ with st.sidebar:
     else:
         advanced = False
 
+    today = datetime.datetime.utcnow().date()
     if not advanced:
         st.number_input('Withdrawal amount per year:', value=10000, min_value=1, step=1, key='year_amount')
         st.number_input('Number of years:', value=10, min_value=1, max_value=50, step=1, key='year_count')
         frequency = st.radio('Withdrawal frequency:', ['Yearly', 'Monthly'], horizontal=True, key='frequency')
+        min_start_date = next_business_day(today)
+        max_start_date = today.replace(year=today.year + 30, month=12, day=31)
+        start_date = st.date_input('Start date', value=None, min_value=min_start_date, max_value=max_start_date, key='start_date',
+            help='Withdrawal start date.  Default is a year/month from today, as determined by the frequency.')
     else:
-        today = datetime.datetime.utcnow().date()
         default_date = today.replace(year=today.year + 1)
         edited_df = st.data_editor(
             data = pd.DataFrame([
@@ -110,7 +115,7 @@ if not advanced:
         f = monthly
         amount = st.session_state.year_amount / 12
         count = st.session_state.year_count * 12
-    s = schedule(count, amount, f)
+    s = schedule(count, amount, f, start_date)
 else:
     s = []
     for index, row in edited_df.iterrows():
@@ -125,9 +130,10 @@ else:
     s.sort(key=operator.itemgetter(0))
 
 
-issued = Issued()
-prices = lse.GiltPrices()
-rpi_series = rpi.RPI() # XXX pass this to BondLadder
+with st.spinner('Downloading data...'):
+    issued = Issued()
+    prices = lse.GiltPrices()
+    rpi_series = rpi.RPI() # XXX pass this to BondLadder
 bl = BondLadder(issued, prices, s)
 bl.index_linked = index_linked
 bl.marginal_income_tax = st.session_state.marginal_income_tax
@@ -135,7 +141,7 @@ bl.interest_rate = st.session_state.interest_rate * .01
 if experimental:
     bl.lag = st.session_state.window
 try:
-    with st.spinner():
+    with st.spinner('Solving...'):
         bl.solve()
 
 except ValueError as ex:
@@ -177,17 +183,26 @@ currency_format = '{:,.2f}'
 
 with tab1:
 
-    df = bl.buy_df
-
     st.warning("A bond ladder is not necessarily the best strategy. Read [here](https://www.fidelity.com/learning-center/investment-products/fixed-income-bonds/bond-investment-strategies) to know more.", icon="⚠️")
 
+    if not advanced and start_date is not None:
+        msg = f'Coupons received before {start_date} will be accumulated as a cash balance and not reinvested.'
+        if not st.session_state.interest_rate:
+            msg += '\n\nYou might want to set an interest rate for more meaningful results.'
+        st.warning(msg, icon="⚠️")
+
     st.info(f'Using gilts issued as of the close of {issued.close_date}', icon="ℹ️")
+
     prices_date = prices.get_prices_date()
     prices_date = prices_date.astimezone(ZoneInfo("Europe/London"))
     prices_date = prices_date.strftime("%Y-%m-%d %H:%M %Z")
     st.info(f'Using prices from {prices_date}', icon="ℹ️")
+
     if index_linked:
         st.info(f'Using published RPI series until {rpi_series.last_date().strftime("%B %Y")}', icon="ℹ️")
+
+
+    df = bl.buy_df
 
     # https://pandas.pydata.org/docs/user_guide/style.html#1.-Remove-UUID-and-cell_ids
     from pandas.io.formats.style import Styler

@@ -5,6 +5,7 @@
 #
 
 
+import datetime
 import sys
 
 import pytest
@@ -46,6 +47,17 @@ def test_monthly():
     frequency = at.radio(key="frequency")
     assert frequency.value == "Yearly"
     frequency.set_value("Monthly")
+    run(at)
+
+
+def test_start_date():
+    at = AppTest.from_file("app.py", default_timeout=default_timeout)
+    run(at)
+
+    start_date = at.date_input(key="start_date")
+    assert start_date.value is None
+    today = datetime.datetime.utcnow().date()
+    start_date.set_value(today.replace(year=today.year + 10, month=4, day=6))
     run(at)
 
 

@@ -416,12 +416,14 @@ def monthly(date):
 
 def schedule(count, amount=10000, frequency=yearly, start=None):
     if start is None:
-        start = datetime.datetime.utcnow().date()
-    result = []
-    d = start
-    for i in range(count):
+        d = datetime.datetime.utcnow().date()
         d = frequency(d)
+    else:
+        d = start
+    result = []
+    for i in range(count):
         result.append((d, amount))
+        d = frequency(d)
     return result
 
 
