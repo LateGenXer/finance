@@ -18,7 +18,9 @@ I am not a financial or tax adviser.
 
 ## Recent changes
 
-N/A
+- Allow to set a start date in the future.
+- Automatically download latest issued gilts from DMO's website.
+- Always present UK local time.
 
 ## Features
 
@@ -31,9 +33,7 @@ N/A
 
 ## Known issues
 
-* Date/times might be off, due to timezome differences (between the client, the hosting service, and UK.)
-* Issued gilts are not yet automatically downloaded from UK's DMO website, so listed gilts will grow stale unless manually updated when gilts go in/out of circulation.
-* There's no ability to start withdrawals in the distant future (mostly because it does yet consider the possibility of reinvesting coupons.)
+* For start dates in the future, early coupons are not reinvested.
 * The tool does not yet consider the possibility of selling gilts before maturity, which might be advantageous, especially with index-linked gilts and/or high income marginal tax rates, as good gilts became fewer and further apart.
 * The tool does not consider BoE's yield or inflation curves.
 * It does not take special care with index-linked gilts whose redemption value is know (due to the indexation lag) and therefore are more akin to convential gilts.
