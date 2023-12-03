@@ -268,15 +268,30 @@ class TradewebClosePrices(Prices):
         return self.datetime
 
 
+def main():
+    logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s %(message)s', level=logging.INFO)
+
+    datetime, content = get_latest_gilt_prices()
+
+    w = csv.writer(sys.stdout)
+
+    th = ['date', 'isin', 'tidm', 'price']
+    w.writerow(th)
+
+    for item in content:
+        tidm = item['tidm']
+
+        data = get_instrument_data(tidm)
+        assert data['currency'] == 'GBP'
+
+        lastclosedate = data['lastclosedate']
+        lastclosedate = datetime.fromisoformat(lastclosedate)
+        lastclosedate = lastclosedate.date()
+        lastclosedate = lastclosedate.isoformat()
+
+        tr = [lastclosedate, data['isin'], data['tidm'], data['lastclose']]
+        w.writerow(tr)
+
+
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s', level=logging.INFO)
-    prices = GiltPrices()
-    if len(sys.argv) == 1:
-        for isin, tidm in csv.reader(open(_tidm_csv, 'rt')):
-            tidm = prices.lookup_tidm(isin)
-            price = prices.get_price(tidm)
-            print(f'{tidm:4} {price:6.2f}')
-    else:
-        for tidm in sys.argv[1:]:
-            price = prices.get_price(tidm)
-            print(f'{tidm:4} {price:6.2f}')
+    main()

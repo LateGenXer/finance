@@ -38,3 +38,7 @@ def test_prices(cls):
     assert prices.lookup_tidm(isin) == tidm
     assert prices.get_price(tidm) >= 0
     assert isinstance(prices.get_prices_date(), datetime.datetime)
+
+
+def test_main():
+    lse.main()
