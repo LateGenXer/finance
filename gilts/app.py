@@ -278,6 +278,7 @@ with tab2:
 
     s.set_table_styles([
         dict(selector='th', props='text-align: center;'),
+        dict(selector='th, td', props='font-family: monospace; font-size: 8pt;'),
         dict(selector='table, tr, th, td', props='border: 0;'),
         dict(selector='td', props='text-align: right; padding: 0px 5px 0px 5px;'),
         dict(selector='tbody tr:nth-child(even)', props='background-color: whitesmoke;'),
