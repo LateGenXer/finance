@@ -12,6 +12,7 @@ import posixpath
 import shutil
 import sys
 import time
+import threading
 import urllib.error
 import urllib.request
 import email.message
@@ -86,8 +87,8 @@ def download(url, filename=None, ttl=0, content_type=None, verbose=False):
 
     logger.info(f'Downloading {url} to {os.path.relpath(filename)}')
     head, tail = os.path.split(filename)
-    pid = os.getpid()
-    tmp_filename = os.path.join(head, f'.{tail}.{pid}')
+    tid = threading.get_native_id()
+    tmp_filename = os.path.join(head, f'.{tail}.{tid}')
     dst = open(tmp_filename, 'wb')
     shutil.copyfileobj(src, dst)
     dst.close()
