@@ -297,7 +297,7 @@ class Issued:
             # Cache of https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A
             # updated daily by .github/workflows/gh-pages.yml to avoid Captchas on
             # more frequent downloads.
-            download('https://lategenxer.github.io/finance/dmo-D1A.xml', filename, ttl=1800)
+            download('https://lategenxer.github.io/finance/dmo-D1A.xml', filename)
 
         entries = self.load_xml(filename)
 
