@@ -299,15 +299,15 @@ class Issued:
             # more frequent downloads.
             download('https://lategenxer.github.io/finance/dmo-D1A.xml', filename)
 
-        entries = self.load_xml(filename)
+        entries = self._parse_xml(filename)
 
         self.all = []
         for entry in entries:
             kwargs = {
                 'isin': entry['ISIN_CODE'],
                 'coupon': self._parse_coupon(entry['INSTRUMENT_NAME']),
-                'maturity': datetime.datetime.fromisoformat(entry['REDEMPTION_DATE']).date(),
-                'issue_date': datetime.datetime.fromisoformat(entry['FIRST_ISSUE_DATE']).date(),
+                'maturity': self._parse_date(entry['REDEMPTION_DATE']),
+                'issue_date': self._parse_date(entry['FIRST_ISSUE_DATE']),
             }
             type_ = entry['INSTRUMENT_TYPE']
             if type_ == 'Conventional ':
@@ -320,11 +320,12 @@ class Issued:
                 kwargs['base_rpi'] = float(entry['BASE_RPI_87'])
                 gilt = IndexLinkedGilt(**kwargs)
 
+            self.close_date = self._parse_date(entry['CLOSE_OF_BUSINESS_DATE'])
+
             # Check ex-divdend dates match when testing
             if "PYTEST_CURRENT_TEST" in os.environ:
-                current_xd_date = datetime.datetime.fromisoformat(entry['CURRENT_EX_DIV_DATE']).date()
-                close_date = datetime.datetime.fromisoformat(entry['CLOSE_OF_BUSINESS_DATE']).date()
-                settlement_date = next_business_day(close_date)
+                current_xd_date = self._parse_date(entry['CURRENT_EX_DIV_DATE'])
+                settlement_date = next_business_day(self.close_date)
                 _, next_coupon_date = gilt.prev_next_coupon_date(settlement_date)
                 assert gilt.ex_dividend_date(next_coupon_date) == current_xd_date
 
@@ -335,12 +336,16 @@ class Issued:
         self.isin = {gilt.isin: gilt for gilt in self.all}
 
     @staticmethod
-    def load_xml(filename):
+    def _parse_xml(filename):
         stream = open(filename, 'rt')
         tree = xml.etree.ElementTree.parse(stream)
         root = tree.getroot()
         for node in root:
             yield node.attrib
+
+    @staticmethod
+    def _parse_date(string):
+        return datetime.datetime.fromisoformat(string).date()
 
     _coupon_re = re.compile(r'^(?P<unit>[0-9]+) ?(?P<fraction>|½|¼|¾|[1357]/8) ?%$')
     _fractions = {
@@ -382,8 +387,7 @@ def lagged_date(date, months):
 
 
 def yield_curve(issued, prices, index_linked=False):
-    today = datetime.datetime.utcnow().date()
-    settlement_date = next_business_day(today)
+    settlement_date = next_business_day(issued.close_date)
     data = []
     for g in issued.filter(index_linked):
         isin = g.isin
@@ -392,7 +396,7 @@ def yield_curve(issued, prices, index_linked=False):
         dirty_price = g.dirty_price(clean_price, settlement_date)
 
         ytm = g.ytm(dirty_price, settlement_date) * 100.0
-        maturity = (g.maturity - today).days / 365.0
+        maturity = (g.maturity - issued.close_date).days / 365.0
         data.append((maturity, ytm, tidm))
 
     return pd.DataFrame(data, columns=['Maturity', 'Yield', 'TIDM'])

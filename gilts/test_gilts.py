@@ -58,8 +58,6 @@ def tradeweb():
 def test_tradeweb(issued, tradeweb):
     for row in tradeweb:
         isin = row['ISIN']
-        #if isin != 'GB00BHBFH458':
-        #    continue
         gilt = issued.isin[isin]
 
         print(row)
