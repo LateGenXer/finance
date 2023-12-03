@@ -220,12 +220,11 @@ with tab1:
     s.format(formatters, subset=list(formatters.keys()), na_rep='')
 
     s.set_table_styles([
-        {'selector': 'table', 'props': 'margin: 0px auto;'},
-        {'selector': 'table, tr, th, td', 'props': 'border: 0;'},
-        {'selector': 'td', 'props': 'text-align: right; padding: 0px 5px 0px 5px;'},
-        {'selector': 'tbody tr:nth-child(even)', 'props': 'background-color: whitesmoke;'},
-        {'selector': 'td.col0', 'props': 'text-align: left'},
-        {'selector': 'td.col1', 'props': 'text-align: left'},
+        dict(selector='table', props='margin: 0px auto;'),
+        dict(selector='table, tr, th, td', props='border: 0;'),
+        dict(selector='td', props='text-align: right; padding: 0px 5px 0px 5px;'),
+        dict(selector='tbody tr:nth-child(even)', props='background-color: whitesmoke;'),
+        dict(selector='td.col0, td.col1', props='text-align: left'),
     ])
 
     df_ = df[df['Quantity'].lt(.005)]
@@ -278,10 +277,11 @@ with tab2:
     s.format(precision=2, thousands=',', decimal='.', na_rep='')
 
     s.set_table_styles([
-        {'selector': 'table, tr, th, td', 'props': 'border: 0;'},
-        {'selector': 'td', 'props': 'text-align: right; padding: 0px 5px 0px 5px;'},
-        {'selector': 'tbody tr:nth-child(even)', 'props': 'background-color: whitesmoke;'},
-        {'selector': 'td.col1', 'props': 'text-align: left'},
+        dict(selector='th', props='text-align: center;'),
+        dict(selector='table, tr, th, td', props='border: 0;'),
+        dict(selector='td', props='text-align: right; padding: 0px 5px 0px 5px;'),
+        dict(selector='tbody tr:nth-child(even)', props='background-color: whitesmoke;'),
+        dict(selector='th.col1, td.col1', props='text-align: left'),
     ])
     s.set_properties(subset=['Description'], **{'text-align': 'left'})
 
