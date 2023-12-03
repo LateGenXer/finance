@@ -86,7 +86,8 @@ def download(url, filename=None, ttl=0, content_type=None, verbose=False):
 
     logger.info(f'Downloading {url} to {os.path.relpath(filename)}')
     head, tail = os.path.split(filename)
-    tmp_filename = os.path.join(head, '.' + tail)
+    pid = os.getpid()
+    tmp_filename = os.path.join(head, f'.{tail}.{pid}')
     dst = open(tmp_filename, 'wb')
     shutil.copyfileobj(src, dst)
     dst.close()
