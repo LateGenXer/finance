@@ -33,6 +33,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+import caching
+
 if int(os.environ.get('PULP', '0')) != 0:
     import pulp as lp
 else:
@@ -293,13 +295,9 @@ class Issued:
 
     def __init__(self, filename=None):
         if filename is None:
-            filename = os.path.join(os.path.dirname(__file__), 'dmo-D1A.xml')
-            # Cache of https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A
-            # updated daily by .github/workflows/gh-pages.yml to avoid Captchas on
-            # more frequent downloads.
-            download('https://lategenxer.github.io/finance/dmo-D1A.xml', filename)
-
-        entries = self._parse_xml(filename)
+            entries = self._download()
+        else:
+            entries = self._parse_xml(filename)
 
         self.all = []
         for entry in entries:
@@ -334,6 +332,16 @@ class Issued:
         self.all.sort(key=operator.attrgetter('maturity'))
 
         self.isin = {gilt.isin: gilt for gilt in self.all}
+
+    @staticmethod
+    @caching.cache_data(ttl=15*60)
+    def _download():
+        # Cache of https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A
+        # updated daily by .github/workflows/gh-pages.yml to avoid Captchas on
+        # more frequent downloads.
+        filename = os.path.join(os.path.dirname(__file__), 'dmo-D1A.xml')
+        download('https://lategenxer.github.io/finance/dmo-D1A.xml', filename)
+        return list(Issued._parse_xml(filename))
 
     @staticmethod
     def _parse_xml(filename):

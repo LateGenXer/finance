@@ -128,8 +128,9 @@ class GiltPrices(Prices):
 
     def __init__(self, filename=None):
         if filename is None:
-            filename = os.path.join(os.path.dirname(__file__), 'gilts-closing-prices.csv')
-            download('https://lategenxer.github.io/finance/gilts-closing-prices.csv', filename)
+            entries = self._download()
+        else:
+            entries = csv.DictReader(open(filename, 'rt'))
 
         self.tidms = {}
         self.prices = {}
@@ -137,7 +138,7 @@ class GiltPrices(Prices):
         from zoneinfo import ZoneInfo
         tzinfo = ZoneInfo("Europe/London")
 
-        for entry in csv.DictReader(open(filename, 'rt')):
+        for entry in entries:
             date = datetime.date.fromisoformat(entry['date'])
 
             # https://www.lsegissuerservices.com/spark/lse-whitepaper-trading-insights
@@ -149,6 +150,13 @@ class GiltPrices(Prices):
 
             self.tidms[isin] = tidm
             self.prices[tidm] = price
+
+    @staticmethod
+    @caching.cache_data(ttl=15*60)
+    def _download():
+        filename = os.path.join(os.path.dirname(__file__), 'gilts-closing-prices.csv')
+        download('https://lategenxer.github.io/finance/gilts-closing-prices.csv', filename)
+        return list(csv.DictReader(open(filename, 'rt')))
 
     def lookup_tidm(self, isin):
         return self.tidms[isin]
