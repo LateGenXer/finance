@@ -164,7 +164,7 @@ class Gilt:
         r = (next_coupon_date - settlement_date).days
         assert r > 0
         s = (next_coupon_date - prev_coupon_date).days
-        assert s > 0
+        assert s >= 181 and s <= 184
 
         c = self.coupon
         f = 2

@@ -86,10 +86,17 @@ def test_tradeweb(issued, tradeweb):
         if conventional:
             ytm = float(row['Yield'])
             ytm_ = gilt.ytm(dirty_price, settlement_date)
-            # ytm_ = (1 + ytm_)/(1 + .03) - 1
             ytm_ *= 100
-            #print(f'{ytm_:8.6f} vs {ytm:8.6f} {ytm_ - ytm:9.6f}')
-            assert ytm_ == approx(ytm, rel=5e-3)
+
+            print(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:.1e})')
+
+            _, next_coupon_dates = gilt.coupon_dates(settlement_date=settlement_date)
+            if len(next_coupon_dates) == 2:
+                # XXX: Tradeweb seems to be using simple interest
+                # (non-compounding) for all bonds maturing less than one year
+                assert ytm_ == approx(ytm, rel=1e-2)
+            else:
+                assert ytm_ == approx(ytm, abs=5e-6)
 
 
 @pytest.mark.parametrize("lag", [0, 2])
