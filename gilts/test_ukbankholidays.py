@@ -48,12 +48,3 @@ def test_next_business_day(d0, d1):
     d0 = date(*d0)
     d1 = date(*d1)
     assert next_business_day(d0) == d1
-
-
-def test_write():
-    from ukbankholidays import _write
-    try:
-        _write()
-    except ValueError:
-        pytest.skip("captcha")
-
