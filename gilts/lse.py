@@ -163,7 +163,7 @@ class GiltPrices(Prices):
 class TradewebClosePrices(Prices):
     # https://reports.tradeweb.com/closing-prices/gilts/ > Type: Gilts Only > Export
 
-    default = os.path.join(os.path.dirname(__file__), 'Tradeweb_FTSE_ClosePrices_20231117.csv')
+    default = os.path.join(os.path.dirname(__file__), 'Tradeweb_FTSE_ClosePrices_20231201.csv')
 
     def __init__(self, filename=default):
         self.tidms = {}
