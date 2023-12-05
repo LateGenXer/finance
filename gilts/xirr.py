@@ -6,7 +6,6 @@
 
 
 import math
-import datetime
 
 import numpy as np
 
@@ -19,55 +18,52 @@ __all__ = [
 ]
 
 
-def _periods(dates):
-    d0 = dates[0]
-    assert isinstance(d0, datetime.date)
-    dm = min(dates)
-    if d0 != dm:
-        raise ValueError(f'First date ({d0}) is not earliest date ({dm}).')
-    return np.array([(d0 - di).days / 365.0 for di in dates], dtype=np.float64)
+def _periods(dates, period):
+    dates = np.array(dates, dtype=np.datetime64)
+    assert (dates[:-1] <= dates[1:]).all()
+    periods = (dates - dates[0]) / np.timedelta64(1, 'D')
+    periods /= period
+    return periods
 
 
-def _npv(discount_factor, values, periods):
-    if discount_factor <= 0.0:
-        return math.inf
-    return np.sum(values * discount_factor ** periods)
-
-
-def _npv_prime(discount_factor, values, periods):
-    '''Derivative of _npv in respect to the discount_factor.'''
-    if discount_factor <= 0.0:
-        return math.inf
-    return np.sum(values * periods * discount_factor ** (periods - 1))
-
-
-def xnpv(rate, values, dates):
+def xnpv(rate, values, dates, period=365.25):
     '''Equivalent of Excel's XNPV function.'''
     values = np.asarray(values, dtype=np.float64)
-    periods = _periods(dates)
-    return _npv(1.0 + rate, values, periods)
+    periods = _periods(dates, period)
+    discount_factor = 1.0 / (1.0 + rate)
+    return np.dot(values, discount_factor ** periods)
 
 
-def xirr(values, dates, guess=0.1, secant=False):
+def xirr(values, dates, guess=0.1, secant=False, period=365.25):
     '''Equivalent of Excel's XIRR function.'''
 
     assert min(values) <= 0.0
     assert max(values) >= 0.0
 
     values = np.asarray(values, dtype=np.float64)
-    periods = _periods(dates)
+    periods = _periods(dates, period)
 
-    fn       = lambda r: _npv      (1.0 + r, values, periods)
+    def fn(df):
+        if df <= 0.0:
+            return -math.inf
+        return np.dot(values, df ** periods)
 
     if secant:
         fn_prime = None
     else:
-        fn_prime = lambda r: _npv_prime(1.0 + r, values, periods)
+        values_periods = values * periods
+        periods_minus_one = periods - 1.0
+        def fn_prime(df):
+            if df <= 0.0:
+                return math.inf
+            return np.dot(values_periods, df ** periods_minus_one)
+
+    df_guess = 1.0 / (1.0 + guess)
 
     try:
-        return scipy.optimize.newton(fn, guess, fn_prime)
+        df = scipy.optimize.newton(fn, df_guess, fn_prime)
     except RuntimeError:
-        # https://stackoverflow.com/a/33260133 suggests using brentq but it
-        # seems errors can be avoided by passing the exact derivative to the
-        # newton method.
-        raise
+        # https://stackoverflow.com/a/33260133
+        df = scipy.optimize.brentq(fn, 1e-6, 1e6)
+
+    return 1.0 / df - 1.0
