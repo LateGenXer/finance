@@ -162,7 +162,7 @@ class Gilt:
         n = len(next_coupon_dates) - 1
 
         r = (next_coupon_date - settlement_date).days
-        assert r > 0
+        assert r >= 0
         s = (next_coupon_date - prev_coupon_date).days
         assert s >= 181 and s <= 184
 
