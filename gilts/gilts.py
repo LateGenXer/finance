@@ -234,19 +234,32 @@ class IndexLinkedGilt(Gilt):
         self.lag = 3 if issue_date >= datetime.date(2005, 9, 22) else 8
 
     # https://www.dmo.gov.uk/media/0ltegugd/igcalc.pdf
-    def ref_date(self, settlement_date):
+    def ref_rpi(self, settlement_date):
         if self.lag == 3:
-            return lagged_date(settlement_date, months=3)
+            d = settlement_date
+            month_idx = (d.year - rpi.ref_year) * 12 + (d.month - 1)
+            month_idx -= self.lag
+            weight = (d.day - 1) / days_in_month(d.year, d.month)
+            assert weight >= 0 and weight < 1
+            rpi0 = self._rpi(month_idx)
+            rpi1 = self._rpi(month_idx + 1)
+            return round(rpi0 + weight * (rpi1 - rpi0), 5)
         else:
             assert self.lag == 8
-            next_coupon_date = self.maturity
-            while self.previous_coupon_date(next_coupon_date) >= settlement_date:
-                next_coupon_date = Gilt.previous_coupon_date(next_coupon_date)
-            return lagged_date(next_coupon_date.replace(day = 1), months=8)
+            _, d = self.prev_next_coupon_date(settlement_date)
+            month_idx = (d.year - rpi.ref_year) * 12 + (d.month - 1)
+            month_idx -= self.lag
+            return self._rpi(month_idx)
 
-    def ref_rpi(self, settlement_date):
-        ref_date = self.ref_date(settlement_date)
-        return rpi.estimate(ref_date)
+    inflation_rate = 0.03
+
+    def _rpi(self, month_idx):
+        assert month_idx >= 0
+        try:
+            return rpi.series[month_idx]
+        except IndexError:
+            months = month_idx + 1 - len(rpi.series)
+            return rpi.series[-1] * (1 + self.inflation_rate) ** (months / 12)
 
     def index_ratio(self, settlement_date):
         return round(self.ref_rpi(settlement_date) / self.base_rpi, 5)
@@ -270,8 +283,7 @@ class IndexLinkedGilt(Gilt):
 
     def cash_flows(self, settlement_date):
         for date, value in Gilt.cash_flows(self, settlement_date=settlement_date):
-            ref_date = self.ref_date(date)
-            index_ratio = rpi.estimate(ref_date) / self.base_rpi
+            index_ratio = self.index_ratio(date)
             # Round to 6 decimal places, per https://www.dmo.gov.uk/media/0ltegugd/igcalc.pdf
             # Annex: Rounding Conventions for Interest and Redemption Cash Flows for Index-linked Gilts
             value = round(value * index_ratio, 6)
@@ -398,18 +410,6 @@ def days_in_month(year, month):
         return 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28
     else:
         return _days_in_month[month - 1]
-
-
-def lagged_date(date, months):
-    assert months <= 12
-    if date.month > months:
-        year = date.year
-        month = date.month - months
-    else:
-        year = date.year - 1
-        month = date.month + 12 - months
-    day = min(date.day, days_in_month(year, month))
-    return date.replace(year=year, month=month, day=day)
 
 
 def yield_curve(issued, prices, index_linked=False):

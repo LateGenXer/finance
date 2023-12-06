@@ -55,8 +55,15 @@ def tradeweb():
     return list(lse.TradewebClosePrices.parse(filename))
 
 
-def test_tradeweb(issued, tradeweb):
+gilt_types = ["Conventional", "Index-linked"]
+
+@pytest.mark.parametrize("type_", gilt_types)
+def test_tradeweb(issued, tradeweb, type_):
     for row in tradeweb:
+        assert row["Type"] in gilt_types
+        if row["Type"] != type_:
+            continue
+
         isin = row['ISIN']
         gilt = issued.isin[isin]
 
@@ -80,16 +87,19 @@ def test_tradeweb(issued, tradeweb):
         accrued_interest = float(row['Accrued Interest'])
         dirty_price = float(row['Dirty Price'])
 
-        assert gilt.accrued_interest(settlement_date) == approx(accrued_interest, abs=1e-6 if conventional else 1e-4)
-        assert gilt.dirty_price(clean_price, settlement_date) == approx(dirty_price, abs=1e-6 if conventional else 5e-2)
+        abs_tol = 1e-6 if conventional or gilt.lag != 8 else 1e-4
+        assert gilt.accrued_interest(settlement_date) == approx(accrued_interest, abs=abs_tol)
+        assert gilt.dirty_price(clean_price, settlement_date) == approx(dirty_price, abs=abs_tol)
+
+        ytm = float(row['Yield'])
+        ytm_ = gilt.ytm(dirty_price, settlement_date)
+        if not conventional:
+            ytm_ = (1 + ytm_)/(1 + .03) - 1
+        ytm_ *= 100
+
+        print(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:+.1e})')
 
         if conventional:
-            ytm = float(row['Yield'])
-            ytm_ = gilt.ytm(dirty_price, settlement_date)
-            ytm_ *= 100
-
-            print(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:+.1e})')
-
             _, next_coupon_dates = gilt.coupon_dates(settlement_date=settlement_date)
             if len(next_coupon_dates) == 2:
                 # XXX: Tradeweb seems to be using simple interest
