@@ -237,7 +237,7 @@ class IndexLinkedGilt(Gilt):
             next_coupon_date = self.maturity
             while self.previous_coupon_date(next_coupon_date) >= settlement_date:
                 next_coupon_date = Gilt.previous_coupon_date(next_coupon_date)
-            return lagged_date(next_coupon_date, months=8).replace(day = 1)
+            return lagged_date(next_coupon_date.replace(day = 1), months=8)
 
     def ref_rpi(self, settlement_date):
         ref_date = self.ref_date(settlement_date)
@@ -386,12 +386,25 @@ from rpi import RPI
 rpi = RPI()
 
 
+_days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+def days_in_month(year, month):
+    if month == 2:
+        return 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28
+    else:
+        return _days_in_month[month - 1]
+
+
 def lagged_date(date, months):
     assert months <= 12
     if date.month > months:
-        return date.replace(month=date.month - months)
+        year = date.year
+        month = date.month - months
     else:
-        return date.replace(year=date.year - 1, month=date.month + 12 - months)
+        year = date.year - 1
+        month = date.month + 12 - months
+    day = min(date.day, days_in_month(year, month))
+    return date.replace(year=year, month=month, day=day)
 
 
 def yield_curve(issued, prices, index_linked=False):
@@ -415,11 +428,18 @@ EventKind = enum.IntEnum("EventKind", ['CASH_FLOW', 'CONSUMPTION', 'TAX_YEAR_END
 
 
 def yearly(date):
-    return date.replace(year=date.year + 1)
+    year = year=date.year + 1
+    month = date.month
+    day = min(date.day, days_in_month(year, month))
+    return date.replace(year=year, month=month, day=day)
+
 
 def monthly(date):
-    # XXX Deal more graceuflly with variable number of days per month
-    return date.replace(year=date.year + date.month // 12, month=date.month % 12 + 1, day=min(date.day, 28))
+    # XXX Deal more gracefully with variable number of days per month
+    year = year=date.year + date.month // 12
+    month = date.month % 12 + 1
+    day = min(date.day, days_in_month(year, month))
+    return date.replace(year=year, month=month, day=day)
 
 
 def schedule(count, amount=10000, frequency=yearly, start=None):
@@ -476,7 +496,6 @@ class BondLadder:
             events.append(Event(d, "Withdrawal", EventKind.CONSUMPTION, amount))
             transactions.append((d, amount))
         last_consuption = d
-        #last_consuption = last_consuption.replace(year=last_consuption.year + 1)
 
         # Add tax events
         if self.marginal_income_tax:
