@@ -2,10 +2,14 @@ name: gh-pages
 
 on:
 
-  # Every workday at 17:00 UTC (17:00 GMT, 18:00 BST)
-  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
+  # Schedule after new data is available.
+  # Times are in UTC, which match GMT.  During BST schedules will run one hour behind.
+  # See also https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
   schedule:
-    - cron: '0 17 * * MON-FRI'
+    # LSE's gilt closing prices are available shortly after 16:35.
+    - cron: '45 16 * * MON-FRI'
+    # BoE's issued gilts report are available early hours after midnight.
+    - cron: '0 4 * * TUE-SAT'
 
   # When dependencies change
   push:
@@ -44,10 +48,9 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Create bare-bones site
-        run: |
-          mkdir _site
+        run: mkdir _site
       - name: Download Gilts in Issue from DMO
-        run: gilts/download.py 'https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A' _site/dmo-D1A.xml text/xml
+        run: python gilts/download.py 'https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A' _site/dmo-D1A.xml text/xml
       - name: Download Gilts Closing Prices from LSE
         run: python gilts/lse.py > _site/gilts-closing-prices.csv
       - name: Upload artifact
