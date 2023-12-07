@@ -195,7 +195,7 @@ with tab1:
             msg += '\n\nYou might want to set an interest rate for more meaningful results.'
         st.warning(msg, icon="⚠️")
 
-    st.info(f'Using gilts issued as of the close of {date_format(issued.close_date)}.', icon="ℹ️")
+    st.info(f'Using gilts in issue on the close of {date_format(issued.close_date)}.', icon="ℹ️")
 
     prices_date = prices.get_prices_date()
     prices_date = prices_date.astimezone(ZoneInfo("Europe/London"))
