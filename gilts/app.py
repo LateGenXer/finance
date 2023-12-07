@@ -181,25 +181,28 @@ tab1, tab2, tab3, tab4 = st.tabs(["Implementation", "Cash Flow", "Export", "Abou
 
 currency_format = '{:,.2f}'
 
+# https://www.gov.uk/guidance/style-guide/a-to-z-of-gov-uk-style
+def date_format(d):
+    return f'{d.day} {d:%B} {d.year}'
+
 with tab1:
 
     st.warning("A bond ladder is not necessarily the best strategy. Read [here](https://www.fidelity.com/learning-center/investment-products/fixed-income-bonds/bond-investment-strategies) to know more.", icon="⚠️")
 
     if not advanced and start_date is not None:
-        msg = f'Coupons received before {start_date} will be accumulated as a cash balance and not reinvested.'
+        msg = f'Coupons received before {date_format(start_date)} will be accumulated as a cash balance and not reinvested.'
         if not st.session_state.interest_rate:
             msg += '\n\nYou might want to set an interest rate for more meaningful results.'
         st.warning(msg, icon="⚠️")
 
-    st.info(f'Using gilts issued as of the close of {issued.close_date}', icon="ℹ️")
+    st.info(f'Using gilts issued as of the close of {date_format(issued.close_date)}.', icon="ℹ️")
 
     prices_date = prices.get_prices_date()
     prices_date = prices_date.astimezone(ZoneInfo("Europe/London"))
-    prices_date = prices_date.strftime("%Y-%m-%d %H:%M %Z")
-    st.info(f'Using prices from {prices_date}', icon="ℹ️")
+    st.info(f'Using prices from {date_format(prices_date)}, {prices_date:%H:%M (%Z)}.', icon="ℹ️")
 
     if index_linked:
-        st.info(f'Using published RPI series until {rpi_series.last_date().strftime("%B %Y")}', icon="ℹ️")
+        st.info(f'Using published RPI until {rpi_series.last_date():%B %Y}.', icon="ℹ️")
 
 
     df = bl.buy_df
