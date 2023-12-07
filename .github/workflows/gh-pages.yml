@@ -6,10 +6,10 @@ on:
   # Times are in UTC, which match GMT.  During BST schedules will run one hour behind.
   # See also https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
   schedule:
-    # LSE's gilt closing prices are available shortly after 16:35.
-    - cron: '45 16 * * MON-FRI'
+    # LSE's gilt closing prices are determined shortly after 16:35, published 15min after.
+    - cron: '0 17 * * MON-FRI'
     # BoE's issued gilts report are available early hours after midnight.
-    - cron: '0 4 * * TUE-SAT'
+    - cron: '0 5 * * TUE-SAT'
 
   # When dependencies change
   push:
