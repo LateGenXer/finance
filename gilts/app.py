@@ -50,14 +50,15 @@ from gilts import Issued, BondLadder, schedule, monthly, yearly, yield_curve
 from ukbankholidays import next_business_day
 
 
+st.title('Gilt Ladder Builder')
+
+
 #
 # Parameters
 #
 
 with st.sidebar:
-    st.title('Gilt Ladder Builder')
-
-    #st.info('Parameters are not stored permanently and will not persist across page reloads.', icon="ℹ️")
+    st.header("Parameters")
 
     # TODO
     if experimental:
@@ -150,6 +151,8 @@ except ValueError as ex:
 
 with st.sidebar:
     st.divider()
+
+    st.header("Overview")
 
     st.metric(label="Cost", value=f"£{bl.cost:,.2f}")
     if not index_linked:
