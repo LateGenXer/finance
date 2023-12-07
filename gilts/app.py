@@ -21,6 +21,7 @@ import pandas as pd
 
 
 experimental = '--experimental' in sys.argv[1:]
+mock_schedule_file = '--mock-schedule-file' in sys.argv[1:]
 
 
 # https://docs.streamlit.io/library/api-reference/utilities/st.set_page_config
@@ -60,14 +61,9 @@ st.title('Gilt Ladder Builder')
 with st.sidebar:
     st.header("Parameters")
 
-    # TODO
-    if experimental:
-        advanced = st.toggle("Advanced", value=False, key="advanced")
-    else:
-        advanced = False
-
     today = datetime.datetime.utcnow().date()
-    if not advanced:
+    tab1, tab2 = st.tabs(["Basic", "Advanced"])
+    with tab1:
         st.number_input('Withdrawal amount per year:', value=10000, min_value=1, step=1, key='year_amount')
         st.number_input('Number of years:', value=10, min_value=1, max_value=50, step=1, key='year_count')
         frequency = st.radio('Withdrawal frequency:', ['Yearly', 'Monthly'], horizontal=True, key='frequency')
@@ -75,19 +71,24 @@ with st.sidebar:
         max_start_date = today.replace(year=today.year + 30, month=12, day=31)
         start_date = st.date_input('Start date', value=None, min_value=min_start_date, max_value=max_start_date, key='start_date',
             help='Withdrawal start date.  Default is a year/month from today, as determined by the frequency.')
-    else:
-        default_date = today.replace(year=today.year + 1)
-        edited_df = st.data_editor(
-            data = pd.DataFrame([
-                {'Date': default_date, 'Amount': 1000 },
-            ]),
-            column_config={
-                "Date": st.column_config.DateColumn("Date", required=True, min_value=today),
-                "Amount": st.column_config.NumberColumn("Amount", required=True, default=1000, min_value=1, step=1),
-            },
-            num_rows="dynamic",
-            key="schedule",
-        )
+    with tab2:
+        schedule_file = st.file_uploader("Upload withdrawal schedule as a CSV file.", type=['csv'], help='''
+Upload a CSV file with (date, amount) pairs, like:
+```
+Date,Value
+2024-12-01,1000
+2025-12-01,1000
+2026-12-01,1000
+2027-12-01,1000
+2028-12-01,1000
+```
+''')
+        if mock_schedule_file:
+            schedule_file = io.BytesIO(b'''Date,Value
+            2073-12-31,1000
+            ''')
+
+    st.divider()
 
     index_linked = st.toggle("Index-linked", value=False, key="index_linked")
 
@@ -106,6 +107,7 @@ with st.sidebar:
 #
 
 # Withdrawal schedule
+advanced = schedule_file is not None
 if not advanced:
     if frequency == 'Yearly':
         f = yearly
@@ -118,17 +120,27 @@ if not advanced:
         count = st.session_state.year_count * 12
     s = schedule(count, amount, f, start_date)
 else:
-    s = []
-    for index, row in edited_df.iterrows():
-        date = row['Date']
-        value = row['Amount']
-        assert isinstance(date, datetime.date)
-        assert value > 0
-        s.append((date, value))
-    if not s:
-        st.error("No data")
-        st.stop()
-    s.sort(key=operator.itemgetter(0))
+    # To convert to a string based IO:
+    buffer = io.TextIOWrapper(schedule_file, encoding="utf-8")
+
+    schedule_df = pd.read_csv(buffer, header=0, names=['Date', 'Value'], parse_dates=['Date'])
+    schedule_df['Date'] = schedule_df['Date'].dt.date
+    schedule_df.sort_values(by=['Date'], inplace=True)
+
+    with st.expander("Uploaded data", expanded=False):
+        st.dataframe(
+            data = schedule_df,
+            column_config={
+                "Date": st.column_config.DateColumn("Date", required=True, min_value=today),
+                "Value": st.column_config.NumberColumn("Value", required=True, default=1000, min_value=1, step=1),
+            },
+            hide_index = True,
+        )
+    assert len(schedule_df)
+    assert schedule_df['Date'].min() >= today
+    assert schedule_df['Value'].min() > 0
+
+    s = list(schedule_df.itertuples(index=False))
 
 
 with st.spinner('Downloading data...'):

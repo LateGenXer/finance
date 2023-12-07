@@ -71,15 +71,11 @@ def test_index_linked():
     run(at)
 
 
-def test_experimental_advanced():
+def test_schedule_file():
     argv = sys.argv
     try:
-        sys.argv = ['app.py', '--experimental']
+        sys.argv = ['app.py', '--mock-schedule-file']
         at = AppTest.from_file("app.py", default_timeout=default_timeout)
-        run(at)
-
-        advanced = at.toggle(key="advanced")
-        advanced.set_value(True)
         run(at)
 
     finally:
