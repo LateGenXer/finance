@@ -417,7 +417,7 @@ def yield_curve(issued, prices, index_linked=False):
         dirty_price = g.dirty_price(clean_price, settlement_date)
 
         ytm = g.ytm(dirty_price, settlement_date) * 100.0
-        maturity = (g.maturity - issued.close_date).days / 365.0
+        maturity = (g.maturity - issued.close_date).days / 365.25
         data.append((maturity, ytm, tidm))
 
     return pd.DataFrame(data, columns=['Maturity', 'Yield', 'TIDM'])
@@ -473,7 +473,7 @@ class BondLadder:
     def solve(self):
         today = datetime.datetime.utcnow().date()
         date, amount = self.schedule[0]
-        yearly_consumption = amount * 365 / (date - today).days
+        yearly_consumption = amount * 365.25 / (date - today).days
 
         prob = lp.LpProblem("Ladder")
 
@@ -623,7 +623,7 @@ class BondLadder:
             if ev.date != prev_date:
                 assert ev.date >= prev_date
                 if self.interest_rate:
-                    interest = balance * self.interest_rate * (ev.date - prev_date).days / 365
+                    interest = balance * self.interest_rate * (ev.date - prev_date).days / 365.25
                     balance = balance + interest
                     accrued_income = accrued_income + interest
                     cash_flows.append(CashFlow(date=ev.date, description="Interest", incoming=interest, balance=balance, income=interest))
