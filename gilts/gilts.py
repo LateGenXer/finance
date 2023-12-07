@@ -561,7 +561,7 @@ class BondLadder:
                             sell = lp.LpVariable(f'Sell_{tidm}_{cd.strftime("%Y%m%d")}', 0)
                             quantity = quantity - sell
                             prob += quantity >= 0
-                            income += sell * g.accrued_interest(cd)
+                            income = income + sell * g.accrued_interest(cd)
                             ref_dirty_price = g.value(rate=ytm, settlement_date=cd)
                             dirty_price = g.value(rate=0.10, settlement_date=cd)
                             discount = dirty_price/ref_dirty_price - 1
@@ -569,10 +569,11 @@ class BondLadder:
                             operand = sell * dirty_price, income
                             description = self._description('*** Sell {sell:.2f} × {tidm} @ {clean_price:.2f} ({discount:+.1%}) ***', tidm=tidm, sell=sell, clean_price=clean_price, discount=discount)
                             events.append(Event(cd, description, EventKind.CASH_FLOW, operand))
+                            income = 0
 
                 # Coupons
                 if d <= last_consuption:
-                    income += quantity * amount
+                    income = income + quantity * amount
                     operand = quantity * amount, income
                     description = self._description('Coupon from {quantity:.2f} × {tidm} @ {amount:.4f}', tidm=tidm, quantity=quantity, amount=amount)
                     events.append(Event(d, description, EventKind.CASH_FLOW, operand))
@@ -586,12 +587,6 @@ class BondLadder:
                 operand = quantity * amount, None
                 events.append(Event(maturity, f'Redemption of {tidm}', EventKind.CASH_FLOW, operand))
                 quantity = 0
-            else:
-                #income += quantity * g.accrued_interest(last_consuption)
-                #price = g.value(rate=0.0525, settlement_date=last_consuption)
-                #operand = quantity * price, income
-                #events.append(Event(last_consuption, f'Sell {tidm}', EventKind.CASH_FLOW, operand))
-                pass
 
             holdings.append(holding)
 
