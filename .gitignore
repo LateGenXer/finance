@@ -135,4 +135,6 @@ dmypy.json
 
 *.xml
 
+*.zip
+
 _site/
