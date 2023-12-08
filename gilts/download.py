@@ -96,7 +96,7 @@ def download(url, filename=None, ttl=0, content_type=None, verbose=False):
     src.close()
     try:
         os.rename(tmp_filename, filename)
-    except FileExistsError:
+    except FileExistsError:  # pragma: no cover
         assert sys.platform != 'linux'
         shutil.move(tmp_filename, filename)
 
