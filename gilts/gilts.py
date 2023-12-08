@@ -483,9 +483,10 @@ class BondLadder:
         self.schedule = schedule
         self.buy_df = None
         self.cash_flow_df = None
+        self.today = datetime.datetime.utcnow().date()
 
     def solve(self):
-        today = datetime.datetime.utcnow().date()
+        today = self.today
         date, amount = self.schedule[0]
         yearly_consumption = amount * 365.25 / (date - today).days
 

@@ -19,8 +19,8 @@ from gilts import *
 @pytest.mark.parametrize("coupon_date,xd_date", [
     # https://docs.londonstockexchange.com/sites/default/files/documents/dmo-private-investor-guide-to-gilts.pdf
     ((2004,  9,  7), (2004,  8, 26)),
-])
-def test_ex_divind_date(coupon_date, xd_date):
+], ids=repr)
+def test_ex_dividend_date(coupon_date, xd_date):
     coupon_date = datetime.date(*coupon_date)
     xd_date = datetime.date(*xd_date)
     assert Gilt.ex_dividend_date(coupon_date) == xd_date
@@ -115,6 +115,7 @@ def test_bond_ladder(issued, prices, count, amount, frequency, index_linked, mar
     bl.marginal_income_tax = marginal_income_tax
     bl.interest_rate = interest_rate
     bl.lag = lag
+    bl.today = prices.get_prices_date().date()
     bl.solve()
     bl.print()
 
