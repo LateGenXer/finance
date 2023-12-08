@@ -25,16 +25,16 @@ class LpVariable:
 
     def __init__(self, name, lbound=None, ubound=None):
         self.name = name
-        self.lbound = lbound
-        self.ubound = ubound
-        self.index = None
-        self.value = None
+        self._lbound = lbound
+        self._ubound = ubound
+        self._index = None
+        self._value = None
 
     def __str__(self):
         return self.name
 
     def __repr__(self):
-        return f'<{self.name}>'
+        return self.name
 
     def __add__(self, other):
         return toAffine(self) + other
@@ -74,6 +74,9 @@ class LpVariable:
 
     def __ge__(self, other):
         return toAffine(self) >= other
+
+    def value(self):
+        return self._value
 
 
 def toAffine(x):
@@ -148,22 +151,22 @@ class LpAffineExpression:
             return self._unary(lambda a: a / other)
 
     def __eq__(self, other):
-        return LpConstraint(self - other, EQ)
+        return LpConstraint(self - other, LpConstraintEQ)
 
     def __le__(self, other):
-        return LpConstraint(self - other, LE)
+        return LpConstraint(self - other, LpConstraintLE)
 
     def __ge__(self, other):
-        return LpConstraint(self - other, GE)
+        return LpConstraint(self - other, LpConstraintGE)
 
     def value(self):
         res = self.b
         for x, a in self.AX.items():
-            res += a*x.value
+            res += a*x._value
         return res
 
 
-LE, GE, EQ = range(3)
+LpConstraintLE, LpConstraintGE, LpConstraintEQ = range(3)
 
 
 class LpConstraint:
@@ -178,11 +181,11 @@ class LpConstraint:
 
 LpMinimize, LpMaximize = range(2)
 
-LpStatusUndefined = -3
-LpStatusUnbounded = -2
+LpStatusUndefined  = -3
+LpStatusUnbounded  = -2
 LpStatusInfeasible = -1
-LpStatusNotSolved = 0
-LpStatusOptimal = 1
+LpStatusNotSolved  =  0
+LpStatusOptimal    =  1
 
 
 class LpProblem:
@@ -247,11 +250,11 @@ class LpProblem:
             if msg:
                 print(constraint)
             lhs = constraint.lhs
-            if constraint.sense == EQ:
+            if constraint.sense == LpConstraintEQ:
                 n_eq += 1
             else:
                 n_ub += 1
-                if constraint.sense == GE:
+                if constraint.sense == LpConstraintGE:
                     lhs = -lhs
 
             rhs = -lhs.b
@@ -263,7 +266,7 @@ class LpProblem:
                 indices.append(index)
                 data.append(a)
 
-            if constraint.sense == EQ:
+            if constraint.sense == LpConstraintEQ:
                 A_eq_indices.extend(indices)
                 A_eq_data.extend(data)
                 A_eq_indptr.append(len(A_eq_indices))
@@ -284,8 +287,8 @@ class LpProblem:
         bounds = [None] * n
         for x, i in variables.items():
             if msg:
-                print(f'{x.lbound} <= {x.name} <= {x.ubound}')
-            bounds[i] = (x.lbound, x.ubound)
+                print(f'{x._lbound} <= {x.name} <= {x._ubound}')
+            bounds[i] = (x._lbound, x._ubound)
 
         if msg:
             print(f'argmin({self.objective})')
@@ -294,14 +297,8 @@ class LpProblem:
             i = variables[x]
             c[i] = a
 
-        method = 'highs-ipm'
-        options = {}
         method = 'highs-ds'
         options = {}
-        #method = 'highs'
-        #options = {}
-        #method='interior-point'
-        #options = None
 
         if msg:
             print(variables)
@@ -321,7 +318,8 @@ class LpProblem:
 
         if res.status == 0:
             for x, i in variables.items():
-                x.value = res.x[i]
+                x._value = res.x[i]
+                assert x.name not in self.vd
                 self.vd[x.name] = x
         else:
             print(res.message)
@@ -347,21 +345,22 @@ class LpProblem:
 def value(x):
     if isinstance(x, numbers.Number):
         return x
-    elif isinstance(x, LpAffineExpression):
-        return x.value()
     else:
-        assert isinstance(x, LpVariable)
-        return x.value
+        assert isinstance(x, (LpVariable, LpAffineExpression))
+        return x.value()
 
 
 def GLPK_CMD(msg=0):
     return msg
 
+
 def PULP_CBC_CMD(msg=0):
     return msg
 
+
 def COIN_CMD(msg=0):
     return msg
+
 
 def listSolvers(onlyAvailable):
     return ['GLPK_CMD', 'PULP_CBC_CMD', 'COIN_CMD']
