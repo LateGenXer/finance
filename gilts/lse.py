@@ -106,7 +106,7 @@ def get_latest_gilt_prices():
             assert value['first'] is True
             assert value['last'] is True
             return date, value['content']
-    raise ValueError
+    raise ValueError  # pragma: no cover
 
 
 class Prices:
@@ -127,6 +127,7 @@ class Prices:
 class GiltPrices(Prices):
 
     def __init__(self, filename=None):
+        Prices.__init__(self)
         if filename is None:
             entries = self._download()
         else:
@@ -174,6 +175,7 @@ class TradewebClosePrices(Prices):
     default = os.path.join(os.path.dirname(__file__), 'Tradeweb_FTSE_ClosePrices_20231201.csv')
 
     def __init__(self, filename=default):
+        Prices.__init__(self)
         self.tidms = {}
         for isin, tidm in csv.reader(open(_tidm_csv, 'rt')):
             self.tidms[isin] = tidm

@@ -7,6 +7,8 @@
 
 import datetime
 import os.path
+import subprocess
+import sys
 
 import pytest
 
@@ -36,12 +38,12 @@ def test_get_latest_gilt_prices():
         assert isinstance(instrument['lastprice'], (float, int))
 
 
-@pytest.mark.parametrize('cls', [
-    lse.GiltPrices,
-    lse.TradewebClosePrices,
+@pytest.mark.parametrize('prices', [
+    pytest.param(lse.GiltPrices(None), id="cached"),
+    pytest.param(lse.GiltPrices(os.path.join(os.path.dirname(__file__), 'gilts-closing-prices-20231201.csv')), id="local"),
+    pytest.param(lse.TradewebClosePrices(), id="tradeweb"),
 ])
-def test_prices(cls):
-    prices = cls()
+def test_prices(prices):
     isin, tidm = 'GB00BBJNQY21', 'TR68'
     assert prices.lookup_tidm(isin) == tidm
     assert prices.get_price(tidm) >= 0
@@ -49,4 +51,5 @@ def test_prices(cls):
 
 
 def test_main():
-    lse.main()
+    status = subprocess.call([sys.executable, lse.__file__])
+    assert status == 0
