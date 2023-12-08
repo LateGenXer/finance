@@ -36,15 +36,23 @@ d = [
 d = [(d[i], d[i + 1]) for i in range(len(d) - 1)]
 
 
-@pytest.mark.parametrize("d0,d1", d)
+@pytest.mark.parametrize("d0,d1", d, ids=lambda val: str(date(*val)))
 def test_prev_business_day(d0, d1):
     d0 = date(*d0)
     d1 = date(*d1)
     assert prev_business_day(d1) == d0
 
 
-@pytest.mark.parametrize("d0,d1", d)
+@pytest.mark.parametrize("d0,d1", d, ids=repr)
 def test_next_business_day(d0, d1):
     d0 = date(*d0)
     d1 = date(*d1)
     assert next_business_day(d0) == d1
+
+
+def test_main():
+    from ukbankholidays import main
+    try:
+        main()
+    except ValueError:
+        pytest.skip("captcha")

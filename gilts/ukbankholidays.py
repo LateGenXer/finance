@@ -82,5 +82,5 @@ def main():
         print(f'{date.strftime("%Y-%m-%d")}')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
