@@ -44,12 +44,16 @@ _headers = {
 _tidm_re = re.compile(r'^https://www\.londonstockexchange\.com/stock/(?P<tidm>\w+)/.*$')
 
 
+# https://requests.readthedocs.io/en/latest/user/advanced/#keep-alive
+_session = requests.Session()
+
+
 @caching.cache_data(ttl=24*3600)
 def lookup_tidm(isin):
     logger.info(f'Looking up TIDM of {isin}')
     # https://www.londonstockexchange.com/live-markets/market-data-dashboard/price-explorer?categories=BONDS&subcategories=14
     url = f'https://api.londonstockexchange.com/api/gw/lse/search?worlds=quotes&q={isin}'
-    r = requests.get(url, headers=_headers, stream=False)
+    r = _session.get(url, headers=_headers, stream=False)
     assert r.ok
 
     obj = r.json()
@@ -65,7 +69,7 @@ def lookup_tidm(isin):
 def get_instrument_data(tidm):
     logger.info(f'Getting {tidm} instrument data')
     url = f'https://api.londonstockexchange.com/api/gw/lse/instruments/alldata/{tidm}'
-    r = requests.get(url, headers=_headers, stream=False)
+    r = _session.get(url, headers=_headers, stream=False)
     assert r.ok
     obj = r.json()
     return obj
@@ -95,7 +99,7 @@ def get_latest_gilt_prices():
     headers = _headers.copy()
     headers['content-type'] = 'application/json'
     url ='https://api.londonstockexchange.com/api/v1/components/refresh'
-    r = requests.post(url, headers=headers, json=payload)
+    r = _session.post(url, headers=headers, json=payload, stream=False)
     assert r.ok
     # This can create troubles with timezones
     date = email.utils.parsedate_to_datetime(r.headers['Date'])
