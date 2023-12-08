@@ -118,13 +118,13 @@ class Prices:
     def __init__(self):
         pass
 
-    def lookup_tidm(self, isin):
+    def lookup_tidm(self, isin):  # pragma: no cover
         raise NotImplementedError
 
-    def get_price(self, isin):
+    def get_price(self, tidm):  # pragma: no cover
         raise NotImplementedError
 
-    def get_prices_date(self):
+    def get_prices_date(self):  # pragma: no cover
         raise NotImplementedError
 
 

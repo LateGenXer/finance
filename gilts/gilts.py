@@ -57,7 +57,8 @@ class Gilt:
 
     type_ = 'Conventional'
 
-    def __init__(self, isin, coupon, maturity, issue_date):
+    def __init__(self, name, isin, coupon, maturity, issue_date):
+        self.name = name
         assert isinstance(isin, str) and len(isin) == 12
         self.isin = isin
         assert isinstance(coupon, numbers.Number)
@@ -75,6 +76,7 @@ class Gilt:
             return d.replace(d.year - 1, d.month + 6, d.day)
 
     def coupon_dates(self, settlement_date):
+        assert settlement_date >= self.issue_date
         assert settlement_date <= self.maturity
         next_coupon_dates = []
         prev_coupon_date = self.maturity
@@ -228,41 +230,51 @@ class IndexLinkedGilt(Gilt):
 
     type_ = 'Index-linked'
 
-    def __init__(self, isin, coupon, maturity, issue_date, base_rpi):
-        Gilt.__init__(self, isin, coupon, maturity, issue_date=issue_date)
+    def __init__(self, name, isin, coupon, maturity, issue_date, base_rpi):
+        Gilt.__init__(self, name, isin, coupon, maturity, issue_date=issue_date)
         self.base_rpi = base_rpi
         self.lag = 3 if issue_date >= datetime.date(2005, 9, 22) else 8
 
     # https://www.dmo.gov.uk/media/0ltegugd/igcalc.pdf
-    def ref_rpi(self, settlement_date):
+    def ref_rpi(self, settlement_date, inflation_rate=None):
         if self.lag == 3:
             d = settlement_date
             month_idx = (d.year - rpi.ref_year) * 12 + (d.month - 1)
             month_idx -= self.lag
             weight = (d.day - 1) / days_in_month(d.year, d.month)
             assert weight >= 0 and weight < 1
-            rpi0 = self._rpi(month_idx)
-            rpi1 = self._rpi(month_idx + 1)
+            rpi0 = self._rpi(month_idx,     inflation_rate)
+            rpi1 = self._rpi(month_idx + 1, inflation_rate)
             return round(rpi0 + weight * (rpi1 - rpi0), 5)
         else:
             assert self.lag == 8
             _, d = self.prev_next_coupon_date(settlement_date)
             month_idx = (d.year - rpi.ref_year) * 12 + (d.month - 1)
             month_idx -= self.lag
-            return self._rpi(month_idx)
+            return self._rpi(month_idx, inflation_rate)
 
     inflation_rate = 0.03
 
-    def _rpi(self, month_idx):
+    def _rpi(self, month_idx, inflation_rate):
         assert month_idx >= 0
         try:
             return rpi.series[month_idx]
         except IndexError:
+            if inflation_rate is None:
+                raise
+            # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf
+            # ANNEX A: Estimation of the nominal values of future unknown cash
+            # flows on index-linked gilts with an 8-month indexation lag.
             months = month_idx + 1 - len(rpi.series)
-            return rpi.series[-1] * (1 + self.inflation_rate) ** (months / 12)
+            return round(rpi.series[-1] * (1 + inflation_rate) ** (months / 12), 5)
 
-    def index_ratio(self, settlement_date):
-        return round(self.ref_rpi(settlement_date) / self.base_rpi, 5)
+    def index_ratio(self, settlement_date, inflation_rate=None):
+        if inflation_rate is None:
+            inflation_rate = self.inflation_rate
+        index_ratio = self.ref_rpi(settlement_date, inflation_rate=inflation_rate) / self.base_rpi
+        if self.lag == 3:
+            index_ratio = round(index_ratio, 5)
+        return index_ratio
 
     def dirty_price(self, clean_price, settlement_date):
         # For index-linked gilts with a 3-month indexation lag, the quoted price is the real clean price.
@@ -281,12 +293,14 @@ class IndexLinkedGilt(Gilt):
         accrued_interest *= self.index_ratio(settlement_date)
         return accrued_interest
 
-    def cash_flows(self, settlement_date):
+    def cash_flows(self, settlement_date, inflation_rate=None):
+        if inflation_rate is None:
+            inflation_rate = self.inflation_rate
         for date, value in Gilt.cash_flows(self, settlement_date=settlement_date):
-            index_ratio = self.index_ratio(date)
-            # Round to 6 decimal places, per https://www.dmo.gov.uk/media/0ltegugd/igcalc.pdf
+            index_ratio = self.index_ratio(date, inflation_rate=inflation_rate)
+            # See https://www.dmo.gov.uk/media/0ltegugd/igcalc.pdf
             # Annex: Rounding Conventions for Interest and Redemption Cash Flows for Index-linked Gilts
-            value = round(value * index_ratio, 6)
+            value = round(value * index_ratio, 6 if self.issue_date.year >= 2002 else 4)
             yield date, value
 
     def ytm(self, dirty_price, settlement_date):
@@ -318,9 +332,11 @@ class Issued:
 
         self.all = []
         for entry in entries:
+            name = entry['INSTRUMENT_NAME']
             kwargs = {
+                'name': name,
                 'isin': entry['ISIN_CODE'],
-                'coupon': self._parse_coupon(entry['INSTRUMENT_NAME']),
+                'coupon': self._parse_coupon(name),
                 'maturity': self._parse_date(entry['REDEMPTION_DATE']),
                 'issue_date': self._parse_date(entry['FIRST_ISSUE_DATE']),
             }
