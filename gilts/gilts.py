@@ -140,7 +140,7 @@ class Gilt:
 
         if prev_coupon_date < self.issue_date:
             next_coupon_date = next_coupon_dates.pop(0)
-            r = (settlement_date - self.issue_date).days/(next_coupon_date - prev_coupon_date).days
+            r = (next_coupon_date - self.issue_date).days / (next_coupon_date - prev_coupon_date).days
             transactions.append((next_coupon_date, r*self.coupon/2))
 
         for next_coupon_date in next_coupon_dates:
