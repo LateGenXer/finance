@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # Copyright (c) 2023 LateGenXer
 #
@@ -801,21 +800,3 @@ class BondLadder:
 
         print(f'Withdrawal Rate: {self.withdrawal_rate:,.2%}')
         print(f'Net Yield: {self.yield_:.2%}')
-
-
-def bond_ladder(schedule, index_linked=False, marginal_income_tax=0, interest_rate=0, lag=0, issued=None, prices=None):
-    if issued is None:
-        issued = Issued()
-    if prices is None:
-        prices = GiltPrices()
-    bl = BondLadder(issued, prices, schedule)
-    bl.index_linked = index_linked
-    bl.marginal_income_tax = marginal_income_tax
-    bl.interest_rate = interest_rate
-    bl.lag = lag
-    bl.solve()
-    bl.print()
-
-
-if __name__ == '__main__':
-    bond_ladder(schedule(30, 10000), index_linked=False, marginal_income_tax=0.45, lag=1, interest_rate=0.025)
