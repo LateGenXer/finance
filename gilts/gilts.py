@@ -639,7 +639,7 @@ class BondLadder:
             # Accumulate interest on cash balance
             if ev.date != prev_date:
                 assert ev.date >= prev_date
-                if self.interest_rate:
+                if self.interest_rate and ev.date <= last_consuption:
                     interest = balance * self.interest_rate * (ev.date - prev_date).days / 365.25
                     balance = balance + interest
                     accrued_income = accrued_income + interest
@@ -703,12 +703,7 @@ class BondLadder:
         assert lp.value(balance) < 1.0
 
         assert tax_due is None
-        if self.marginal_income_tax:
-            if self.interest_rate:
-                # There's always some residual interest outstanding
-                assert lp.value(accrued_income) < 1000.0
-            else:
-                assert lp.value(accrued_income) < 0.01
+        assert not self.marginal_income_tax or lp.value(accrued_income) < 0.01
 
         total_cost = lp.value(total_cost)
 
