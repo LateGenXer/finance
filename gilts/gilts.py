@@ -455,6 +455,20 @@ def schedule(count, amount=10000, frequency=yearly, start=None):
     return result
 
 
+class Description:
+    '''Deferred description.'''
+
+    def __init__(self, fmt, **kwargs):
+        self.fmt = fmt
+        self.kwargs = kwargs
+
+    def __str__(self):
+        return self.fmt.format(**{k: lp.value(v) if isinstance(v, (lp.LpVariable, lp.LpAffineExpression)) else v for k, v in self.kwargs.items()})
+
+    def __repr__(self):  # pragma: no cover
+        return repr(self.fmt.format(**{k: math.nan if isinstance(v, (lp.LpVariable, lp.LpAffineExpression)) else v for k, v in self.kwargs.items()}))
+
+
 class BondLadder:
 
     index_linked = False
@@ -569,7 +583,7 @@ class BondLadder:
                             discount = dirty_price/ref_dirty_price - 1
                             clean_price = g.clean_price(dirty_price, settlement_date=cd)
                             operand = sell * dirty_price, income
-                            description = self._description('*** Sell {sell:.2f} × {tidm} @ {clean_price:.2f} ({discount:+.1%}) ***', tidm=tidm, sell=sell, clean_price=clean_price, discount=discount)
+                            description = Description('*** Sell {sell:.2f} × {tidm} @ {clean_price:.2f} ({discount:+.1%}) ***', tidm=tidm, sell=sell, clean_price=clean_price, discount=discount)
                             events.append(Event(cd, description, EventKind.CASH_FLOW, operand))
                             income = 0
 
@@ -577,7 +591,7 @@ class BondLadder:
                 if d <= last_consuption:
                     income = income + quantity * amount
                     operand = quantity * amount, income
-                    description = self._description('Coupon from {quantity:.2f} × {tidm} @ {amount:.4f}', tidm=tidm, quantity=quantity, amount=amount)
+                    description = Description('Coupon from {quantity:.2f} × {tidm} @ {amount:.4f}', tidm=tidm, quantity=quantity, amount=amount)
                     events.append(Event(d, description, EventKind.CASH_FLOW, operand))
                     income = 0
 
@@ -598,7 +612,7 @@ class BondLadder:
         @dataclasses.dataclass
         class CashFlow:
             date: datetime.date
-            description: str | typing.Callable[[], str]
+            description: str | Description
             incoming: typing.Any = math.nan
             outgoing: typing.Any = math.nan
             balance: typing.Any = math.nan
@@ -722,9 +736,7 @@ class BondLadder:
 
         # Use real values
         for cf in cash_flows:
-            if callable(cf.description):
-                cf.description = cf.description()
-            assert isinstance(cf.description, str)
+            cf.description = str(cf.description)
             if self.index_linked:
                 index_ratio = base_rpi / rpi.estimate(cf.date)
             else:
@@ -748,10 +760,6 @@ class BondLadder:
 
         dates, values = zip(*transactions)
         self.yield_ = xirr(values, dates)
-
-    @staticmethod
-    def _description(fmt, **kwargs):
-        return lambda: fmt.format(**{k: lp.value(v) if isinstance(v, (lp.LpVariable, lp.LpAffineExpression)) else v for k, v in kwargs.items()})
 
     def print(self):
         print(self.buy_df.to_string(
