@@ -1,4 +1,4 @@
-name: build
+name: test
 
 on:
   push:
@@ -12,7 +12,7 @@ env:
 
 jobs:
 
-  ubuntu-22_04:
+  ubuntu:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3
