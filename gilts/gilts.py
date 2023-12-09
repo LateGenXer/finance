@@ -630,6 +630,8 @@ class BondLadder:
         balance = initial_cash
         cash_flows.append(CashFlow(date=today, description="Deposit", incoming=initial_cash, balance=balance))
 
+        interest_desc = "Interest"
+
         accrued_income = 0
         tax_due = None
         prev_date = today
@@ -643,7 +645,7 @@ class BondLadder:
                     interest = balance * self.interest_rate * (ev.date - prev_date).days / 365.25
                     balance = balance + interest
                     accrued_income = accrued_income + interest
-                    cash_flows.append(CashFlow(date=ev.date, description="Interest", incoming=interest, balance=balance, income=interest))
+                    cash_flows.append(CashFlow(date=ev.date, description=interest_desc, incoming=interest, balance=balance, income=interest))
                 prev_date = ev.date
 
             cf = CashFlow(date=ev.date, description=ev.description)
@@ -736,6 +738,8 @@ class BondLadder:
         self.cost = total_cost
 
         # Use real values
+        data = []
+        prev_cf = None
         for cf in cash_flows:
             cf.description = str(cf.description)
             if self.index_linked:
@@ -747,9 +751,28 @@ class BondLadder:
             cf.balance  = index_ratio * lp.value(cf.balance)
             cf.income   = index_ratio * lp.value(cf.income)
 
-        df = pd.DataFrame(data=cash_flows)
-        df = df.drop(df[df.incoming < .005].index)
-        df = df.drop(df[df.outgoing < .005].index)
+            # Filter out zero flows
+            if cf.incoming <= .005:
+                assert math.isnan(cf.outgoing)
+                assert not cf.income > .005
+                continue
+            if cf.outgoing <= .005:
+                assert math.isnan(cf.incoming)
+                assert not cf.income > .005
+                continue
+
+            # Coalesce consecutive cash interest
+            if cf.description is interest_desc and prev_cf is not None and prev_cf.description is interest_desc:
+                prev_cf.incoming += cf.incoming
+                assert math.isnan(cf.outgoing)
+                prev_cf.balance = cf.balance
+                prev_cf.income += cf.income
+                continue
+
+            data.append(cf)
+            prev_cf = cf
+
+        df = pd.DataFrame(data=data)
         df = df.rename(columns=str.title)
         self.cash_flow_df = df
 
