@@ -530,6 +530,8 @@ class BondLadder:
             coupon = g.coupon
             issue_date = g.issue_date
             maturity = g.maturity
+            if maturity <= settlement_date:
+                continue
             # XXX handle this better
             if maturity > last_consuption.replace(year=last_consuption.year + self.lag):
                 continue
