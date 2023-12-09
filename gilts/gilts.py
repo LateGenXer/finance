@@ -194,13 +194,19 @@ class Gilt:
             print('r', r)
             print('s', s)
 
-        def fn(y):
-            v = 1 / (1 + y / f)
-            return v**(r/s) * (d1 + d2 * v + c * v**2 / (f * (1 - v)) * (1 - v**(n - 1)) + 100 * v**n) - P
-
         if n > 0:
-            y = optimize.newton(fn, .05)
+            # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf
+            # Section 1
+            def fn(v):
+                return v**(r/s) * (d1 + d2 * v + c * v**2 / (f * (1 - v)) * (1 - v**(n - 1)) + 100 * v**n) - P
+
+            v0 = 1 / (1 + .05 / f)
+            v = optimize.newton(fn, v0)
+            y = (1 / v - 1) * f
         else:
+            # Simple interest, like Tradeweb
+            # https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-actuaries-uk-gilts-index-series-guide-to-calc.pdf
+            # Section 6.1
             y = ((d1 + 100) / P - 1) / (r / 365)
 
         return y

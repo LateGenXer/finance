@@ -88,7 +88,7 @@ def test_tradeweb(issued, tradeweb):
             ytm_ = gilt.ytm(dirty_price, settlement_date)
             ytm_ *= 100
 
-            print(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:.1e})')
+            print(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:+.1e})')
 
             _, next_coupon_dates = gilt.coupon_dates(settlement_date=settlement_date)
             if len(next_coupon_dates) == 2:
