@@ -23,4 +23,8 @@ jobs:
     - run: pip install --upgrade pipenv wheel
     - run: pipenv install --dev
     - run: pipenv run pip list
-    - run: pipenv run pytest -n auto
+    - run: pipenv run pytest -n auto --cov
+    - run: pipenv run coverage xml
+    - uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
