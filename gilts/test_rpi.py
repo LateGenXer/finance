@@ -9,6 +9,7 @@
 
 
 import math
+import os.path
 
 from datetime import date
 
@@ -16,10 +17,10 @@ import pytest
 
 from pytest import approx
 
-from rpi import RPI
+from rpi import RPI, OutOfDateError
 
 
-def test_rpi():
+def _test(rpi):
 
     rpi = RPI()
 
@@ -36,8 +37,29 @@ def test_rpi():
     assert last_date >= date(2023, 10, 1)
 
     assert rpi.value(last_date) == rpi.series[-1]
+    assert rpi.latest() == rpi.series[-1]
 
     d0 = last_date
     d1 = d0.replace(year = d0.year + d0.month // 12, month = d0.month % 12 + 1)
     assert rpi.estimate(d1) / rpi.value(d0) == approx(1.03**(1.0/12.0))
 
+    d2 = d0.replace(day=15)
+    r = (d2 - d0).days / (d1 - d0).days
+    assert rpi.estimate(d2) / rpi.value(d0) == approx(1.03**(r/12.0))
+
+
+def test_rpi():
+    if os.path.exists(RPI._filename):
+        os.unlink(RPI._filename)
+
+    rpi = RPI()
+    _test(rpi)
+
+    rpi = RPI()
+    _test(rpi)
+
+
+def test_rpi_superseded():
+    filename = os.path.join(os.path.dirname(__file__), 'rpi-series-20231018.csv')
+    with pytest.raises(OutOfDateError):
+        rpi = RPI(filename)

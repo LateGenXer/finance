@@ -65,15 +65,15 @@ class RPI:
         assert self.series
 
     _url = 'https://www.ons.gov.uk/generator?format=csv&uri=/economy/inflationandpriceindices/timeseries/chaw/mm23'
+    _filename = os.path.join(os.path.dirname(__file__), 'rpi-series.csv')
 
     @classmethod
     def _load(cls):
-        filename = os.path.join(os.path.dirname(__file__), 'rpi-series.csv')
         try:
-            return cls._parse(filename)
+            return cls._parse(cls._filename)
         except (FileNotFoundError, OutOfDateError):
-            download(RPI._url, filename)
-            return cls._parse(filename)
+            download(RPI._url, cls._filename)
+            return cls._parse(cls._filename)
 
     def last_date(self):
         months = len(self.series) - 1
@@ -83,16 +83,13 @@ class RPI:
 
     @staticmethod
     @caching.cache_data(ttl=24*3600)
-    def _parse(filename, verbosity=0, ignore_date=False):
+    def _parse(filename, ignore_date=False):
         stream = open(filename, 'rt')
         series = []
         next_year = RPI.ref_year
         next_month = 1
         for row in csv.reader(stream):
-            if verbosity >= 2:
-                print(row)
-            if len(row) != 2:
-                continue
+            assert len(row) == 2
             date, value = row
             if date == "Next release":
                 mo = _next_release_re.match(value)
@@ -111,8 +108,6 @@ class RPI:
             month = _months.index(mo.group('month')) + 1
             date = datetime.date(year, month, 1)
             value = float(value)
-            if verbosity >= 1:
-                print(f'{date}, {value:.1f}')
             assert year == next_year
             assert month == next_month
             series.append(value)
