@@ -104,14 +104,33 @@ def test_tradeweb(issued, tradeweb):
 @pytest.mark.parametrize("marginal_income_tax", [0.0, 0.40])
 @pytest.mark.parametrize("index_linked", [False, True])
 @pytest.mark.parametrize("count,amount,frequency", [
-    (10   , 10000,  yearly),
-    (30*12,  1000, monthly),
+    (50   , 10000,  yearly),
+    (10*12,  1000, monthly),
 ])
+#@pytest.mark.parametrize("count,amount,frequency,index_linked,marginal_income_tax,interest_rate,lag", [(10, 10000, yearly, True, 0.40, 0.25, 0)])
 def test_bond_ladder(issued, prices, count, amount, frequency, index_linked, marginal_income_tax, interest_rate, lag):
-    bl = BondLadder(issued=issued, prices=prices, schedule=schedule(count, amount, frequency))
+    s = schedule(count, amount, frequency)
+    bl = BondLadder(issued=issued, prices=prices, schedule=s)
     bl.index_linked = index_linked
     bl.marginal_income_tax = marginal_income_tax
     bl.interest_rate = interest_rate
     bl.lag = lag
     bl.solve()
     bl.print()
+
+    df = bl.cash_flow_df
+    for cf in df.itertuples():
+        assert math.isnan(cf.Incoming) != math.isnan(cf.Outgoing)
+        assert not cf.Incoming < 0.005
+        assert not cf.Outgoing < 0.005
+
+        assert cf.Balance > -0.005
+
+    withdrawals = df['Outgoing'].loc[df['Description'] == 'Withdrawal'].sum()
+    withdrawals_exp = sum([value for _, value in s])
+    assert withdrawals == approx(withdrawals_exp, abs=0.005)
+
+    income_loc = df['Income'] == df['Income']
+    incoming = df['Incoming'].loc[income_loc].sum()
+    income = df['Income'].loc[income_loc].sum()
+    assert income <= incoming + .005
