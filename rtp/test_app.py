@@ -21,7 +21,7 @@ def run(at):
 @pytest.fixture(scope='module')
 def at():
     print("--- at- ----")
-    at = AppTest.from_file("app.py")
+    at = AppTest.from_file("app.py", default_timeout=10)
     run(at)
     return at
 
