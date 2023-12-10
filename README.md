@@ -1,4 +1,4 @@
-[![build](https://github.com/LateGenXer/finance/actions/workflows/build.yml/badge.svg)](https://github.com/LateGenXer/finance/actions/workflows/build.yml)
+[![test](https://github.com/LateGenXer/finance/actions/workflows/test.yml/badge.svg)](https://github.com/LateGenXer/finance/actions/workflows/test.yml)
 
 This repository holds financial calculators I wrote mostly for my own personal needs.
 
