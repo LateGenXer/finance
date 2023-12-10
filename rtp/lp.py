@@ -181,11 +181,21 @@ class LpConstraint:
 
 LpMinimize, LpMaximize = range(2)
 
+
 LpStatusUndefined  = -3
 LpStatusUnbounded  = -2
 LpStatusInfeasible = -1
 LpStatusNotSolved  =  0
 LpStatusOptimal    =  1
+
+
+_status_map = [
+    LpStatusOptimal,    # 0. Optimization proceeding nominally.
+    LpStatusNotSolved,  # 1. Iteration limit reached.
+    LpStatusInfeasible, # 2. Problem appears to be infeasible.
+    LpStatusUnbounded,  # 3. Problem appears to be unbounded.
+    LpStatusUndefined,  # 4. Numerical difficulties encountered.
+]
 
 
 class LpProblem:
@@ -324,19 +334,7 @@ class LpProblem:
         else:
             print(res.message)
 
-        return [
-            # 0. Optimization proceeding nominally.
-            LpStatusOptimal,
-            # 1. Iteration limit reached.
-            LpStatusNotSolved,
-            # 2. Problem appears to be infeasible.
-            LpStatusInfeasible,
-            # 3. Problem appears to be unbounded.
-            LpStatusUnbounded,
-            # 4. Numerical difficulties encountered.
-            LpStatusOptimal,
-        ][res.status]
-        return LpStatusOptimal
+        return _status_map[res.status]
 
     def variablesDict(self):
         return self.vd
