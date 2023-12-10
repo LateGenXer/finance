@@ -137,7 +137,7 @@ else:
             hide_index = True,
         )
     assert len(schedule_df)
-    assert schedule_df['Date'].min() >= today
+    assert schedule_df['Date'].min() >= min_start_date
     assert schedule_df['Value'].min() > 0
 
     s = list(schedule_df.itertuples(index=False))
