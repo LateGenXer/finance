@@ -747,6 +747,7 @@ class BondLadder:
 
             # Coalesce consecutive cash interest
             if cf.description is interest_desc and prev_cf is not None and prev_cf.description is interest_desc:
+                prev_cf.date = cf.date
                 prev_cf.incoming += cf.incoming
                 assert math.isnan(cf.outgoing)
                 prev_cf.balance = cf.balance
