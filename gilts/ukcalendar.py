@@ -12,8 +12,11 @@ import datetime
 __all__ = [
     'next_business_day',
     'prev_business_day',
+    'days_in_month',
     'ukbankholidays',
     'isukbankholiday',
+    'shift_year',
+    'shift_month',
 ]
 
 
@@ -35,11 +38,35 @@ def prev_business_day(date):
             return date
 
 
+_days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+def days_in_month(year, month):
+    if month == 2:
+        return 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28
+    else:
+        return _days_in_month[month - 1]
+
+
+def shift_year(date, years=1):
+    assert isinstance(date, datetime.date)
+    year = date.year + years
+    month = date.month
+    day = min(date.day, days_in_month(year, month))
+    return date.replace(year=year, month=month, day=day)
+
+
+def shift_month(date, months=1):
+    assert isinstance(date, datetime.date)
+    year_month = date.year*12 + date.month - 1 + months
+    year = year_month // 12
+    month = year_month % 12 + 1
+    day = min(date.day, days_in_month(year, month))
+    return date.replace(year=year, month=month, day=day)
+
+
 def isukbankholiday(date):
     assert isinstance(date, datetime.date)
     return (date.year, date.month, date.day) in ukbankholidays
-
-
 
 
 # Bank holidays from

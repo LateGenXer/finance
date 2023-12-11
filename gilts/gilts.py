@@ -47,7 +47,7 @@ else:
     del _spec
 
 from xirr import *
-from ukcalendar import next_business_day, prev_business_day
+from ukcalendar import *
 from lse import GiltPrices
 
 
@@ -80,12 +80,14 @@ class Gilt:
         assert settlement_date <= self.maturity
         next_coupon_dates = []
         prev_coupon_date = self.maturity
+        periods = 0
         while True:
             next_coupon_dates.append(prev_coupon_date)
-            prev_coupon_date = self.previous_coupon_date(prev_coupon_date)
+            periods += 1
+            prev_coupon_date = shift_month(self.maturity, -6*periods)
             if prev_coupon_date < settlement_date:
-                previous_coupon_date = prev_coupon_date
                 break
+        previous_coupon_date = prev_coupon_date
         next_coupon_dates.reverse()
         return prev_coupon_date, next_coupon_dates
 
@@ -419,15 +421,6 @@ from rpi import RPI
 rpi = RPI()
 
 
-_days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-
-def days_in_month(year, month):
-    if month == 2:
-        return 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28
-    else:
-        return _days_in_month[month - 1]
-
-
 def yield_curve(issued, prices, index_linked=False):
     settlement_date = next_business_day(issued.close_date)
     data = []
@@ -448,31 +441,17 @@ def yield_curve(issued, prices, index_linked=False):
 EventKind = enum.IntEnum("EventKind", ['CASH_FLOW', 'CONSUMPTION', 'TAX_YEAR_END', 'TAX_PAYMENT'])
 
 
-def yearly(date):
-    year = year=date.year + 1
-    month = date.month
-    day = min(date.day, days_in_month(year, month))
-    return date.replace(year=year, month=month, day=day)
-
-
-def monthly(date):
-    # XXX Deal more gracefully with variable number of days per month
-    year = year=date.year + date.month // 12
-    month = date.month % 12 + 1
-    day = min(date.day, days_in_month(year, month))
-    return date.replace(year=year, month=month, day=day)
-
-
-def schedule(count, amount=10000, frequency=yearly, start=None):
-    if start is None:
-        d = datetime.datetime.utcnow().date()
-        d = frequency(d)
-    else:
-        d = start
+def schedule(count, amount=10000, shift=shift_year, start=None):
     result = []
-    for i in range(count):
-        result.append((d, amount))
-        d = frequency(d)
+    if start is None:
+        start = datetime.datetime.utcnow().date()
+        for i in range(count):
+            d = shift(start, 1 + i)
+            result.append((d, amount))
+    else:
+        for i in range(count):
+            d = shift(start, i)
+            result.append((d, amount))
     return result
 
 
@@ -569,7 +548,7 @@ class BondLadder:
             if maturity <= settlement_date:
                 continue
             # XXX handle this better
-            if maturity > last_consuption.replace(year=last_consuption.year + self.lag):
+            if maturity > shift_year(last_consuption, self.lag):
                 continue
             isin = g.isin
             tidm = self.prices.lookup_tidm(isin)
@@ -595,7 +574,7 @@ class BondLadder:
                 if self.lag:
                     while consumption_dates and consumption_dates[0] <= d:
                         cd = consumption_dates.pop(0)
-                        if maturity < cd.replace(year=cd.year + self.lag):
+                        if maturity < shift_year(cd, self.lag):
                             sell = lp.LpVariable(f'Sell_{tidm}_{cd.strftime("%Y%m%d")}', 0)
                             quantity = quantity - sell
                             prob += quantity >= 0

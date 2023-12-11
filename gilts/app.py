@@ -47,8 +47,8 @@ Copyright (c) 2023 LateGenXer.
 import lse
 import rpi
 
-from gilts import Issued, BondLadder, schedule, monthly, yearly, yield_curve
-from ukcalendar import next_business_day
+from gilts import Issued, BondLadder, schedule, yield_curve
+from ukcalendar import next_business_day, shift_year, shift_month
 
 
 st.title('Gilt Ladder Builder')
@@ -68,7 +68,7 @@ with st.sidebar:
         st.number_input('Number of years:', value=10, min_value=1, max_value=50, step=1, key='year_count')
         frequency = st.radio('Withdrawal frequency:', ['Yearly', 'Monthly'], horizontal=True, key='frequency')
         min_start_date = next_business_day(today)
-        max_start_date = today.replace(year=today.year + 30, month=12, day=31)
+        max_start_date = shift_year(today, 30)
         start_date = st.date_input('Start date', value=None, min_value=min_start_date, max_value=max_start_date, key='start_date',
             help='Withdrawal start date.  Default is a year/month from today, as determined by the frequency.')
     with tab2:
@@ -110,15 +110,15 @@ Date,Value
 advanced = schedule_file is not None
 if not advanced:
     if frequency == 'Yearly':
-        f = yearly
+        shift = shift_year
         amount = st.session_state.year_amount
         count = st.session_state.year_count
     else:
         assert st.session_state.frequency == 'Monthly'
-        f = monthly
+        shift = shift_month
         amount = st.session_state.year_amount / 12
         count = st.session_state.year_count * 12
-    s = schedule(count, amount, f, start_date)
+    s = schedule(count, amount, shift, start_date)
 else:
     # To convert to a string based IO:
     buffer = io.TextIOWrapper(schedule_file, encoding="utf-8")

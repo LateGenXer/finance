@@ -360,13 +360,13 @@ def test_il_estimated_redemption(issued, entry):
 @pytest.mark.parametrize("interest_rate", [0.0, 0.02])
 @pytest.mark.parametrize("marginal_income_tax", [0.0, 0.40])
 @pytest.mark.parametrize("index_linked", [False, True])
-@pytest.mark.parametrize("count,amount,frequency", [
-    (50   , 10000,  yearly),
-    (10*12,  1000, monthly),
+@pytest.mark.parametrize("count,amount,shift", [
+    (50   , 10000, shift_year ),
+    (10*12,  1000, shift_month),
 ])
-#@pytest.mark.parametrize("count,amount,frequency,index_linked,marginal_income_tax,interest_rate,lag", [(10, 10000, yearly, True, 0.40, 0.25, 0)])
-def test_bond_ladder(issued, prices, count, amount, frequency, index_linked, marginal_income_tax, interest_rate, lag):
-    s = schedule(count, amount, frequency)
+#@pytest.mark.parametrize("count,amount,shift,index_linked,marginal_income_tax,interest_rate,lag", [(10, 10000, shift_year, True, 0.40, 0.25, 0)])
+def test_bond_ladder(issued, prices, count, amount, shift, index_linked, marginal_income_tax, interest_rate, lag):
+    s = schedule(count, amount, shift)
     bl = BondLadder(issued=issued, prices=prices, schedule=s)
     bl.index_linked = index_linked
     bl.marginal_income_tax = marginal_income_tax
