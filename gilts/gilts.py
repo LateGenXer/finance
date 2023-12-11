@@ -232,6 +232,9 @@ class IndexLinkedGilt(Gilt):
 
     type_ = 'Index-linked'
 
+    # Default inflation assumption for estimating future cash flows
+    inflation_rate = 0.03
+
     def __init__(self, name, isin, coupon, maturity, issue_date, base_rpi):
         Gilt.__init__(self, name, isin, coupon, maturity, issue_date=issue_date)
         self.base_rpi = base_rpi
@@ -241,34 +244,20 @@ class IndexLinkedGilt(Gilt):
     def ref_rpi(self, settlement_date, inflation_rate=None):
         if self.lag == 3:
             d = settlement_date
-            month_idx = (d.year - rpi.ref_year) * 12 + (d.month - 1)
+            month_idx = rpi.lookup_index(d)
             month_idx -= self.lag
             weight = (d.day - 1) / days_in_month(d.year, d.month)
             assert weight >= 0 and weight < 1
-            rpi0 = self._rpi(month_idx,     inflation_rate)
-            rpi1 = self._rpi(month_idx + 1, inflation_rate)
-            return round(rpi0 + weight * (rpi1 - rpi0), 5)
+            rpi0 = rpi.extrapolate_from_index(month_idx,     inflation_rate)
+            rpi1 = rpi.extrapolate_from_index(month_idx + 1, inflation_rate)
+            ref_rpi = rpi0 + weight * (rpi1 - rpi0)
         else:
             assert self.lag == 8
             _, d = self.prev_next_coupon_date(settlement_date)
-            month_idx = (d.year - rpi.ref_year) * 12 + (d.month - 1)
+            month_idx = rpi.lookup_index(d)
             month_idx -= self.lag
-            return self._rpi(month_idx, inflation_rate)
-
-    inflation_rate = 0.03
-
-    def _rpi(self, month_idx, inflation_rate):
-        assert month_idx >= 0
-        try:
-            return rpi.series[month_idx]
-        except IndexError:
-            if inflation_rate is None:
-                raise
-            # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf
-            # ANNEX A: Estimation of the nominal values of future unknown cash
-            # flows on index-linked gilts with an 8-month indexation lag.
-            months = month_idx + 1 - len(rpi.series)
-            return round(rpi.series[-1] * (1 + inflation_rate) ** (months / 12), 5)
+            ref_rpi = rpi.extrapolate_from_index(month_idx, inflation_rate)
+        return round(ref_rpi, 5)
 
     def index_ratio(self, settlement_date, inflation_rate=None):
         if inflation_rate is None:
@@ -504,10 +493,10 @@ class BondLadder:
 
         # Add consumption events
         d = today
-        base_rpi = rpi.estimate(d)
+        base_rpi = rpi.extrapolate(d, IndexLinkedGilt.inflation_rate)
         for d, amount in self.schedule:
             if self.index_linked:
-                amount = amount * rpi.estimate(d) / base_rpi
+                amount = amount * rpi.extrapolate(d, IndexLinkedGilt.inflation_rate) / base_rpi
             events.append(Event(d, "Withdrawal", EventKind.CONSUMPTION, amount))
             transactions.append((d, amount))
         last_consuption = d
@@ -738,7 +727,7 @@ class BondLadder:
         for cf in cash_flows:
             cf.description = str(cf.description)
             if self.index_linked:
-                index_ratio = base_rpi / rpi.estimate(cf.date)
+                index_ratio = base_rpi / rpi.extrapolate(cf.date, IndexLinkedGilt.inflation_rate)
             else:
                 index_ratio = 1.0
             cf.incoming = index_ratio * lp.value(cf.incoming)

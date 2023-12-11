@@ -47,7 +47,7 @@ Copyright (c) 2023 LateGenXer.
 import lse
 import rpi
 
-from gilts import Issued, BondLadder, schedule, yield_curve
+from gilts import Issued, BondLadder, schedule, yield_curve, IndexLinkedGilt
 from ukcalendar import next_business_day, shift_year, shift_month
 
 
@@ -172,7 +172,7 @@ with st.sidebar:
 
 It considers the opportunity cost of cash balances and any income tax.''')
     else:
-        inflation_rate = .03
+        inflation_rate = IndexLinkedGilt.inflation_rate
         yield_ = (1.0 + bl.yield_)/(1 + inflation_rate) - 1
         st.metric(label="Net Real Yield", value=f"{yield_:.2%}", help=f'''IRR derived from total cost and withdrawals adjusted for a constant inflation rate of {inflation_rate:.1%}.
 

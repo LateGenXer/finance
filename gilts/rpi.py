@@ -116,9 +116,13 @@ class RPI:
         return series
 
     # https://www.dmo.gov.uk/media/0ltegugd/igcalc.pdf
-    def _index(self, date):
+    def lookup_index(self, date):
         assert date.year >= self.ref_year
         return (date.year - self.ref_year)*12 + (date.month - 1)
+
+    def lookup(self, date):
+        month_idx = self.lookup_index(date)
+        return self.series[month_idx]
 
     # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf,
     # Annex B: Method of indexation for index-linked gilts with a 3-month indexation lag
@@ -131,33 +135,36 @@ class RPI:
 
         return rpi
 
-    def value(self, date):
+    def interpolate(self, date):
         assert date.year >= self.ref_year
 
-        idx = self._index(date)
-        rpi0 = self.series[idx]
+        month_idx = self.lookup_index(date)
+        rpi0 = self.series[month_idx]
         if date.day == 1:
             return rpi0
-        rpi1 = self.series[idx + 1]
+        rpi1 = self.series[month_idx + 1]
 
         return self._interpolate(date, rpi0, rpi1)
 
     def latest(self):
         return self.series[-1]
 
-    def _extrapolate(self, idx, inflation_rate):
+    # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf
+    # ANNEX A: Estimation of the nominal values of future unknown cash
+    # flows on index-linked gilts with an 8-month indexation lag.
+    def extrapolate_from_index(self, month_idx, inflation_rate):
         try:
-            return self.series[idx]
+            return self.series[month_idx]
         except IndexError:
-            months = idx + 1 - len(self.series)
+            months = month_idx + 1 - len(self.series)
             return self.series[-1] * (1 + inflation_rate) ** (months / 12)
 
-    def estimate(self, date, inflation_rate=.03):
-        idx = self._index(date)
-        rpi0 = self._extrapolate(idx, inflation_rate)
+    def extrapolate(self, date, inflation_rate):
+        month_idx = self.lookup_index(date)
+        rpi0 = self.extrapolate_from_index(month_idx, inflation_rate)
         if date.day == 1:
             return rpi0
-        rpi1 = self._extrapolate(idx + 1, inflation_rate)
+        rpi1 = self.extrapolate_from_index(month_idx + 1, inflation_rate)
 
         return self._interpolate(date, rpi0, rpi1)
 
