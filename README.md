@@ -1,4 +1,5 @@
 [![test](https://github.com/LateGenXer/finance/actions/workflows/test.yml/badge.svg)](https://github.com/LateGenXer/finance/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/LateGenXer/finance/graph/badge.svg?token=Z4JH3VMYLJ)](https://codecov.io/gh/LateGenXer/finance)
 
 This repository holds financial calculators I wrote mostly for my own personal needs.
 
