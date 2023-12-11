@@ -47,7 +47,7 @@ else:
     del _spec
 
 from xirr import *
-from ukbankholidays import next_business_day, prev_business_day
+from ukcalendar import next_business_day, prev_business_day
 from lse import GiltPrices
 
 

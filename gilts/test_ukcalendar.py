@@ -9,7 +9,7 @@ import pytest
 
 from datetime import date
 
-from ukbankholidays import *
+from ukcalendar import *
 
 
 
@@ -51,7 +51,7 @@ def test_next_business_day(d0, d1):
 
 
 def test_main():
-    from ukbankholidays import main
+    from ukcalendar import main
     try:
         main()
     except ValueError:

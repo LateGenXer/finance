@@ -48,7 +48,7 @@ import lse
 import rpi
 
 from gilts import Issued, BondLadder, schedule, monthly, yearly, yield_curve
-from ukbankholidays import next_business_day
+from ukcalendar import next_business_day
 
 
 st.title('Gilt Ladder Builder')
