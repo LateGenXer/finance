@@ -105,7 +105,7 @@ def test_content_length():
     assert os.path.isfile(filename)
     mtime = os.path.getmtime(filename)
 
-    download(url)
+    download(url, filename)
     assert os.path.isfile(filename)
     assert os.path.getmtime(filename) == mtime
     os.unlink(filename)
