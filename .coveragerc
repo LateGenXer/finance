@@ -1,6 +1,0 @@
-[run]
-source =
-    gilts/
-    rtp/
-omit =
-    test_*.py

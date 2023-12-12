@@ -1,0 +1,18 @@
+[tool.pytest.ini_options]
+minversion = "6.0"
+log_format = "%(asctime)s %(name)s %(levelname)s %(message)s"
+log_date_format = "%Y-%m-%d %H:%M:%S"
+log_cli = true
+log_cli_level = "INFO"
+# https://github.com/pytest-dev/pytest/issues/9037#issuecomment-905758207
+disable_test_id_escaping_and_forfeit_all_rights_to_community_support = true
+#addopts = "-nauto"
+
+[tool.coverage.run]
+source = [
+    "gilts/",
+    "rtp/",
+]
+omit = [
+    "test_*.py",
+]
