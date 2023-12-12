@@ -1,6 +1,2 @@
-[logger]
-level = "info"
-messageFormat = "[%(asctime)s] %(name)s %(levelname)s %(message)s"
-
 [server]
 maxUploadSize = 1
