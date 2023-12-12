@@ -67,14 +67,6 @@ class Gilt:
         self.maturity = maturity
         self.issue_date = issue_date
 
-    @staticmethod
-    def previous_coupon_date(d):
-        assert isinstance(d, datetime.date)
-        if d.month >= 7:
-            return d.replace(d.year, d.month - 6, d.day)
-        else:
-            return d.replace(d.year - 1, d.month + 6, d.day)
-
     def coupon_dates(self, settlement_date):
         assert settlement_date >= self.issue_date
         assert settlement_date <= self.maturity
