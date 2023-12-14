@@ -12,6 +12,7 @@ import pytest
 
 from pytest import approx
 
+from rpi import RPI
 from gilts import *
 
 
@@ -27,8 +28,10 @@ def test_ex_dividend_date(coupon_date, xd_date):
 
 @pytest.fixture
 def issued():
+    rpi_filename = os.path.join(os.path.dirname(__file__), 'rpi-series-20231115.csv')
+    rpi_series = RPI(rpi_filename)
     filename = os.path.join(os.path.dirname(__file__), 'dmo-D1A-20231201.xml')
-    return Issued(filename)
+    return Issued(filename, rpi_series=rpi_series)
 
 
 gilts_closing_prices_csv = os.path.join(os.path.dirname(__file__), 'gilts-closing-prices-20231201.csv')
@@ -370,34 +373,25 @@ il_estimated_redemptions = [
 def test_il_estimated_redemption(issued, entry):
     settlement_date = next_business_day(datetime.date(2023, 12, 8))
 
-    from gilts import rpi
+    assert issued.rpi_series.last_date() == datetime.date(2023, 10, 1)
 
-    # Truncate RPI to Oct 2023
-    # XXX: Avoid monkey patching
-    months = (2023 - rpi.ref_year)*12 + 10
-    rpi_series = rpi.series
-    try:
-        rpi.series = rpi.series[:months]
+    name, redemption_0, redemption_3 = entry
+    for gilt in issued.filter(index_linked=True):
+        if gilt.name == name:
+            years = (gilt.maturity - settlement_date).days / 365.25
 
-        name, redemption_0, redemption_3 = entry
-        for gilt in issued.filter(index_linked=True):
-            if gilt.name == name:
-                years = (gilt.maturity - settlement_date).days / 365.25
+            for inflation_rate, redemption_exp in [
+                (0.00, redemption_0),
+                (None, redemption_3),
+            ]:
 
-                for inflation_rate, redemption_exp in [
-                    (0.00, redemption_0),
-                    (None, redemption_3),
-                ]:
+                cash_flows = list(gilt.cash_flows(settlement_date, inflation_rate=inflation_rate))
 
-                    cash_flows = list(gilt.cash_flows(settlement_date, inflation_rate=inflation_rate))
+                _, redemption = cash_flows[-1]
 
-                    _, redemption = cash_flows[-1]
+                assert redemption == approx(redemption_exp, abs=2e-2, rel=1e-3)
 
-                    assert redemption == approx(redemption_exp, abs=2e-2, rel=1e-3)
-
-                return
-    finally:
-        rpi.series = rpi_series
+            return
 
     raise AssertionError(f'{name} not found')
 

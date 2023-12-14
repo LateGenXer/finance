@@ -61,7 +61,7 @@ class RPI:
         if filename is None:
             self.series = self._load()
         else:
-            self.series = self._parse(filename, ignore_date=True)
+            self.series = self.parse(filename, ignore_date=True)
         assert self.series
 
     _url = 'https://www.ons.gov.uk/generator?format=csv&uri=/economy/inflationandpriceindices/timeseries/chaw/mm23'
@@ -70,10 +70,10 @@ class RPI:
     @classmethod
     def _load(cls):
         try:
-            return cls._parse(cls._filename)
+            return cls.parse(cls._filename)
         except (FileNotFoundError, OutOfDateError):
             download(RPI._url, cls._filename)
-            return cls._parse(cls._filename)
+            return cls.parse(cls._filename)
 
     def last_date(self):
         months = len(self.series) - 1
@@ -83,7 +83,7 @@ class RPI:
 
     @staticmethod
     @caching.cache_data(ttl=24*3600)
-    def _parse(filename, ignore_date=False):
+    def parse(filename, ignore_date=False):
         stream = open(filename, 'rt')
         series = []
         next_year = RPI.ref_year
@@ -98,7 +98,7 @@ class RPI:
                 month = _long_months.index(mo.group('month')) + 1
                 day = int(mo.group('day'))
                 next_release = datetime.date(year, month, day)
-                if datetime.datetime.utcnow().date() > next_release:
+                if datetime.datetime.utcnow().date() > next_release and not ignore_date:
                     logger.warning(f'{filename} has been superseded on {next_release}')
                     raise OutOfDateError
             mo = _monthly_re.match(date)

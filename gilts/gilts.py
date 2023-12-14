@@ -224,28 +224,29 @@ class IndexLinkedGilt(Gilt):
     # Default inflation assumption for estimating future cash flows
     inflation_rate = 0.03
 
-    def __init__(self, name, isin, coupon, maturity, issue_date, base_rpi):
+    def __init__(self, name, isin, coupon, maturity, issue_date, base_rpi, rpi_series):
         Gilt.__init__(self, name, isin, coupon, maturity, issue_date=issue_date)
         self.base_rpi = base_rpi
         self.lag = 3 if issue_date >= datetime.date(2005, 9, 22) else 8
+        self.rpi_series = rpi_series
 
     # https://www.dmo.gov.uk/media/0ltegugd/igcalc.pdf
     def ref_rpi(self, settlement_date, inflation_rate=None):
         if self.lag == 3:
             d = settlement_date
-            month_idx = rpi.lookup_index(d)
+            month_idx = self.rpi_series.lookup_index(d)
             month_idx -= self.lag
             weight = (d.day - 1) / days_in_month(d.year, d.month)
             assert weight >= 0 and weight < 1
-            rpi0 = rpi.extrapolate_from_index(month_idx,     inflation_rate)
-            rpi1 = rpi.extrapolate_from_index(month_idx + 1, inflation_rate)
+            rpi0 = self.rpi_series.extrapolate_from_index(month_idx,     inflation_rate)
+            rpi1 = self.rpi_series.extrapolate_from_index(month_idx + 1, inflation_rate)
             ref_rpi = rpi0 + weight * (rpi1 - rpi0)
         else:
             assert self.lag == 8
             _, d = self.prev_next_coupon_date(settlement_date)
-            month_idx = rpi.lookup_index(d)
+            month_idx = self.rpi_series.lookup_index(d)
             month_idx -= self.lag
-            ref_rpi = rpi.extrapolate_from_index(month_idx, inflation_rate)
+            ref_rpi = self.rpi_series.extrapolate_from_index(month_idx, inflation_rate)
         return round(ref_rpi, 5)
 
     def index_ratio(self, settlement_date, inflation_rate=None):
@@ -304,11 +305,15 @@ class IndexLinkedGilt(Gilt):
 class Issued:
     # https://www.dmo.gov.uk/data/
 
-    def __init__(self, filename=None):
+    def __init__(self, filename=None, rpi_series=None):
         if filename is None:
             entries = self._download()
         else:
             entries = self._parse_xml(filename)
+
+        if rpi_series is None:
+            rpi_series = RPI()
+        self.rpi_series = rpi_series
 
         self.all = []
         for entry in entries:
@@ -329,6 +334,7 @@ class Issued:
                 lag = int(mo.group(1))
                 assert lag == 3 if kwargs['issue_date'] >= datetime.date(2005, 9, 22) else 8
                 kwargs['base_rpi'] = float(entry['BASE_RPI_87'])
+                kwargs['rpi_series'] = rpi_series
                 gilt = IndexLinkedGilt(**kwargs)
 
             self.close_date = self._parse_date(entry['CLOSE_OF_BUSINESS_DATE'])
@@ -454,9 +460,6 @@ class GiltPrices(Prices):
         return self.datetime
 
 
-rpi = RPI()
-
-
 def yield_curve(issued, prices, index_linked=False):
     settlement_date = next_business_day(issued.close_date)
     data = []
@@ -515,6 +518,7 @@ class BondLadder:
 
     def __init__(self, issued, prices, schedule):
         self.issued = issued
+        self.rpi_series = issued.rpi_series
         self.prices = prices
         self.schedule = schedule
         self.buy_df = None
@@ -540,10 +544,10 @@ class BondLadder:
 
         # Add consumption events
         d = today
-        base_rpi = rpi.extrapolate(d, IndexLinkedGilt.inflation_rate)
+        base_rpi = self.rpi_series.extrapolate(d, IndexLinkedGilt.inflation_rate)
         for d, amount in self.schedule:
             if self.index_linked:
-                amount = amount * rpi.extrapolate(d, IndexLinkedGilt.inflation_rate) / base_rpi
+                amount = amount * self.rpi_series.extrapolate(d, IndexLinkedGilt.inflation_rate) / base_rpi
             events.append(Event(d, "Withdrawal", EventKind.CONSUMPTION, amount))
             transactions.append((d, amount))
         last_consuption = d
@@ -766,7 +770,7 @@ class BondLadder:
         for cf in cash_flows:
             cf.description = str(cf.description)
             if self.index_linked:
-                index_ratio = base_rpi / rpi.extrapolate(cf.date, IndexLinkedGilt.inflation_rate)
+                index_ratio = base_rpi / self.rpi_series.extrapolate(cf.date, IndexLinkedGilt.inflation_rate)
             else:
                 index_ratio = 1.0
             cf.incoming = index_ratio * lp.value(cf.incoming)

@@ -1,6 +1,6 @@
 *.csv
 !gilts-closing-prices-20231201.csv
-!rpi-series-20231018.csv
+!rpi-series-20231115.csv
 !Tradeweb_FTSE_ClosePrices_20231201.csv
 !ukbankholidays.csv
 
