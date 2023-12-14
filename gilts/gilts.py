@@ -10,6 +10,7 @@ import datetime
 import dataclasses
 import enum
 import json
+import logging
 import math
 import numbers
 import re
@@ -49,6 +50,8 @@ else:
 from xirr import *
 from ukcalendar import *
 from rpi import RPI
+
+logger = logging.getLogger('gilts')
 
 
 
@@ -149,9 +152,6 @@ class Gilt:
         # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf , Section 1: price/yield formulae
         # https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-actuaries-uk-gilts-index-series-guide-to-calc.pdf Section 6, Formulae – applying to conventional gilts only
 
-        #print()
-        #print(self.short_name())
-
         P = dirty_price
 
         prev_coupon_date, next_coupon_dates = self.coupon_dates(settlement_date=settlement_date)
@@ -175,19 +175,18 @@ class Gilt:
         if settlement_date >= xd_date:
             d1 = 0
 
-        if False:
-            print()
-            print('settlement_date', settlement_date)
-            print('xd_date', xd_date)
-            print('prev_coupon_date', prev_coupon_date)
-            print('next_coupon_date', next_coupon_date)
-            print('P', P)
-            print('n', n)
-            print('c', c)
-            print('d1', d1)
-            print('d2', d2)
-            print('r', r)
-            print('s', s)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('settlement_date = %s', settlement_date)
+            logger.debug('xd_date = %s', xd_date)
+            logger.debug('prev_coupon_date = %s', prev_coupon_date)
+            logger.debug('next_coupon_date = %s', next_coupon_date)
+            logger.debug('P = %f', P)
+            logger.debug('n = %i', n)
+            logger.debug('c = %f', c)
+            logger.debug('d1 = %f', d1)
+            logger.debug('d2 = %f', d2)
+            logger.debug('r = %i', r)
+            logger.debug('s = %i', s)
 
         if n > 0:
             # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf

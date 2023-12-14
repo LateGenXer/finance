@@ -105,19 +105,21 @@ def test_yield_curve(issued, prices, index_linked, show_plots):
 @pytest.mark.parametrize("row", [
     pytest.param(row, id=row['Gilt Name']) for row in TradewebClosePrices.parse(tradeweb_csv)
 ])
-def test_tradeweb(issued, row):
+def test_tradeweb(caplog, issued, row):
+    caplog.set_level(logging.DEBUG, logger="gilts")
+
+    for name, value in row.items():
+        logger.debug('%s = %s', name, value)
+    logger.debug('')
+
     type_ = row["Type"]
     assert type_ in ["Conventional", "Index-linked"]
 
     isin = row['ISIN']
     gilt = issued.isin[isin]
 
-    print(row)
-    print(gilt.issue_date)
-
-    assert gilt.type_ == row['Type']
-    #print(row['Type'])
-    conventional = row['Type'] == 'Conventional'
+    assert gilt.type_ == type_
+    conventional = type_ == 'Conventional'
 
     coupon = float(row['Coupon'])
     assert gilt.coupon == coupon
@@ -142,7 +144,7 @@ def test_tradeweb(issued, row):
         ytm_ = (1 + ytm_)/(1 + .03) - 1
     ytm_ *= 100
 
-    print(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:+.1e})')
+    logger.debug(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:+.1e})')
 
     if conventional:
         _, next_coupon_dates = gilt.coupon_dates(settlement_date=settlement_date)
