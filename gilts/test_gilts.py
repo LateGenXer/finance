@@ -31,16 +31,22 @@ def issued():
     return Issued(filename)
 
 
+gilts_closing_prices_csv = os.path.join(os.path.dirname(__file__), 'gilts-closing-prices-20231201.csv')
+
+
+# https://reports.tradeweb.com/closing-prices/gilts/ > Type: Gilts Only > Export
+tradeweb_csv = os.path.join(os.path.dirname(__file__), 'Tradeweb_FTSE_ClosePrices_20231201.csv')
+
+
 class TradewebClosePrices(Prices):
-    # https://reports.tradeweb.com/closing-prices/gilts/ > Type: Gilts Only > Export
 
-    default = os.path.join(os.path.dirname(__file__), 'Tradeweb_FTSE_ClosePrices_20231201.csv')
-    tidm_csv = os.path.join(os.path.dirname(__file__), 'tidm.csv')
-
-    def __init__(self, filename=default):
+    def __init__(self, filename=tradeweb_csv):
         Prices.__init__(self)
+
         self.tidms = {}
-        for isin, tidm in csv.reader(open(self.tidm_csv, 'rt')):
+        for row in csv.DictReader(open(gilts_closing_prices_csv, 'rt')):
+            tidm = row['tidm']
+            isin = row['isin']
             self.tidms[isin] = tidm
 
         self.prices = {}
@@ -53,7 +59,7 @@ class TradewebClosePrices(Prices):
         self.datetime = self.datetime.replace(hour=23, minute=59, second=59)
 
     @staticmethod
-    def parse(filename):
+    def parse(filename=tradeweb_csv):
         for row in csv.DictReader(open(filename, 'rt', encoding='utf-8-sig')):
             if row['Type'] in ('Conventional', 'Index-linked'):
                 yield row
@@ -70,8 +76,7 @@ class TradewebClosePrices(Prices):
 
 @pytest.fixture
 def prices():
-    filename = TradewebClosePrices.default
-    return TradewebClosePrices(filename)
+    return TradewebClosePrices()
 
 
 @pytest.mark.parametrize('prices', [
@@ -99,8 +104,7 @@ def test_yield_curve(issued, prices, index_linked, show_plots):
 
 @pytest.fixture
 def tradeweb():
-    filename = TradewebClosePrices.default
-    return list(TradewebClosePrices.parse(filename))
+    return list(TradewebClosePrices.parse(tradeweb_csv))
 
 
 gilt_types = ["Conventional", "Index-linked"]
