@@ -725,15 +725,7 @@ class BondLadder:
         prob.setObjective(total_cost)
 
         status = prob.solve(solver)
-        if status != lp.LpStatusOptimal:
-            statusMsg = {
-                lp.LpStatusNotSolved: "Not Solved",
-                lp.LpStatusOptimal: "Optimal",
-                lp.LpStatusInfeasible: "Infeasible",
-                lp.LpStatusUnbounded: "Unbounded",
-                lp.LpStatusUndefined: "Undefined",
-            }.get(status, "Unexpected")
-            raise ValueError(f"Failed to solve the problem ({statusMsg})")
+        assert status == lp.LpStatusOptimal
 
         # There should be no cash left, barring rounding errors
         assert lp.value(balance) < 1.0
