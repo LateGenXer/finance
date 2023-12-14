@@ -102,63 +102,56 @@ def test_yield_curve(issued, prices, index_linked, show_plots):
         plt.savefig(os.devnull, format='svg')
 
 
-@pytest.fixture
-def tradeweb():
-    return list(TradewebClosePrices.parse(tradeweb_csv))
+@pytest.mark.parametrize("row", [
+    pytest.param(row, id=row['Gilt Name']) for row in TradewebClosePrices.parse(tradeweb_csv)
+])
+def test_tradeweb(issued, row):
+    type_ = row["Type"]
+    assert type_ in ["Conventional", "Index-linked"]
 
+    isin = row['ISIN']
+    gilt = issued.isin[isin]
 
-gilt_types = ["Conventional", "Index-linked"]
+    print(row)
+    print(gilt.issue_date)
 
-@pytest.mark.parametrize("type_", gilt_types)
-def test_tradeweb(issued, tradeweb, type_):
-    for row in tradeweb:
-        assert row["Type"] in gilt_types
-        if row["Type"] != type_:
-            continue
+    assert gilt.type_ == row['Type']
+    #print(row['Type'])
+    conventional = row['Type'] == 'Conventional'
 
-        isin = row['ISIN']
-        gilt = issued.isin[isin]
+    coupon = float(row['Coupon'])
+    assert gilt.coupon == coupon
 
-        print(row)
-        print(gilt.issue_date)
+    maturity = datetime.datetime.strptime(row['Maturity'], '%d/%m/%Y').date()
+    assert gilt.maturity == maturity
 
-        assert gilt.type_ == row['Type']
-        #print(row['Type'])
-        conventional = row['Type'] == 'Conventional'
+    close_date = datetime.datetime.strptime(row['Close of Business Date'], '%d/%m/%Y').date()
+    settlement_date = next_business_day(close_date)
 
-        coupon = float(row['Coupon'])
-        assert gilt.coupon == coupon
+    clean_price = float(row['Clean Price'])
+    accrued_interest = float(row['Accrued Interest'])
+    dirty_price = float(row['Dirty Price'])
 
-        maturity = datetime.datetime.strptime(row['Maturity'], '%d/%m/%Y').date()
-        assert gilt.maturity == maturity
+    abs_tol = 1e-6 if conventional or gilt.lag != 8 else 1e-4
+    assert gilt.accrued_interest(settlement_date) == approx(accrued_interest, abs=abs_tol)
+    assert gilt.dirty_price(clean_price, settlement_date) == approx(dirty_price, abs=abs_tol)
 
-        close_date = datetime.datetime.strptime(row['Close of Business Date'], '%d/%m/%Y').date()
-        settlement_date = next_business_day(close_date)
+    ytm = float(row['Yield'])
+    ytm_ = gilt.ytm(dirty_price, settlement_date)
+    if not conventional:
+        ytm_ = (1 + ytm_)/(1 + .03) - 1
+    ytm_ *= 100
 
-        clean_price = float(row['Clean Price'])
-        accrued_interest = float(row['Accrued Interest'])
-        dirty_price = float(row['Dirty Price'])
+    print(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:+.1e})')
 
-        abs_tol = 1e-6 if conventional or gilt.lag != 8 else 1e-4
-        assert gilt.accrued_interest(settlement_date) == approx(accrued_interest, abs=abs_tol)
-        assert gilt.dirty_price(clean_price, settlement_date) == approx(dirty_price, abs=abs_tol)
-
-        ytm = float(row['Yield'])
-        ytm_ = gilt.ytm(dirty_price, settlement_date)
-        if not conventional:
-            ytm_ = (1 + ytm_)/(1 + .03) - 1
-        ytm_ *= 100
-
-        print(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:+.1e})')
-
-        if conventional:
-            _, next_coupon_dates = gilt.coupon_dates(settlement_date=settlement_date)
-            if len(next_coupon_dates) == 2:
-                # XXX: Tradeweb seems to be using simple interest
-                # (non-compounding) for all bonds maturing less than one year
-                assert ytm_ == approx(ytm, rel=1e-2)
-            else:
-                assert ytm_ == approx(ytm, abs=5e-6)
+    if conventional:
+        _, next_coupon_dates = gilt.coupon_dates(settlement_date=settlement_date)
+        if len(next_coupon_dates) == 2:
+            # XXX: Tradeweb seems to be using simple interest
+            # (non-compounding) for all bonds maturing less than one year
+            assert ytm_ == approx(ytm, rel=1e-2)
+        else:
+            assert ytm_ == approx(ytm, abs=5e-6)
 
 
 # Index-linked Gilt Cash Flows, taken from
