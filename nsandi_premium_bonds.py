@@ -43,10 +43,13 @@ total_volume = 0
 for value, volume in prizes:
     total_volume += volume
 
-mean = 0
-for value, volume in prizes:
-    p = volume / total_volume * odds * 12
-    mean += value * p
+
+def mean():
+    mean = 0
+    for value, volume in prizes:
+        p = volume / total_volume * odds * 12
+        mean += value * p
+    return mean
 
 
 # Binomial PDF
@@ -57,18 +60,6 @@ def binomial(k, n, p):
         return exp(lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1) + log(p)*k + log(1 - p)*(n - k))
     else:
         return float(factorial(n)) / float(factorial(k) * factorial(n - k)) * p**k * (1 - p)**(n - k)
-
-
-# Rough approximation.
-def median_approx(n):
-    assert n > 0
-    assert n <= 50000
-    assert n % 25 == 0
-    median = 0
-    for value, volume in prizes:
-        p = volume / total_volume * odds * 12
-        median += value * round(n * p)
-    return median
 
 
 odds_per_bond = 25 * odds
@@ -114,10 +105,12 @@ def median(n):
     return median
 
 
+chunk = 1024
+
 def sample(p):
-    prize = 0
+    prize = np.zeros([chunk], dtype=np.int64)
     for value, volume in prizes:
-        k = np.random.binomial(12*volume, p)
+        k = np.random.binomial(12*volume, p, size=[chunk])
         prize += k*value
     return prize
 
@@ -133,19 +126,21 @@ def median_mc(n, N):
     p = our_bonds / total_bonds
 
     pool = multiprocessing.Pool((multiprocessing.cpu_count() + 1) // 2)
-    samples = pool.map(sample, [p]*N)
+
+    nchunks = (N + 1) // chunk
+
+    samples = pool.map(sample, [p]*nchunks )
 
     median = np.median(samples)
     return median
 
 
-print(f'Mean:   {mean:.2%}')
-for arg in sys.argv[1:]:
-    n = int(arg)
-    print(f'{n}:')
-    m = median_approx(n)
-    print(f'  Median (approx):    {m:4.0f} {m/n:.2%}')
-    m = median(n)
-    print(f'  Median (accurate):  {m:4.0f} {m/n:.2%}')
-    m = median_mc(n, 512*1024)
-    print(f'  Median (MC):        {m:4.0f} {m/n:.2%}')
+if __name__ == '__main__':
+    print(f'Mean:   {mean():.2%}')
+    for arg in sys.argv[1:]:
+        n = int(arg)
+        print(f'{n}:')
+        m = median(n)
+        print(f'  Median (accurate):  {m:4.0f} {m/n:.2%}')
+        m = median_mc(n, 512*1024)
+        print(f'  Median (MC):        {m:4.0f} {m/n:.2%}')
