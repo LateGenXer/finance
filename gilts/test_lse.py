@@ -5,7 +5,9 @@
 #
 
 
+import csv
 import datetime
+import io
 import os.path
 import subprocess
 import sys
@@ -39,5 +41,10 @@ def test_get_latest_gilt_prices():
 
 
 def test_main():
-    status = subprocess.call([sys.executable, lse.__file__])
-    assert status == 0
+    output = subprocess.check_output([sys.executable, lse.__file__], text=True)
+    found = False
+    with io.StringIO(output) as stream:
+        for entry in list(csv.DictReader(stream)):
+            if entry['tidm'] == 'TR68' and entry['isin'] == 'GB00BBJNQY21':
+                found = True
+    assert found

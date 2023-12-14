@@ -140,7 +140,6 @@ def test_main():
 
     if os.path.exists(filename):
         os.unlink(filename)
-    status = subprocess.call([sys.executable, download_path, url, filename])
-    assert status == 0
+    subprocess.check_call([sys.executable, download_path, url, filename])
     assert os.path.isfile(filename)
     os.unlink(filename)
