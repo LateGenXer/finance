@@ -29,7 +29,7 @@ def cache_data(ttl=None):
 # Use Streamlit's cache_data when serving
 try:
     from streamlit import runtime
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 else:
     if runtime.exists():

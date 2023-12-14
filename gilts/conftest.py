@@ -9,7 +9,6 @@ import pytest
 
 
 pytest.register_assert_rewrite("gilts")
-pytest.register_assert_rewrite("lse")
 
 
 def pytest_addoption(parser):

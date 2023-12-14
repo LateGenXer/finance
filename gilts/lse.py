@@ -17,8 +17,6 @@ import re
 import requests
 import sys
 
-import caching
-
 
 __all__ = [
     'lookup_tidm',
@@ -47,7 +45,6 @@ _tidm_re = re.compile(r'^https://www\.londonstockexchange\.com/stock/(?P<tidm>\w
 _session = requests.Session()
 
 
-@caching.cache_data(ttl=24*3600)
 def lookup_tidm(isin):
     logger.info(f'Looking up TIDM of {isin}')
     # https://www.londonstockexchange.com/live-markets/market-data-dashboard/price-explorer?categories=BONDS&subcategories=14
@@ -64,7 +61,6 @@ def lookup_tidm(isin):
     return tidm
 
 
-@caching.cache_data(ttl=15*60)
 def get_instrument_data(tidm):
     logger.info(f'Getting {tidm} instrument data')
     url = f'https://api.londonstockexchange.com/api/gw/lse/instruments/alldata/{tidm}'
@@ -74,7 +70,6 @@ def get_instrument_data(tidm):
     return obj
 
 
-@caching.cache_data(ttl=15*60)
 def get_latest_gilt_prices():
     '''Get the latest gilt prices with a single request'''
 
