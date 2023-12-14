@@ -38,18 +38,6 @@ def test_get_latest_gilt_prices():
         assert isinstance(instrument['lastprice'], (float, int))
 
 
-@pytest.mark.parametrize('prices', [
-    pytest.param(lse.GiltPrices(None), id="cached"),
-    pytest.param(lse.GiltPrices(os.path.join(os.path.dirname(__file__), 'gilts-closing-prices-20231201.csv')), id="local"),
-    pytest.param(lse.TradewebClosePrices(), id="tradeweb"),
-])
-def test_prices(prices):
-    isin, tidm = 'GB00BBJNQY21', 'TR68'
-    assert prices.lookup_tidm(isin) == tidm
-    assert prices.get_price(tidm) >= 0
-    assert isinstance(prices.get_prices_date(), datetime.datetime)
-
-
 def test_main():
     status = subprocess.call([sys.executable, lse.__file__])
     assert status == 0

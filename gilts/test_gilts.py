@@ -12,8 +12,6 @@ import pytest
 
 from pytest import approx
 
-import lse
-
 from gilts import *
 
 
@@ -33,10 +31,59 @@ def issued():
     return Issued(filename)
 
 
+class TradewebClosePrices(Prices):
+    # https://reports.tradeweb.com/closing-prices/gilts/ > Type: Gilts Only > Export
+
+    default = os.path.join(os.path.dirname(__file__), 'Tradeweb_FTSE_ClosePrices_20231201.csv')
+    tidm_csv = os.path.join(os.path.dirname(__file__), 'tidm.csv')
+
+    def __init__(self, filename=default):
+        Prices.__init__(self)
+        self.tidms = {}
+        for isin, tidm in csv.reader(open(self.tidm_csv, 'rt')):
+            self.tidms[isin] = tidm
+
+        self.prices = {}
+        for row in self.parse(filename):
+            isin = row['ISIN']
+            price = float(row['Clean Price'])
+            tidm = self.tidms[isin]
+            self.prices[tidm] = price
+            self.datetime = datetime.datetime.strptime(row['Close of Business Date'], '%d/%m/%Y')
+        self.datetime = self.datetime.replace(hour=23, minute=59, second=59)
+
+    @staticmethod
+    def parse(filename):
+        for row in csv.DictReader(open(filename, 'rt', encoding='utf-8-sig')):
+            if row['Type'] in ('Conventional', 'Index-linked'):
+                yield row
+
+    def lookup_tidm(self, isin):
+        return self.tidms[isin]
+
+    def get_price(self, tidm):
+        return self.prices[tidm]
+
+    def get_prices_date(self):
+        return self.datetime
+
+
 @pytest.fixture
 def prices():
-    filename = lse.TradewebClosePrices.default
-    return lse.TradewebClosePrices(filename)
+    filename = TradewebClosePrices.default
+    return TradewebClosePrices(filename)
+
+
+@pytest.mark.parametrize('prices', [
+    pytest.param(GiltPrices(None), id="cached"),
+    pytest.param(GiltPrices(os.path.join(os.path.dirname(__file__), 'gilts-closing-prices-20231201.csv')), id="local"),
+    pytest.param(TradewebClosePrices(), id="tradeweb"),
+])
+def test_prices(prices):
+    isin, tidm = 'GB00BBJNQY21', 'TR68'
+    assert prices.lookup_tidm(isin) == tidm
+    assert prices.get_price(tidm) >= 0
+    assert isinstance(prices.get_prices_date(), datetime.datetime)
 
 
 @pytest.mark.parametrize("index_linked", [False, True])
@@ -52,8 +99,8 @@ def test_yield_curve(issued, prices, index_linked, show_plots):
 
 @pytest.fixture
 def tradeweb():
-    filename = lse.TradewebClosePrices.default
-    return list(lse.TradewebClosePrices.parse(filename))
+    filename = TradewebClosePrices.default
+    return list(TradewebClosePrices.parse(filename))
 
 
 gilt_types = ["Conventional", "Index-linked"]

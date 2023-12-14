@@ -44,10 +44,9 @@ Copyright (c) 2023 LateGenXer.
 )
 
 
-import lse
 import rpi
 
-from gilts import Issued, BondLadder, schedule, yield_curve, IndexLinkedGilt
+from gilts import Issued, GiltPrices, BondLadder, schedule, yield_curve, IndexLinkedGilt
 from ukcalendar import next_business_day, shift_year, shift_month
 
 
@@ -145,7 +144,7 @@ else:
 
 with st.spinner('Downloading data...'):
     issued = Issued()
-    prices = lse.GiltPrices()
+    prices = GiltPrices()
     rpi_series = rpi.RPI() # XXX pass this to BondLadder
 bl = BondLadder(issued, prices, s)
 bl.index_linked = index_linked

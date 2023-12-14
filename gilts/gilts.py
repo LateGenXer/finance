@@ -48,7 +48,7 @@ else:
 
 from xirr import *
 from ukcalendar import *
-from lse import GiltPrices
+from rpi import RPI
 
 
 
@@ -397,7 +397,65 @@ class Issued:
                 yield g
 
 
-from rpi import RPI
+class Prices:
+
+    def __init__(self):
+        pass
+
+    def lookup_tidm(self, isin):  # pragma: no cover
+        raise NotImplementedError
+
+    def get_price(self, tidm):  # pragma: no cover
+        raise NotImplementedError
+
+    def get_prices_date(self):  # pragma: no cover
+        raise NotImplementedError
+
+
+class GiltPrices(Prices):
+
+    def __init__(self, filename=None):
+        Prices.__init__(self)
+        if filename is None:
+            entries = self._download()
+        else:
+            entries = csv.DictReader(open(filename, 'rt'))
+
+        self.tidms = {}
+        self.prices = {}
+
+        from zoneinfo import ZoneInfo
+        tzinfo = ZoneInfo("Europe/London")
+
+        for entry in entries:
+            date = datetime.date.fromisoformat(entry['date'])
+
+            # https://www.lsegissuerservices.com/spark/lse-whitepaper-trading-insights
+            self.datetime = datetime.datetime(date.year, date.month, date.day, 16, 35, 0, tzinfo=tzinfo)
+
+            isin = entry['isin']
+            tidm = entry['tidm']
+            price = float(entry['price'])
+
+            self.tidms[isin] = tidm
+            self.prices[tidm] = price
+
+    @staticmethod
+    @caching.cache_data(ttl=15*60)
+    def _download():
+        filename = os.path.join(os.path.dirname(__file__), 'gilts-closing-prices.csv')
+        download('https://lategenxer.github.io/finance/gilts-closing-prices.csv', filename)
+        return list(csv.DictReader(open(filename, 'rt')))
+
+    def lookup_tidm(self, isin):
+        return self.tidms[isin]
+
+    def get_price(self, tidm):
+        return self.prices[tidm]
+
+    def get_prices_date(self):
+        return self.datetime
+
 
 rpi = RPI()
 

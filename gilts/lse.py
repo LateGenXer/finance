@@ -16,15 +16,14 @@ import os.path
 import re
 import requests
 import sys
-import pprint
 
 import caching
 
-from download import download
-
 
 __all__ = [
-    'LSE',
+    'lookup_tidm',
+    'get_instrument_data',
+    'get_latest_gilt_prices',
 ]
 
 
@@ -75,9 +74,6 @@ def get_instrument_data(tidm):
     return obj
 
 
-_tidm_csv = os.path.join(os.path.dirname(__file__), 'tidm.csv')
-
-
 @caching.cache_data(ttl=15*60)
 def get_latest_gilt_prices():
     '''Get the latest gilt prices with a single request'''
@@ -111,102 +107,6 @@ def get_latest_gilt_prices():
             assert value['last'] is True
             return date, value['content']
     raise ValueError  # pragma: no cover
-
-
-class Prices:
-
-    def __init__(self):
-        pass
-
-    def lookup_tidm(self, isin):  # pragma: no cover
-        raise NotImplementedError
-
-    def get_price(self, tidm):  # pragma: no cover
-        raise NotImplementedError
-
-    def get_prices_date(self):  # pragma: no cover
-        raise NotImplementedError
-
-
-class GiltPrices(Prices):
-
-    def __init__(self, filename=None):
-        Prices.__init__(self)
-        if filename is None:
-            entries = self._download()
-        else:
-            entries = csv.DictReader(open(filename, 'rt'))
-
-        self.tidms = {}
-        self.prices = {}
-
-        from zoneinfo import ZoneInfo
-        tzinfo = ZoneInfo("Europe/London")
-
-        for entry in entries:
-            date = datetime.date.fromisoformat(entry['date'])
-
-            # https://www.lsegissuerservices.com/spark/lse-whitepaper-trading-insights
-            self.datetime = datetime.datetime(date.year, date.month, date.day, 16, 35, 0, tzinfo=tzinfo)
-
-            isin = entry['isin']
-            tidm = entry['tidm']
-            price = float(entry['price'])
-
-            self.tidms[isin] = tidm
-            self.prices[tidm] = price
-
-    @staticmethod
-    @caching.cache_data(ttl=15*60)
-    def _download():
-        filename = os.path.join(os.path.dirname(__file__), 'gilts-closing-prices.csv')
-        download('https://lategenxer.github.io/finance/gilts-closing-prices.csv', filename)
-        return list(csv.DictReader(open(filename, 'rt')))
-
-    def lookup_tidm(self, isin):
-        return self.tidms[isin]
-
-    def get_price(self, tidm):
-        return self.prices[tidm]
-
-    def get_prices_date(self):
-        return self.datetime
-
-
-class TradewebClosePrices(Prices):
-    # https://reports.tradeweb.com/closing-prices/gilts/ > Type: Gilts Only > Export
-
-    default = os.path.join(os.path.dirname(__file__), 'Tradeweb_FTSE_ClosePrices_20231201.csv')
-
-    def __init__(self, filename=default):
-        Prices.__init__(self)
-        self.tidms = {}
-        for isin, tidm in csv.reader(open(_tidm_csv, 'rt')):
-            self.tidms[isin] = tidm
-
-        self.prices = {}
-        for row in self.parse(filename):
-            isin = row['ISIN']
-            price = float(row['Clean Price'])
-            tidm = self.tidms[isin]
-            self.prices[tidm] = price
-            self.datetime = datetime.datetime.strptime(row['Close of Business Date'], '%d/%m/%Y')
-        self.datetime = self.datetime.replace(hour=23, minute=59, second=59)
-
-    @staticmethod
-    def parse(filename):
-        for row in csv.DictReader(open(filename, 'rt', encoding='utf-8-sig')):
-            if row['Type'] in ('Conventional', 'Index-linked'):
-                yield row
-
-    def lookup_tidm(self, isin):
-        return self.tidms[isin]
-
-    def get_price(self, tidm):
-        return self.prices[tidm]
-
-    def get_prices_date(self):
-        return self.datetime
 
 
 def main():
