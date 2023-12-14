@@ -73,8 +73,11 @@ This tool makes the following simplifying assumptions:
 
 ## Questions
 
-* **Can you please add support for XYZ?**  Maybe.  If it's relatively straightforward and generally useful I can consider it.  But I have no intention to accommodate the long tail of subtly different personal circumstances out there.  At some point people will need to accept this is a generic tool, and that they need to work out their own calculations, or pay somebody to do it.
+* **Can you please add support for XYZ?**
+  Maybe.  If it's relatively straightforward and generally useful I can consider it.  But I have no intention to accommodate the long tail of subtly different personal circumstances out there.  At some point people will need to accept this is a generic tool, and that they need to work out their own calculations, or pay somebody to do it.
 
-* **Can I have the source code?**  Source code is available [here](https://github.com/LateGenXer/finance/tree/main/rtp).  The key technologies used for this tool are: [Python](https://www.python.org/), [PuLP](https://coin-or.github.io/pulp/), [Pandas](https://pandas.pydata.org/) and [Streamlit](https://streamlit.io/).
+* **Can I have the source code?**
+  Source code is available [here](https://github.com/LateGenXer/finance/tree/main/rtp).  The key technologies used for this tool are: [Python](https://www.python.org/), [SciPy](https://scipy.org/), [Pandas](https://pandas.pydata.org/) and [Streamlit](https://streamlit.io/).
 
-* **How can I contact you?**  Try [here](https://github.com/LateGenXer/finance/discussions) but no promise.
+* **How can I contact you?**
+  Try [here](https://www.reddit.com/user/LateGenXer/) but no promise.

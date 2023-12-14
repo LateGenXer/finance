@@ -47,7 +47,7 @@ I am not a financial or tax adviser.
   _Dirty price_ is the price one will actually pay per nominal £100, and vary systematically relative to the clean price to include accrued interest (which increases daily between coupon dates, goes negative on ex-dividend date, and is zero on coupon distributions), and the published RPI index (on index-linked gilts.)
 
 * **Can I have the source code?**
-  Source code is available [here](https://github.com/LateGenXer/finance/).  The key technologies used for this tool are: [Python](https://www.python.org/), [PuLP](https://coin-or.github.io/pulp/), [Pandas](https://pandas.pydata.org/) and [Streamlit](https://streamlit.io/).
+  Source code is available [here](https://github.com/LateGenXer/finance/).  The key technologies used for this tool are: [Python](https://www.python.org/), [SciPy](https://scipy.org/), [Pandas](https://pandas.pydata.org/) and [Streamlit](https://streamlit.io/).
 
 * **How can I contact you?**
   Try [here](https://www.reddit.com/user/LateGenXer/) but no promise.
