@@ -247,6 +247,16 @@ with tab1:
     # https://github.com/streamlit/streamlit/issues/4830#issuecomment-1147878371
     st.write(s.to_html(table_uuid="buy_table"), unsafe_allow_html=True)
 
+    st.text("")
+    st.caption('''
+Definitions:
+* Tradable Instrument Display Mnemonics (TIDM): London Stock Exchange ticker (previously referred to as EPIC codes).
+* Clean Price: market quoted price; excludes accrued interest, and inflation uplift (for 3-month lag index-linked gilts.)
+* Dirty Price: purchase price; includes accrued interest and inflation uplift (for index-linked gilts.)
+* Quantity: £100 nominal units
+* Gross Redemption Yield (GRY): yield to maturity, gross of taxes, and in real terms for index-linked gilts.
+''')
+
     df1 = df
 
     if True:
@@ -281,6 +291,11 @@ with tab2:
 
     df = bl.cash_flow_df
 
+    df = df.rename(columns={
+        'Incoming': 'In',
+        'Outgoing': 'Out',
+    }, errors='raise')
+
     s = Styler(df, uuid_len=0, cell_ids=False)
 
     s.hide(axis='index')
@@ -298,25 +313,13 @@ with tab2:
     ])
     s.set_properties(subset=['Description'], **{'text-align': 'left'})
 
-    if True:
-        st.write(s.to_html(table_uuid="cash_flow_table", border=0), unsafe_allow_html=True)
-    else:
-        # XXX st.dataframe
-        df.fillna("", inplace=True)
-        #s = s.highlight_null(props="color: transparent;")
-        st.dataframe(s,
-            column_config={
-                "Date": st.column_config.DateColumn("Date"),
-                "Description": "Description",
-                "Incoming": st.column_config.NumberColumn("Incoming", format="%.2f"),
-                "Outgoing": st.column_config.NumberColumn("Outgoing", format="%.2f"),
-                "Balance":  st.column_config.NumberColumn("Balance",  format="%.2f"),
-                "Income":   st.column_config.NumberColumn("Income",   format="%.2f"),
-            },
-            hide_index=True,
-            use_container_width=True,
-        )
+    st.write(s.to_html(table_uuid="cash_flow_table", border=0), unsafe_allow_html=True)
 
+    st.text("")
+    st.caption('''
+Remarks:
+* Income refers to _taxable_ income, which excludes accrued interest and redemptions,
+''')
     df2 = df
 
 
