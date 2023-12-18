@@ -424,17 +424,17 @@ def test_bond_ladder(issued, prices, count, amount, shift, index_linked, margina
 
     df = bl.cash_flow_df
     for cf in df.itertuples():
-        assert math.isnan(cf.Incoming) != math.isnan(cf.Outgoing)
-        assert not cf.Incoming < 0.005
-        assert not cf.Outgoing < 0.005
+        assert math.isnan(cf.In) != math.isnan(cf.Out)
+        assert not cf.In < 0.005
+        assert not cf.Out < 0.005
 
         assert cf.Balance > -0.005
 
-    withdrawals = df['Outgoing'].loc[df['Description'] == 'Withdrawal'].sum()
+    withdrawals = df['Out'].loc[df['Description'] == 'Withdrawal'].sum()
     withdrawals_exp = sum([value for _, value in s])
     assert withdrawals == approx(withdrawals_exp, abs=0.005)
 
-    income_loc = df['Income'] == df['Income']
-    incoming = df['Incoming'].loc[income_loc].sum()
-    income = df['Income'].loc[income_loc].sum()
+    income_loc = df['Tax. Inc.'] == df['Tax. Inc.']
+    incoming = df['In'].loc[income_loc].sum()
+    income = df['Tax. Inc.'].loc[income_loc].sum()
     assert income <= incoming + .005

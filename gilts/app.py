@@ -247,14 +247,19 @@ with tab1:
     # https://github.com/streamlit/streamlit/issues/4830#issuecomment-1147878371
     st.write(s.to_html(table_uuid="buy_table"), unsafe_allow_html=True)
 
-    st.text("")
-    st.caption('''
-Definitions:
-* Tradable Instrument Display Mnemonics (TIDM): London Stock Exchange ticker (previously referred to as EPIC codes).
-* Clean Price: market quoted price; excludes accrued interest, and inflation uplift (for 3-month lag index-linked gilts.)
-* Dirty Price: purchase price; includes accrued interest and inflation uplift (for index-linked gilts.)
-* Quantity: £100 nominal units
-* Gross Redemption Yield (GRY): yield to maturity, gross of taxes, and in real terms for index-linked gilts.
+    st.text('')
+
+    with st.expander('Definitions'):
+        st.markdown('''
+**Tradable Instrument Display Mnemonics (TIDM)**: London Stock Exchange ticker (previously referred to as EPIC codes).
+
+**Clean Price**: market quoted price; excludes accrued interest, and inflation uplift (for 3-month lag index-linked gilts.)
+
+**Dirty Price**: purchase price; includes accrued interest and inflation uplift (for index-linked gilts.)
+
+**Quantity**: number of nominal £100 units to buy; however brokers might use different units (e.g., IWeb and Hargreaves Lansdown consider nominal £1 units.)
+
+**Gross Redemption Yield (GRY)**: yield to maturity, gross of taxes, and in real terms for index-linked gilts.
 ''')
 
     df1 = df
@@ -287,20 +292,14 @@ Definitions:
 
 with tab2:
     if st.session_state.index_linked:
-        st.info("Figures are shown in today's money.", icon="ℹ️")
+        st.info("Amounts shown below are in _today_'s money, i.e.,. discounted by assumed inflation.", icon="ℹ️")
 
     df = bl.cash_flow_df
-
-    df = df.rename(columns={
-        'Incoming': 'In',
-        'Outgoing': 'Out',
-    }, errors='raise')
 
     s = Styler(df, uuid_len=0, cell_ids=False)
 
     s.hide(axis='index')
 
-    s.format_index(formatter=str.title, axis=1)
     s.format(precision=2, thousands=',', decimal='.', na_rep='')
 
     s.set_table_styles([
@@ -316,9 +315,10 @@ with tab2:
     st.write(s.to_html(table_uuid="cash_flow_table", border=0), unsafe_allow_html=True)
 
     st.text("")
-    st.caption('''
-Remarks:
-* Income refers to _taxable_ income, which excludes accrued interest and redemptions,
+
+    with st.expander('Definitions'):
+        st.markdown('''
+**Taxable Income (Tax. Inc.)**: cash inflows sujbect to income tax; this excludes accrued interest and redemptions,
 ''')
     df2 = df
 

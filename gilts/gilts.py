@@ -799,7 +799,16 @@ class BondLadder:
             prev_cf = cf
 
         df = pd.DataFrame(data=data)
-        df = df.rename(columns=str.title)
+
+        df.rename(columns={
+            'date':         'Date',
+            'description':  'Description',
+            'incoming':     'In',
+            'outgoing':     'Out',
+            'balance':      'Balance',
+            'income':       'Tax. Inc.',
+        }, inplace=True, errors='raise')
+
         self.cash_flow_df = df
 
         self.withdrawal_rate = yearly_consumption/total_cost
