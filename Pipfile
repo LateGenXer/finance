@@ -16,6 +16,8 @@ pulp = "*"
 pytest = "*"
 pytest-xdist = "*"
 pytest-cov = "*"
+selenium = "*"
+webdriver-manager = "*"
 
 [requires]
 python_version = "3.10"
