@@ -21,8 +21,6 @@ import sys
 
 import xml.etree.ElementTree
 
-import requests
-
 from pprint import pp
 
 from download import download
