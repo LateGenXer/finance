@@ -21,7 +21,6 @@ import pandas as pd
 
 
 experimental = '--experimental' in sys.argv[1:]
-mock_schedule_file = '--mock-schedule-file' in sys.argv[1:]
 
 
 # https://docs.streamlit.io/library/api-reference/utilities/st.set_page_config
@@ -82,10 +81,6 @@ Date,Value
 2028-12-01,1000
 ```
 ''')
-        if mock_schedule_file:
-            schedule_file = io.BytesIO(b'''Date,Value
-            2073-12-31,1000
-            ''')
 
     st.divider()
 

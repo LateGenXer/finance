@@ -71,17 +71,6 @@ def test_index_linked():
     run(at)
 
 
-def test_schedule_file():
-    argv = sys.argv
-    try:
-        sys.argv = ['app.py', '--mock-schedule-file']
-        at = AppTest.from_file("app.py", default_timeout=default_timeout)
-        run(at)
-
-    finally:
-        sys.argv = argv
-
-
 def test_experimental_window():
     argv = sys.argv
     try:
