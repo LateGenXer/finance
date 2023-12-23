@@ -12,7 +12,7 @@ pytest.register_assert_rewrite("gilts")
 
 
 def pytest_addoption(parser):
-    parser.addoption( "--show-plots", action="store_true", default=False, help="Show plots")
+    parser.addoption("--show-plots", action="store_true", default=False, help="Show plots")
 
 
 @pytest.fixture
