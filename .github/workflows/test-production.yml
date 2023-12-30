@@ -1,0 +1,22 @@
+name: test-production
+
+on:
+  workflow_run:
+    workflows: [test]
+    branches: [main]
+    types: [completed]
+
+env:
+  FORCE_COLOR: 3
+
+jobs:
+
+  ubuntu:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+    - run: pip install --upgrade pipenv wheel
+    - run: pipenv install --dev
+    - run: pipenv run pytest gilts/test_selenium.py --production
