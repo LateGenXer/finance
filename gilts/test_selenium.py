@@ -93,7 +93,8 @@ def driver():
         driver.quit()
 
 
-def test_gilt_ladder(server, driver):
+@pytest.fixture(scope="function")
+def page(server, driver):
     driver.get(server + '/Gilt_Ladder')
 
     # Use the same analytics anonymous ID.
@@ -103,24 +104,47 @@ def test_gilt_ladder(server, driver):
     })
 
     driver.implicitly_wait(15)
-
     driver.find_element(By.ID, 'disclaimer');
-    driver.implicitly_wait(0)
 
+    return driver
+
+
+def test_default(page):
+    driver = page
+
+    driver.implicitly_wait(0)
     with pytest.raises(NoSuchElementException):
         exception = driver.find_element(By.XPATH, "//div[@class='stException']");
 
-    if False:
-        index_linked = driver.find_element(By.XPATH, "//p[text()='Index-linked']");
-        index_linked.click()
-    else:
-        # https://www.selenium.dev/documentation/webdriver/elements/file_upload/
-        s = driver.find_element(By.XPATH, "//input[@type='file']")
-        s.send_keys(os.path.join(os.path.dirname(__file__), 'test_schedule.csv'))
+
+def test_index_linked(page):
+    driver = page
+
+    index_linked = driver.find_element(By.XPATH, "//p[text()='Index-linked']");
+    index_linked.click()
 
     time.sleep(3)
 
     driver.implicitly_wait(15)
+    driver.find_element(By.ID, 'disclaimer');
+
+    driver.implicitly_wait(0)
+    with pytest.raises(NoSuchElementException):
+        exception = driver.find_element(By.XPATH, "//div[@class='stException']");
+        driver.save_screenshot('selenium.png')
+
+
+def test_file_upload(page):
+    driver = page
+
+    driver.implicitly_wait(15)
+
+    # https://www.selenium.dev/documentation/webdriver/elements/file_upload/
+    s = driver.find_element(By.XPATH, "//input[@type='file']")
+    s.send_keys(os.path.join(os.path.dirname(__file__), 'test_schedule.csv'))
+
+    time.sleep(3)
+
     driver.find_element(By.ID, 'disclaimer');
     driver.implicitly_wait(0)
 
