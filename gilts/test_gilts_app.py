@@ -31,18 +31,19 @@ def run(at):
     reset_slider(at, 'marginal_income_tax')
 
 
-def test_run():
+@pytest.fixture(scope="function")
+def at():
     at = AppTest.from_file("app.py", default_timeout=default_timeout)
     run(at)
+    return at
 
+
+def test_run(at):
     # Ensure no state corruption
     run(at)
 
 
-def test_monthly():
-    at = AppTest.from_file("app.py", default_timeout=default_timeout)
-    run(at)
-
+def test_monthly(at):
     # Toggle Joint checkbox
     frequency = at.radio(key="frequency")
     assert frequency.value == "Yearly"
@@ -50,10 +51,7 @@ def test_monthly():
     run(at)
 
 
-def test_start_date():
-    at = AppTest.from_file("app.py", default_timeout=default_timeout)
-    run(at)
-
+def test_start_date(at):
     start_date = at.date_input(key="start_date")
     assert start_date.value is None
     today = datetime.datetime.utcnow().date()
@@ -61,10 +59,7 @@ def test_start_date():
     run(at)
 
 
-def test_index_linked():
-    at = AppTest.from_file("app.py", default_timeout=default_timeout)
-    run(at)
-
+def test_index_linked(at):
     # Toggle Joint checkbox
     index_linked = at.toggle(key="index_linked")
     index_linked.set_value(not index_linked.value)
