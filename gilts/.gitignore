@@ -1,9 +1,2 @@
-*.csv
-!gilts-closing-prices-20231201.csv
-!rpi-series-20231115.csv
-!Tradeweb_FTSE_ClosePrices_20231201.csv
-!ukbankholidays.csv
-!test_schedule.csv
-
-*.xml
-!dmo-D1A-20231201.xml
+dmo-D1A.xml
+gilts-closing-prices.csv

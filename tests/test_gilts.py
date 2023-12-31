@@ -13,7 +13,7 @@ import pytest
 from pytest import approx
 
 from rpi import RPI
-from gilts import *
+from gilts.gilts import *
 
 
 @pytest.mark.parametrize("coupon_date,xd_date", [
@@ -28,7 +28,7 @@ def test_ex_dividend_date(coupon_date, xd_date):
 
 @pytest.fixture
 def issued():
-    rpi_filename = os.path.join(os.path.dirname(__file__), 'rpi-series-20231115.csv')
+    rpi_filename = os.path.join(os.path.dirname(__file__), '..', 'tests', 'rpi-series-20231115.csv')
     rpi_series = RPI(rpi_filename)
     filename = os.path.join(os.path.dirname(__file__), 'dmo-D1A-20231201.xml')
     return Issued(filename, rpi_series=rpi_series)

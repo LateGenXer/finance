@@ -45,7 +45,7 @@ Copyright (c) 2023 LateGenXer.
 
 import rpi
 
-from gilts import Issued, GiltPrices, BondLadder, schedule, yield_curve, IndexLinkedGilt
+from gilts.gilts import Issued, GiltPrices, BondLadder, schedule, yield_curve, IndexLinkedGilt
 from ukcalendar import next_business_day, shift_year, shift_month
 
 

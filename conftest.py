@@ -5,7 +5,14 @@
 #
 
 
+import os.path
+import sys
 import pytest
+
+
+here = os.path.dirname(__file__)
+sys.path.insert(0, os.path.join(here, 'rtp'))
+sys.path.insert(0, here)
 
 
 pytest.register_assert_rewrite("gilts")

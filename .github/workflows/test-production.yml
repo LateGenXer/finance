@@ -19,4 +19,4 @@ jobs:
         fetch-depth: 1
     - run: pip install --upgrade pipenv wheel
     - run: pipenv install --dev
-    - run: pipenv run pytest gilts/test_selenium.py --production
+    - run: pipenv run pytest tests/test_selenium.py --production

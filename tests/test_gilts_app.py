@@ -33,7 +33,7 @@ def run(at):
 
 @pytest.fixture(scope="function")
 def at():
-    at = AppTest.from_file("app.py", default_timeout=default_timeout)
+    at = AppTest.from_file("gilts/app.py", default_timeout=default_timeout)
     run(at)
     return at
 
@@ -69,8 +69,8 @@ def test_index_linked(at):
 def test_experimental_window():
     argv = sys.argv
     try:
-        sys.argv = ['app.py', '--experimental']
-        at = AppTest.from_file("app.py", default_timeout=default_timeout)
+        sys.argv = ['gilts/app.py', '--experimental']
+        at = AppTest.from_file("gilts/app.py", default_timeout=default_timeout)
         run(at)
 
         window = at.slider(key="window")

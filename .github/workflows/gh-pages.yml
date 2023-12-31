@@ -17,8 +17,8 @@ on:
       - main
     paths:
       - .github/workflows/gh-pages.yml
-      - gilts/download.py
-      - gilts/lse.py
+      - download.py
+      - lse.py
 
   # Manually
   workflow_dispatch:
@@ -50,9 +50,9 @@ jobs:
       - name: Create bare-bones site
         run: mkdir _site
       - name: Download Gilts in Issue from DMO
-        run: python gilts/download.py 'https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A' _site/dmo-D1A.xml text/xml
+        run: python download.py 'https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A' _site/dmo-D1A.xml text/xml
       - name: Download Gilts Closing Prices from LSE
-        run: python gilts/lse.py > _site/gilts-closing-prices.csv
+        run: python lse.py > _site/gilts-closing-prices.csv
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:

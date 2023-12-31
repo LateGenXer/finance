@@ -138,3 +138,6 @@ dmypy.json
 *.zip
 
 _site/
+
+rpi-series.csv
+selenium.png
