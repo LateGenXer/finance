@@ -32,8 +32,7 @@ cgt_rate = 0.28
 
 def _gbpeur():
     today = datetime.datetime.utcnow().date()
-    last_month = today.replace(year = (today.year*12 + today.month - 2) // 12, month = (today.month - 2) % 12 + 1, day=1)
-    url = f'https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/files/monthly_xml_{last_month:%Y-%m}.xml'
+    url = f'https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/files/monthly_xml_{today.year}-{today.month}.xml'
     headers = {'user-agent': 'Mozilla/5.0'}
     r = requests.get(url, headers=headers)
     stream = io.BytesIO(r.content)
