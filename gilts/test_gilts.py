@@ -396,6 +396,10 @@ def test_il_estimated_redemption(issued, entry):
     raise AssertionError(f'{name} not found')
 
 
+def test_issued_latest():
+    Issued()
+
+
 @pytest.mark.parametrize("lag", [0, 2])
 @pytest.mark.parametrize("interest_rate", [0.0, 0.02])
 @pytest.mark.parametrize("marginal_income_tax", [0.0, 0.40])
