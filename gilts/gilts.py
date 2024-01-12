@@ -74,7 +74,12 @@ class Gilt:
         next_coupon_dates = []
         prev_coupon_date = self.maturity
         periods = 0
-        while True:
+        # First dividends are often non-standard, being longer/shorter than 6
+        # months.  The used convention is not written anywhere, but we assume
+        # the first dividend period will be between 3 and 9 months.
+        # XXX Another solution would be to infer the first dividend date from
+        # dmo-D1A.xml's CURRENT_EX_DIV_DATE attribute.
+        while (prev_coupon_date - self.issue_date).days >= 90:
             next_coupon_dates.append(prev_coupon_date)
             periods += 1
             prev_coupon_date = shift_month(self.maturity, -6*periods)
@@ -339,7 +344,7 @@ class Issued:
 
             self.close_date = self._parse_date(entry['CLOSE_OF_BUSINESS_DATE'])
 
-            # Check ex-divdend dates match when testing
+            # Check ex-dividend dates match when testing
             if "PYTEST_CURRENT_TEST" in os.environ:
                 current_xd_date = self._parse_date(entry['CURRENT_EX_DIV_DATE'])
                 settlement_date = next_business_day(self.close_date)
