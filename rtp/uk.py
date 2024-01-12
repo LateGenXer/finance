@@ -35,7 +35,7 @@ state_pension_full = 221.20 * weeks_per_year
 def nmpa(dob):
     if dob + 55 <= 2028:
         return 55
-    elif dob + 57 <= 2044:
+    elif dob + 57 < 2044:
         return 57
     else:
         # XXX: Not set in stone
