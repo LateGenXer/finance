@@ -13,7 +13,7 @@ assert income_tax_threshold_45 == 125140
 
 # https://www.gov.uk/government/publications/the-personal-allowance-and-basic-rate-limit-for-income-tax-and-certain-national-insurance-contributions-nics-thresholds-from-6-april-2026-to-5-apr/income-tax-personal-allowance-and-the-basic-rate-limit-and-certain-national-insurance-contributions-thresholds-from-6-april-2026-to-5-april-2028
 _inflation_rate = .035
-_inflation_adjustment = (1 + _inflation_rate) ** -4
+_inflation_adjustment = (1 + _inflation_rate) ** -3
 income_tax_threshold_20 = int(income_tax_threshold_20 * _inflation_adjustment)
 income_tax_threshold_40 = int(income_tax_threshold_40 * _inflation_adjustment)
 pa_limit                = int(pa_limit * _inflation_adjustment)
