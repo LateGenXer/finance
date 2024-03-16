@@ -12,6 +12,7 @@ import json
 
 import streamlit as st
 import pandas as pd
+import sys
 
 from uk import aa, uiaa
 from model import model, column_headers, dataframe
@@ -38,20 +39,13 @@ Copyright (c) 2023 LateGenXer.
 
 st.title('Retirement Tax Planner')
 
-# Allow to override initial state on development enviroments
-try:
-    from devel import state as devel_state
-except ImportError:
-    devel = False
-else:
-    devel = True
-    with st.expander("Devel..."):
-        st.write(devel_state)
-        if 'devel_state' not in st.session_state:
-            st.session_state.update(devel_state)
-            st.session_state.devel_state = True
 
-# Default state
+#
+# State
+#
+
+version = 1
+
 default_state = {
     "joint": False,
     "dob_1": 1980,
@@ -81,6 +75,41 @@ default_state = {
     "aa_1": aa,
     "aa_2": uiaa,
 }
+
+
+def load_state(data, override):
+    state = json.loads(data)
+    uploaded_version = state.pop('version', 0)
+    if uploaded_version != version:
+        st.warning(f"Expected parameter file version {version} but got {uploaded_version}", icon="⚠️")
+    for key, value in state.items():
+        if key in default_state:
+            if override:
+                st.session_state[key] = value
+            else:
+                st.session_state.setdefault(key, value)
+        else:
+            st.warning(f"Unexpected parameter {key}={value!r}", icon="⚠️")
+
+
+# Allow to override initial state on development enviroments
+
+devel = False
+if len(sys.argv) == 2:
+    devel = True
+    data = open(sys.argv[1], 'rt').read()
+    load_state(data, override=False)
+else:
+    try:
+        from devel import state as devel_state
+    except ImportError:
+        pass
+    else:
+        devel = True
+        with st.expander("Devel..."):
+            st.write(devel_state)
+            for key, value in devel_state.items():
+                st.session_state.setdefault(key, value)
 for key, value in default_state.items():
     st.session_state.setdefault(key, value)
 
@@ -104,7 +133,6 @@ st.header('Parameters')
 st.info('Parameters are not stored permanently and will not persist across page reloads, but they can be downloaded/uploaded.', icon="ℹ️")
 
 st.session_state.setdefault('uploaded_hashes', set())
-version = 1
 with st.expander("Upload..."):
     uploaded_file = st.file_uploader("Upload parameters", type=['json'], help='Upload all parameters from JSON file.', label_visibility='collapsed')
     if uploaded_file is not None:
@@ -113,15 +141,7 @@ with st.expander("Upload..."):
         data_hash = hash(data)
         if data_hash not in st.session_state.uploaded_hashes:
             st.session_state.uploaded_hashes.add(data_hash)
-            state = json.loads(data)
-            uploaded_version = state.pop('version', 0)
-            if uploaded_version != version:
-                st.warning(f"Expected parameter file version {version} but got {uploaded_version}", icon="⚠️")
-            for key, value in state.items():
-                if key in default_state:
-                    st.session_state[key] = value
-                else:
-                    st.warning(f"Unexpected parameter {key}={value:r}", icon="⚠️")
+            load_state(data, override=True)
 
 st.checkbox("Joint calculation", key="joint")
 with st.form(key='form'):
