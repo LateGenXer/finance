@@ -24,6 +24,7 @@ I am not a financial or tax adviser.
 
 ## Recent changes
 
+* Fix incorrecly doubled CGT allowance for single tax payer case.
 * Avoid compounding CGT.
 * Adjust income tax thresholds in real terms for being frozen in nominal terms until 2027/2028.
 * Drop Portuguese NHR regime

@@ -140,13 +140,13 @@ def uk_income_tax_lp(prob, gross_income):
     return income_tax_lp(prob, gross_income, uk_income_tax_bands)
 
 
-def uk_cgt_lp(prob, cg, cgt_rate):
+def uk_cgt_lp(prob, cg, cgt_rate, cgt_allowance):
     global uid
-    cg_00 = lp.LpVariable(f'cgt_{uid}_00', 0, cgt_allowance*2)
-    cg_20 = lp.LpVariable(f'cgt_{uid}_20', 0)
+    cg_00 = lp.LpVariable(f'cgt_{uid}_00', 0, cgt_allowance)
+    cg_xx = lp.LpVariable(f'cgt_{uid}_xx', 0)
     uid += 1
-    prob += cg_00 + cg_20 == cg
-    tax = cg_20 * cgt_rate
+    prob += cg_00 + cg_xx == cg
+    tax = cg_xx * cgt_rate
     return tax
 
 
@@ -532,7 +532,7 @@ def model(
             else:
                 tax_1 = uk_income_tax_lp(prob, income_gross_1)
                 tax_2 = uk_income_tax_lp(prob, income_gross_2)
-            cgt = uk_cgt_lp(prob, cg, cgt_rate)
+            cgt = uk_cgt_lp(prob, cg, cgt_rate, N*cgt_allowance)
         else:
             # PT
             income_gross = (income_gross_1 + tfc_1 +
@@ -676,7 +676,7 @@ def model(
             else:
                 tax_1 = UK.income_tax(income_gross_1)
                 tax_2 = UK.income_tax(income_gross_2)
-            cgt = max(cg - cgt_allowance*2, 0) * cgt_rate
+            cgt = max(cg - N*cgt_allowance, 0) * cgt_rate
         else:
             # PT
             income_gross = income_gross_1 + income_gross_2
