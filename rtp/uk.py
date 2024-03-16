@@ -23,6 +23,7 @@ income_tax_threshold_45 = pa_limit + 2*income_tax_threshold_20 # 2023/2024
 # https://www.gov.uk/capital-gains-tax/allowances
 # https://www.gov.uk/government/publications/reducing-the-annual-exempt-amount-for-capital-gains-tax
 cgt_allowance = 3000 # 2024/2025
+cgt_rates = [0.10, 0.20]
 
 
 # https://www.gov.uk/marriage-allowance

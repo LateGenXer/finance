@@ -528,7 +528,7 @@ def model(
         ma = 0
         if not pt_yr:
             # UK
-            cgt_rate = 0.20
+            cgt_rate = cgt_rates[1] # Higher rate
             if yr < retirement_year:
                 tax_1 = income_gross_1 * marginal_income_tax_1
                 tax_2 = income_gross_2 * marginal_income_tax_2
@@ -543,7 +543,7 @@ def model(
 
                 tax_1 = taxable_income_20 * 0.20
                 tax_2 = 0
-                cgt_rate = 0.10
+                cgt_rate = cgt_rates[0] # Basic rate
             else:
                 tax_1 = uk_income_tax_lp(prob, income_gross_1)
                 tax_2 = uk_income_tax_lp(prob, income_gross_2)
@@ -687,7 +687,7 @@ def model(
         ma = lp.value(s.ma)
         if not pt_yr:
             # UK
-            cgt_rate = 0.20
+            cgt_rate = cgt_rates[1] # Higher rate
             if yr < retirement_year:
                 tax_1 = income_gross_1 * marginal_income_tax_1
                 tax_2 = income_gross_2 * marginal_income_tax_2
@@ -695,7 +695,7 @@ def model(
                 assert ma >= 0
                 tax_1 = UK.income_tax(income_gross_1, ma)
                 tax_2 = UK.income_tax(income_gross_2, -ma)
-                cgt_rate = 0.10
+                cgt_rate = cgt_rates[0] # Basic rate
             else:
                 tax_1 = UK.income_tax(income_gross_1)
                 tax_2 = UK.income_tax(income_gross_2)
@@ -733,7 +733,7 @@ def model(
 
         tax_rate_1 = tax_1 / max(income_gross_1, 1)
         tax_rate_2 = tax_2 / max(income_gross_2, 1)
-        cgt_rate_  = cgt / max(cg, 1)
+        cgt_rate   = cgt   / max(cg, 1)
 
         lac_1 = lp.value(s.lac_1)
         lac_2 = lp.value(s.lac_2)
@@ -759,7 +759,7 @@ def model(
                     income_gross_1, income_gross_2, income_net, surplus,
                     tax_1, 100 * tax_rate_1,
                     tax_2, 100 * tax_rate_2,
-                    cgt, 100 * cgt_rate_,
+                    cgt, 100 * cgt_rate,
                     lac
                 ))
         tax = tax_1 + tax_2 + cgt + lac
@@ -794,7 +794,7 @@ def model(
             income_tax_rate_1=tax_rate_1,
             income_tax_rate_2=tax_rate_2,
             cgt=cgt,
-            cgt_rate=cgt_rate_,
+            cgt_rate=cgt_rate,
             lac=lac
         )
 
