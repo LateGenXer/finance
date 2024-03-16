@@ -6,8 +6,7 @@ programming](https://en.wikipedia.org/wiki/Linear_programming)_ to determine
 when and how much to withdraw from the different pots to fund retirement
 spending, in order to make the money last as much as possible.
 
-I initially wrote this for my own personal use, after running against limitations in other retirement planners such as [Guiide](https://guiide.co.uk/) and [MyNetwealth](https://my.netwealth.com/).  Specifically, for failing to take in consideration the particular circumstances of married couples and/or Lifetime Allowance.
-The main driver was to better understand and estimate the impact of the Lifetime Allowance, in order to make better informed choices of savings products / tax wrappers.
+I initially wrote this for my own personal use, after running against limitations in other retirement planners such as [Guiide](https://guiide.co.uk/) and [MyNetwealth](https://my.netwealth.com/).  Specifically, for failing to take in consideration the particular circumstances of married couples and the old Lifetime Allowance.
 I am not a financial or tax adviser.
 
 ## Disclaimers
@@ -19,13 +18,8 @@ I am not a financial or tax adviser.
 
 * This tool is meant for efficient **tax planning**, not **tax avoidance**.
   Per [this HMRC's paper](https://www.gov.uk/government/publications/tackling-tax-avoidance-evasion-and-other-forms-of-non-compliance),
-  _"**tax avoidance** involves bending the rules of the tax system to gain a tax
-  advantage that Parliament never intended_",
-  whereas
-  _"**tax planning** involves using tax reliefs for the purpose for which they were
-  intended -- it is not tax avoidance. For example, claiming relief on capital
-  investment, saving in a tax-exempt ISA or saving for retirement by
-  contributing to a pension scheme are all legitimate forms of tax planning."_
+  _"**tax avoidance** involves bending the rules of the tax system to gain a tax advantage that Parliament never intended_", whereas
+  _"**tax planning** involves using tax reliefs for the purpose for which they were intended -- it is not tax avoidance.  For example, claiming relief on capital investment, saving in a tax-exempt ISA or saving for retirement by contributing to a pension scheme are all legitimate forms of tax planning."_
   In any doubt, get professional advice, or contact HMRC.
 
 ## Recent changes
@@ -48,24 +42,26 @@ I am not a financial or tax adviser.
 ## Assumptions
 
 This tool makes the following simplifying assumptions:
-* all tax rates of 2023/2024 stay constant;
+* all current tax rates stay constant;
 * all tax thresholds and allowances will follow inflation;
-* that the CGT allowance is fully used on gains from GIA, while still avoiding [_bed & breakfast rule_](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg13350).
+* that the CGT allowances are fully used on gains from GIA, while still avoiding the [_bed & breakfast rule_](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg13350).
+* The tool enforces a fixed income in _real_ terms (that is, growing with inflation) until both retirees reach 100 year of age.
 
 ## Limitations
 
-* The tool enforces a fixed income in _real_ terms (that is, growing with inflation) until both retirees reach 100 year of age.
-
 * Capital Gains Tax (CGT) is _overestimated_.  CGT rate depends on the marginal income tax rate.  This implies a non-linearity which can't be modeled as an ordinary linear programming problems.
 
-* Equally, income tax after the Personal Allowance disappears (currently £125,140) is overestimated.  This is because the marginal income tax rate drops from 60% back to 45%, which can't be accurately modeled as a linear programming problem.
+* Equally, income tax after the Personal Allowance disappears is overestimated.  This is because the marginal income tax rate drops from 60% back to 45%, which can't be accurately modeled as a linear programming problem.
 
-* It cannot model post-retirement scenarios.
+* It cannot model post-retirement scenarios yet.  In particular, it assumes all pension funds are uncrystalized (that no TFC, drawdown, or UFPLS was taken.)
 
-* It cannot model defined benefits pension pots or annuities.
+* It cannot model defined benefits pension pots or annuities yet.
 
-* It doesn't model mortality or the impact of different asset allocations on
-  IHT.
+* It doesn't model mortality or the impact of different asset allocations on IHT.
+
+* It ignores dividend allowance and dividence tax.
+
+* It does not consider cash, or tax efficient products such as NS&I Premium Bonds and individual Gilts.
 
 ## Known issues
 
