@@ -76,10 +76,10 @@ class Gilt:
         periods = 0
         # First dividends are often non-standard, being longer/shorter than 6
         # months.  The used convention is not written anywhere, but we assume
-        # the first dividend period will be between 3 and 9 months.
+        # the first dividend period will be between 2 and 8 months.
         # XXX Another solution would be to infer the first dividend date from
         # dmo-D1A.xml's CURRENT_EX_DIV_DATE attribute.
-        while (prev_coupon_date - self.issue_date).days >= 90:
+        while (prev_coupon_date - self.issue_date).days >= 60:
             next_coupon_dates.append(prev_coupon_date)
             periods += 1
             prev_coupon_date = shift_month(self.maturity, -6*periods)
