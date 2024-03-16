@@ -80,6 +80,7 @@ class ResState:
     gia_delta: float
     income_gross_1: float
     income_gross_2: float
+    cg: float
     income_net: float
     income_surplus: float
     income_tax_1: float
@@ -785,6 +786,7 @@ def model(
             gia_delta=normalize(-drawdown_gia, 2),
             income_gross_1=income_gross_1,
             income_gross_2=income_gross_2,
+            cg=cg,
             income_net=income_net,
             income_surplus=normalize(surplus, 2),
             income_tax_1=tax_1,
@@ -831,6 +833,7 @@ column_headers = {
     'gia_delta': '(\u0394)',
     'income_gross_1': 'GI1',
     'income_gross_2': 'GI2',
+    'cg': 'CG',
     'income_net': 'NI',
     'income_surplus': 'Error',
     'income_tax_1': 'IT1',
