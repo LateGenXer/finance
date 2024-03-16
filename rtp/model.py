@@ -318,29 +318,35 @@ class GIA:
         total = 0
         gains = 0
 
-        for yr in range(len(self.assets)):
+        purchase = lp.LpVariable(f'gia_purchase_{uid}', 0)
+        self.assets.insert(0, purchase)
+
+        for yr in range(1, len(self.assets)):
             proceeds = lp.LpVariable(f'gia_proceeds_{uid}_{yr}', 0)
             self.assets[yr] -= proceeds
             self.prob += self.assets[yr] >= 0
             total += proceeds
             gains += proceeds * (1.0 - (1.0 + self.growth_rate) ** -yr)
 
-        purchase = lp.LpVariable(f'gia_purchase_{uid}', 0)
-        self.assets.insert(0, purchase)
+        for yr in range(0, len(self.assets)):
 
+            self.assets[yr] *= (1.0 + self.growth_rate_real) * (1.0 - eps)
         uid += 1
 
         return total - purchase, gains
 
-    def grow(self):
-        for yr in range(1, len(self.assets)):
-            self.assets[yr] *= 1.0 + self.growth_rate_real
 
     def value(self):
         total = 0
         for balance in self.assets:
             total += balance
         return total
+
+
+# Introduce a tiny bias towards SIPPs uncrystalized funds and against
+# GIAs to stabilize results, and prevent redundant money flows that
+# arise when the optimal solution is not unique
+eps = 2**-14
 
 
 def model(
@@ -439,12 +445,6 @@ def model(
     nmpa_1 = nmpa(dob_1)
     nmpa_2 = nmpa(dob_2)
 
-    # Introduce a tiny bias towards SIPPs uncrystalized funds and against
-    # GIAs to stabilize results, and prevent redundant money flows that
-    # arise when the optimal solution is not unique
-    eps = 2**-14
-    gia_growth_rate -= eps
-
     sipp_1 = DCP(prob=prob, uf=sipp_1, growth_rate_real = sipp_growth_rate_real_1, inflation_rate=inflation_rate, lta=lta, lacs=lacs, nmpa=nmpa_1)
     sipp_2 = DCP(prob=prob, uf=sipp_2, growth_rate_real = sipp_growth_rate_real_2, inflation_rate=inflation_rate, lta=lta, lacs=lacs, nmpa=nmpa_2)
 
@@ -512,7 +512,6 @@ def model(
         isa *= 1.0 + isa_growth_rate_real
 
         drawdown_gia, cg = gia.flow()
-        gia.grow()
 
         sipp_1.uf *= 1.0 + eps
         sipp_2.uf *= 1.0 + eps
