@@ -55,6 +55,7 @@ class LPState:
     income_state_2: Any
     income_gross_1: Any
     income_gross_2: Any
+    ma: Any
 
 
 @dataclass
@@ -370,6 +371,7 @@ def model(
         lump_sum,
         aa_1,
         aa_2,
+        marriage_allowance,
     ):
 
     end_age = 100
@@ -404,9 +406,6 @@ def model(
     sipp_growth_rate_real_1 = inflation_ajusted_return(sipp_growth_rate_1, inflation_rate)
     sipp_growth_rate_real_2 = inflation_ajusted_return(sipp_growth_rate_2, inflation_rate)
     isa_growth_rate_real    = inflation_ajusted_return(isa_growth_rate,    inflation_rate)
-
-    cgt_rate = 0.20
-    #cgt_rate = 0.10 #XXX
 
     assert sipp_contrib_1 <= UK.aa
     assert sipp_contrib_2 <= UK.aa
@@ -524,11 +523,26 @@ def model(
         # Income and Capital Gain Taxes modelling
         income_gross_1 = income_state_1 + drawdown_1
         income_gross_2 = income_state_2 + drawdown_2
+
+        ma = 0
         if not pt_yr:
             # UK
+            cgt_rate = 0.20
             if yr < retirement_year:
                 tax_1 = income_gross_1 * marginal_income_tax_1
                 tax_2 = income_gross_2 * marginal_income_tax_2
+            elif marriage_allowance and income_state_2 <= UK.income_tax_threshold_20:
+                ma = lp.LpVariable(f'ma@{yr}', 0, UK.marriage_allowance)
+                taxable_income_00 = lp.LpVariable(f'taxable_income_00@{yr}', 0)
+                taxable_income_20 = lp.LpVariable(f'taxable_income_20@{yr}', 0)
+                prob += taxable_income_00 <= UK.income_tax_threshold_20 + ma
+                prob += taxable_income_00 + taxable_income_20 == income_gross_1
+                prob += income_gross_1 <= UK.income_tax_threshold_40
+                prob += income_gross_2 + ma <= UK.income_tax_threshold_20
+
+                tax_1 = taxable_income_20 * 0.20
+                tax_2 = 0
+                cgt_rate = 0.10
             else:
                 tax_1 = uk_income_tax_lp(prob, income_gross_1)
                 tax_2 = uk_income_tax_lp(prob, income_gross_2)
@@ -585,6 +599,7 @@ def model(
             income_state_2=income_state_2,
             income_gross_1=income_gross_1,
             income_gross_2=income_gross_2,
+            ma=ma,
         )
 
     if max_income:
@@ -668,11 +683,18 @@ def model(
         # Income and Capital Gain Taxes calculation
         income_gross_1 = lp.value(s.income_gross_1)
         income_gross_2 = lp.value(s.income_gross_2)
+        ma = lp.value(s.ma)
         if not pt_yr:
             # UK
+            cgt_rate = 0.20
             if yr < retirement_year:
                 tax_1 = income_gross_1 * marginal_income_tax_1
                 tax_2 = income_gross_2 * marginal_income_tax_2
+            elif ma:
+                assert ma >= 0
+                tax_1 = UK.income_tax(income_gross_1, ma)
+                tax_2 = UK.income_tax(income_gross_2, -ma)
+                cgt_rate = 0.10
             else:
                 tax_1 = UK.income_tax(income_gross_1)
                 tax_2 = UK.income_tax(income_gross_2)

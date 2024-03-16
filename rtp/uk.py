@@ -25,6 +25,10 @@ income_tax_threshold_45 = pa_limit + 2*income_tax_threshold_20 # 2023/2024
 cgt_allowance = 3000 # 2024/2025
 
 
+# https://www.gov.uk/marriage-allowance
+marriage_allowance = 1260
+
+
 # https://www.gov.uk/new-state-pension/what-youll-get
 weeks_per_year = 365.25/7
 state_pension_full = 221.20 * weeks_per_year
@@ -66,9 +70,9 @@ assert tfca * 4 == lta
 isa_allowance = 20000
 
 
-def income_tax(gross_income):
+def income_tax(gross_income, marriage_allowance = 0):
     # https://www.gov.uk/income-tax-rates/income-over-100000
-    personal_allowance = max(income_tax_threshold_20 - max(gross_income - pa_limit, 0)*0.5, 0)
+    personal_allowance = max(income_tax_threshold_20 + marriage_allowance - max(gross_income - pa_limit, 0)*0.5, 0)
     taxable_income = max(gross_income - personal_allowance, 0)
 
     assert income_tax_threshold_45 >= pa_limit + 2*income_tax_threshold_20

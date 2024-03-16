@@ -74,6 +74,7 @@ default_state = {
     "lump_sum": 0,
     "aa_1": aa,
     "aa_2": uiaa,
+    "marriage_allowance": False,
 }
 
 
@@ -215,6 +216,12 @@ with st.form(key='form'):
                 "This is not necessarily optimal, but is easy to model and it should be resonably safe.",
                 "",
                 "Still contributions should be checked with utmost care and advice taken before following such plan.",
+            ]))
+
+            st.checkbox("Marriage Allowance", key="marriage_allowance", disabled=single, help='\n'.join([
+                "Transfer the Marriage Allowance from your partner to you.",
+                "",
+                "This will enforce the [applicable rules](https://www.gov.uk/marriage-allowance#who-can-apply) and might end up constraining the retirement income to ensure income stays withing basic rate.",
             ]))
 
         with col2:
