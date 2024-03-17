@@ -440,7 +440,7 @@ def model(
         sipp_1 += ls_sipp_gross_1
         sipp_2 += ls_sipp_gross_2
         isa    += ls_isa
-        gia    += ls_gia
+        gia    += ls_gia * (1 - eps)
 
     nmpa_1 = nmpa(dob_1)
     nmpa_2 = nmpa(dob_2)
