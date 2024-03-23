@@ -20,6 +20,7 @@ else:
 
 import uk as UK
 import pt as PT
+import jp as JP
 
 from uk import *
 from pt import gbpeur
@@ -357,7 +358,7 @@ def model(
         retirement_year,
         inflation_rate,
         retirement_income_net,
-        pt,
+        country,
         sipp_1,
         sipp_2,
         sipp_growth_rate_1,
@@ -463,9 +464,9 @@ def model(
 
     for yr in range(present_year, end_year):
         retirement = yr >= retirement_year
-        pt_yr = retirement and pt
+        uk_yr = not retirement or country == 'UK'
 
-        if pt and yr == retirement_year:
+        if yr == retirement_year and country != 'UK':
             gia.assets[0] += isa
             isa = 0
 
@@ -485,7 +486,7 @@ def model(
             contrib_1 = 0
             contrib_2 = 0
             if sipp_extra_contrib: #XXX
-                if not pt or yr < retirement_year + 5:
+                if country == 'UK' or yr < retirement_year + 5:
                     if age_1 < 75:
                         contrib_1 = lp.LpVariable(f'contrib_1@{yr}', 0, sipp_contrib_limit_1)
                     if age_2 < 75 and joint:
@@ -501,7 +502,7 @@ def model(
         tfc_1, lac_1 = sipp_1.drawdown(drawdown_1, age=age_1)
         tfc_2, lac_2 = sipp_2.drawdown(drawdown_2, age=age_2)
 
-        if pt_yr:
+        if not uk_yr:
             isa_allowance_yr = 0
         else:
             isa_allowance_yr = isa_allowance*N
@@ -517,15 +518,21 @@ def model(
         sipp_2.uf *= 1.0 + eps
 
         # State pension
-        income_state_1 = state_pension_1 if age_1 >= state_pension_age(dob_1) else 0
-        income_state_2 = state_pension_2 if age_2 >= state_pension_age(dob_2) else 0
+        spa_1 = state_pension_age(dob_1)
+        spa_2 = state_pension_age(dob_2)
+        income_state_1 = state_pension_1 if age_1 >= spa_1 else 0
+        income_state_2 = state_pension_2 if age_2 >= spa_2 else 0
+        if country not in ('UK', 'PT'):
+            # https://www.gov.uk/government/publications/state-pensions-annual-increases-if-you-live-abroad/countries-where-we-pay-an-annual-increase-in-the-state-pension
+            income_state_1 *= (1.0/(1.0 + inflation_rate)) ** max(age_1 - spa_1, 0)
+            income_state_2 *= (1.0/(1.0 + inflation_rate)) ** max(age_2 - spa_2, 0)
 
         # Income and Capital Gain Taxes modelling
         income_gross_1 = income_state_1 + drawdown_1
         income_gross_2 = income_state_2 + drawdown_2
 
         ma = 0
-        if not pt_yr:
+        if uk_yr:
             # UK
             cgt_rate = cgt_rates[1] # Higher rate
             if yr < retirement_year:
@@ -547,8 +554,7 @@ def model(
                 tax_1 = uk_income_tax_lp(prob, income_gross_1)
                 tax_2 = uk_income_tax_lp(prob, income_gross_2)
             cgt = uk_cgt_lp(prob, cg, cgt_rate, N*cgt_allowance)
-        else:
-            # PT
+        elif country == 'PT':
             income_gross = (income_gross_1 + tfc_1 +
                             income_gross_2 + tfc_2)
 
@@ -559,9 +565,18 @@ def model(
             income_gross_2 = income_gross * income_ratio_2
             tax_1 = tax * income_ratio_1
             tax_2 = tax * income_ratio_2
+        elif country == 'JP':
+            income_gross_1 = income_gross_1 + tfc_1
+            income_gross_2 = income_gross_2 + tfc_2
+
+            tax_1 = income_tax_lp(prob, income_gross_1, JP.income_tax_bands, 1/JP.gbpjpy)
+            tax_2 = income_tax_lp(prob, income_gross_2, JP.income_tax_bands, 1/JP.gbpjpy)
+            cgt = cg * JP.cgt_rate
+        else:
+            raise NotImplemetedError
 
         incomings = income_gross_1 + income_gross_2 + drawdown_isa + drawdown_gia
-        if not pt_yr:
+        if uk_yr:
             incomings += tfc_1 + tfc_2
         if yr < retirement_year:
             incomings += misc_contrib
@@ -643,7 +658,7 @@ def model(
 
     for yr in range(present_year, end_year):
         retirement = yr >= retirement_year
-        pt_yr = retirement and pt
+        uk_yr = not retirement or country == 'UK'
 
         s = states[yr]
         if verbosity > 1:
@@ -684,7 +699,7 @@ def model(
         income_gross_1 = lp.value(s.income_gross_1)
         income_gross_2 = lp.value(s.income_gross_2)
         ma = lp.value(s.ma)
-        if not pt_yr:
+        if uk_yr:
             # UK
             cgt_rate = cgt_rates[1] # Higher rate
             if yr < retirement_year:
@@ -699,8 +714,7 @@ def model(
                 tax_1 = UK.income_tax(income_gross_1)
                 tax_2 = UK.income_tax(income_gross_2)
             cgt = max(cg - N*cgt_allowance, 0) * cgt_rate
-        else:
-            # PT
+        elif country == 'PT':
             income_gross = income_gross_1 + income_gross_2
 
             tax = PT.income_tax(income_gross, factor=N/gbpeur)
@@ -715,9 +729,13 @@ def model(
 
             tax_1 = tax * income_ratio_1
             tax_2 = tax * income_ratio_2
+        elif country == 'JP':
+            tax_1 = JP.income_tax(income_gross_1, factor=1/JP.gbpjpy)
+            tax_2 = JP.income_tax(income_gross_2, factor=1/JP.gbpjpy)
+            cgt = cg * JP.cgt_rate
 
         incomings = income_gross_1 + income_gross_2 + drawdown_isa + drawdown_gia
-        if not pt_yr:
+        if uk_yr:
             incomings += tfc_1 + tfc_2
         if yr < retirement_year:
             incomings += misc_contrib

@@ -200,7 +200,7 @@ with st.form(key='form'):
             st.checkbox("Lifetime Allowance Charges", key="lacs")
 
         with col3:
-            st.selectbox("Retirement country:", options=("UK", "PT"), index=0, key='retirement_country',
+            st.selectbox("Retirement country:", options=("UK", "PT", "JP"), index=0, key='retirement_country',
                 help="Country to be tax resident from _retirement year_. " +
                 "Values still always in pounds.  Differences in cost of life not considered."
             )
@@ -264,7 +264,7 @@ for key, xform in state_xforms.items():
     params[key] = xform(st.session_state[key])
 
 params['present_year'] = datetime.date.today().year
-params['pt'] = params.pop('retirement_country') == 'PT'
+params['country'] = params.pop('retirement_country')
 
 if devel:
     with st.expander("Parameters"):

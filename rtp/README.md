@@ -24,6 +24,7 @@ I am not a financial or tax adviser.
 
 ## Recent changes
 
+* Model Japan taxation.
 * Experimental Marriage Allowance modelling.
 * Fix incorrecly doubled CGT allowance for single tax payer case.
 * Avoid compounding CGT.

@@ -9,7 +9,7 @@ import model
 
 @pytest.mark.parametrize('lump_sum', [0, 1000])
 @pytest.mark.parametrize('retirement_income_net', [0, 10000])
-@pytest.mark.parametrize('retirement_country', ['UK', 'PT'])
+@pytest.mark.parametrize('retirement_country', ['UK', 'PT', 'JP'])
 @pytest.mark.parametrize('lacs', [False, True])
 @pytest.mark.parametrize('sipp_extra_contrib', [False, True])
 @pytest.mark.parametrize('joint,marriage_allowance', [(False, False), (True, False), (True, True)])
@@ -36,7 +36,7 @@ def test_model(joint, sipp_extra_contrib, lacs, retirement_country, retirement_i
         "sipp_growth_rate_1": 5.5e-2,
         "sipp_growth_rate_2": 5.5e-2,
         'present_year': datetime.date.today().year,
-        "pt": retirement_country == "UK",
+        "country": retirement_country,
         "retirement_income_net": retirement_income_net,
         "retirement_year": 2045,
         "lacs": lacs,
