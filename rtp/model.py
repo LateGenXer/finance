@@ -331,8 +331,8 @@ class GIA:
             gains += proceeds * (1.0 - (1.0 + self.growth_rate) ** -yr)
 
         for yr in range(0, len(self.assets)):
-
             self.assets[yr] *= (1.0 + self.growth_rate_real) * (1.0 - eps)
+
         uid += 1
 
         return total - purchase, gains
@@ -508,15 +508,14 @@ def model(
         tfc_1, lac_1 = sipp_1.drawdown(drawdown_1, age=age_1)
         tfc_2, lac_2 = sipp_2.drawdown(drawdown_2, age=age_2)
 
-        if not uk_yr:
-            isa_allowance_yr = 0
-        else:
+        if uk_yr:
             isa_allowance_yr = isa_allowance*N
-
-        drawdown_isa = lp.LpVariable(f'dd_isa@{yr}', -isa_allowance_yr)  # Bed & ISA
-        isa       -= drawdown_isa
-        prob += isa >= 0
-        isa *= 1.0 + isa_growth_rate_real
+            drawdown_isa = lp.LpVariable(f'dd_isa@{yr}', -isa_allowance_yr)  # Bed & ISA
+            isa       -= drawdown_isa
+            prob += isa >= 0
+            isa *= 1.0 + isa_growth_rate_real
+        else:
+            drawdown_isa = 0
 
         drawdown_gia, cg = gia.flow()
 
