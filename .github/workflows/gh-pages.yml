@@ -46,7 +46,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Pages
-        uses: actions/configure-pages@v3
+        uses: actions/configure-pages@v4
       - name: Create bare-bones site
         run: mkdir _site
       - name: Download Gilts in Issue from DMO
@@ -54,9 +54,9 @@ jobs:
       - name: Download Gilts Closing Prices from LSE
         run: python lse.py > _site/gilts-closing-prices.csv
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: '_site'
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
