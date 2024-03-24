@@ -549,14 +549,10 @@ def model(
                 tax_1 = income_gross_1 * marginal_income_tax_1
                 tax_2 = income_gross_2 * marginal_income_tax_2
             elif marriage_allowance and income_state_2 <= UK.income_tax_threshold_20:
-                taxable_income_00 = lp.LpVariable(f'taxable_income_00@{yr}', 0)
-                taxable_income_20 = lp.LpVariable(f'taxable_income_20@{yr}', 0)
-                prob += taxable_income_00 <= UK.income_tax_threshold_20 + UK.marriage_allowance
-                prob += taxable_income_00 + taxable_income_20 == income_gross_1
                 prob += income_gross_1 <= UK.income_tax_threshold_40
-                prob += income_gross_2 + UK.marriage_allowance <= UK.income_tax_threshold_20
-                tax_1 = taxable_income_20 * 0.20
-                tax_2 = 0
+                prob += income_gross_2 <= UK.income_tax_threshold_20
+                tax_1 = income_tax_lp(prob, income_gross_1, [(income_tax_threshold_20 + UK.marriage_allowance, 0.00), (None, 0.20)])
+                tax_2 = income_tax_lp(prob, income_gross_2, [(income_tax_threshold_20 - UK.marriage_allowance, 0.00), (None, 0.20)])
                 cgt_rate = cgt_rates[0] # Basic rate
             else:
                 cgt_rate = cgt_rates[1] # Higher rate
