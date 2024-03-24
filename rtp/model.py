@@ -18,12 +18,13 @@ if int(os.environ.get('PULP', '0')) != 0:
 else:
     import lp
 
+import hmrc
+
 import uk as UK
 import pt as PT
 import jp as JP
 
 from uk import *
-from pt import gbpeur
 
 
 verbosity = 0
@@ -421,6 +422,11 @@ def model(
     lta_1 = lta
     lta_2 = lta
 
+    if country == 'PT':
+        gbpeur = hmrc.exchange_rate('EUR')
+    if country == 'JP':
+        gbpjpy = hmrc.exchange_rate('JPY')
+
     prob = lp.LpProblem("Retirement")
 
     max_income = retirement_income_net == 0
@@ -569,8 +575,8 @@ def model(
             income_gross_1 = income_gross_1 + tfc_1
             income_gross_2 = income_gross_2 + tfc_2
 
-            tax_1 = income_tax_lp(prob, income_gross_1, JP.income_tax_bands, 1/JP.gbpjpy)
-            tax_2 = income_tax_lp(prob, income_gross_2, JP.income_tax_bands, 1/JP.gbpjpy)
+            tax_1 = income_tax_lp(prob, income_gross_1, JP.income_tax_bands, 1/gbpjpy)
+            tax_2 = income_tax_lp(prob, income_gross_2, JP.income_tax_bands, 1/gbpjpy)
             cgt = cg * JP.cgt_rate
         else:
             raise NotImplemetedError
@@ -730,8 +736,8 @@ def model(
             tax_1 = tax * income_ratio_1
             tax_2 = tax * income_ratio_2
         elif country == 'JP':
-            tax_1 = JP.income_tax(income_gross_1, factor=1/JP.gbpjpy)
-            tax_2 = JP.income_tax(income_gross_2, factor=1/JP.gbpjpy)
+            tax_1 = JP.income_tax(income_gross_1, factor=1/gbpjpy)
+            tax_2 = JP.income_tax(income_gross_2, factor=1/gbpjpy)
             cgt = cg * JP.cgt_rate
 
         incomings = income_gross_1 + income_gross_2 + drawdown_isa + drawdown_gia

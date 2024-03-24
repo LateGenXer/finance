@@ -5,14 +5,6 @@
 #
 
 
-import datetime
-import io
-
-import xml.etree.ElementTree
-
-import requests
-
-
 # https://taxsummaries.pwc.com/portugal/individual/taxes-on-personal-income
 income_tax_bands = [
    (  7703, 0.1325),
@@ -30,25 +22,6 @@ income_tax_bands = [
 
 
 cgt_rate = 0.28
-
-
-def _gbpeur():
-    today = datetime.datetime.utcnow().date()
-    url = f'https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/files/monthly_xml_{today.year}-{today.month}.xml'
-    headers = {'user-agent': 'Mozilla/5.0'}
-    r = requests.get(url, headers=headers)
-    stream = io.BytesIO(r.content)
-    tree = xml.etree.ElementTree.parse(stream)
-    root = tree.getroot()
-    for node in root:
-        currency = node.find('currencyCode').text
-        rate = float(node.find('rateNew').text)
-        if currency == 'EUR':
-            return rate
-    raise ValueError
-
-
-gbpeur = _gbpeur()
 
 
 def income_tax(gross_income, factor=1.0):

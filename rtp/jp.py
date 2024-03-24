@@ -5,14 +5,6 @@
 #
 
 
-import datetime
-import io
-
-import xml.etree.ElementTree
-
-import requests
-
-
 # https://taxsummaries.pwc.com/japan/individual/taxes-on-personal-income
 income_tax_bands = [
     (   1950000, 0.05 + 0.10 + 0.023),
@@ -26,25 +18,6 @@ income_tax_bands = [
 
 
 cgt_rate = 0.20315
-
-
-def _gbpjpy():
-    today = datetime.datetime.utcnow().date()
-    url = f'https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/files/monthly_xml_{today.year}-{today.month}.xml'
-    headers = {'user-agent': 'Mozilla/5.0'}
-    r = requests.get(url, headers=headers)
-    stream = io.BytesIO(r.content)
-    tree = xml.etree.ElementTree.parse(stream)
-    root = tree.getroot()
-    for node in root:
-        currency = node.find('currencyCode').text
-        rate = float(node.find('rateNew').text)
-        if currency == 'JPY':
-            return rate
-    raise ValueError
-
-
-gbpjpy = _gbpjpy()
 
 
 def income_tax(gross_income, factor=1.0):
