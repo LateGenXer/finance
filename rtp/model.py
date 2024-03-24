@@ -57,7 +57,6 @@ class LPState:
     income_state_2: Any
     income_gross_1: Any
     income_gross_2: Any
-    ma: Any
 
 
 @dataclass
@@ -543,7 +542,6 @@ def model(
         income_gross_1 = income_state_1 + drawdown_1
         income_gross_2 = income_state_2 + drawdown_2
 
-        ma = 0
         if uk_yr:
             # UK
             if yr < retirement_year:
@@ -551,14 +549,12 @@ def model(
                 tax_1 = income_gross_1 * marginal_income_tax_1
                 tax_2 = income_gross_2 * marginal_income_tax_2
             elif marriage_allowance and income_state_2 <= UK.income_tax_threshold_20:
-                ma = lp.LpVariable(f'ma@{yr}', 0, UK.marriage_allowance)
                 taxable_income_00 = lp.LpVariable(f'taxable_income_00@{yr}', 0)
                 taxable_income_20 = lp.LpVariable(f'taxable_income_20@{yr}', 0)
-                prob += taxable_income_00 <= UK.income_tax_threshold_20 + ma
+                prob += taxable_income_00 <= UK.income_tax_threshold_20 + UK.marriage_allowance
                 prob += taxable_income_00 + taxable_income_20 == income_gross_1
                 prob += income_gross_1 <= UK.income_tax_threshold_40
-                prob += income_gross_2 + ma <= UK.income_tax_threshold_20
-
+                prob += income_gross_2 + UK.marriage_allowance <= UK.income_tax_threshold_20
                 tax_1 = taxable_income_20 * 0.20
                 tax_2 = 0
                 cgt_rate = cgt_rates[0] # Basic rate
@@ -627,7 +623,6 @@ def model(
             income_state_2=income_state_2,
             income_gross_1=income_gross_1,
             income_gross_2=income_gross_2,
-            ma=ma,
         )
 
     if max_income:
@@ -711,17 +706,15 @@ def model(
         # Income and Capital Gain Taxes calculation
         income_gross_1 = lp.value(s.income_gross_1)
         income_gross_2 = lp.value(s.income_gross_2)
-        ma = lp.value(s.ma)
         if uk_yr:
             # UK
             if yr < retirement_year:
                 cgt_rate = min(cgt_rate_map[marginal_income_tax_1], cgt_rate_map[marginal_income_tax_2])
                 tax_1 = income_gross_1 * marginal_income_tax_1
                 tax_2 = income_gross_2 * marginal_income_tax_2
-            elif ma:
-                assert ma >= 0
-                tax_1 = UK.income_tax(income_gross_1, ma)
-                tax_2 = UK.income_tax(income_gross_2, -ma)
+            elif marriage_allowance and income_state_2 <= UK.income_tax_threshold_20:
+                tax_1 = UK.income_tax(income_gross_1, UK.marriage_allowance)
+                tax_2 = UK.income_tax(income_gross_2, -UK.marriage_allowance)
                 cgt_rate = cgt_rates[0] # Basic rate
             else:
                 cgt_rate = cgt_rates[1] # Higher rate
