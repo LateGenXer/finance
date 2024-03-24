@@ -351,6 +351,13 @@ class GIA:
 eps = 2**-14
 
 
+cgt_rate_map = {
+    0.00: cgt_rates[0],
+    0.20: cgt_rates[0],
+    0.40: cgt_rates[1],
+    0.45: cgt_rates[1],
+}
+
 def model(
         joint,
         dob_1,
@@ -539,8 +546,8 @@ def model(
         ma = 0
         if uk_yr:
             # UK
-            cgt_rate = cgt_rates[1] # Higher rate
             if yr < retirement_year:
+                cgt_rate = min(cgt_rate_map[marginal_income_tax_1], cgt_rate_map[marginal_income_tax_2])
                 tax_1 = income_gross_1 * marginal_income_tax_1
                 tax_2 = income_gross_2 * marginal_income_tax_2
             elif marriage_allowance and income_state_2 <= UK.income_tax_threshold_20:
@@ -556,6 +563,7 @@ def model(
                 tax_2 = 0
                 cgt_rate = cgt_rates[0] # Basic rate
             else:
+                cgt_rate = cgt_rates[1] # Higher rate
                 tax_1 = uk_income_tax_lp(prob, income_gross_1)
                 tax_2 = uk_income_tax_lp(prob, income_gross_2)
             cgt = uk_cgt_lp(prob, cg, cgt_rate, N*cgt_allowance)
@@ -706,8 +714,8 @@ def model(
         ma = lp.value(s.ma)
         if uk_yr:
             # UK
-            cgt_rate = cgt_rates[1] # Higher rate
             if yr < retirement_year:
+                cgt_rate = min(cgt_rate_map[marginal_income_tax_1], cgt_rate_map[marginal_income_tax_2])
                 tax_1 = income_gross_1 * marginal_income_tax_1
                 tax_2 = income_gross_2 * marginal_income_tax_2
             elif ma:
@@ -716,6 +724,7 @@ def model(
                 tax_2 = UK.income_tax(income_gross_2, -ma)
                 cgt_rate = cgt_rates[0] # Basic rate
             else:
+                cgt_rate = cgt_rates[1] # Higher rate
                 tax_1 = UK.income_tax(income_gross_1)
                 tax_2 = UK.income_tax(income_gross_2)
             cgt = max(cg - N*cgt_allowance, 0) * cgt_rate
