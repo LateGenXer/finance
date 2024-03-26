@@ -478,10 +478,6 @@ def model(
         retirement = yr >= retirement_year
         uk_yr = not retirement or country == 'UK'
 
-        if yr == retirement_year and country != 'UK':
-            gia.assets[0] += isa
-            isa = 0
-
         age_1 = yr - dob_1
         age_2 = yr - dob_2
 
@@ -520,8 +516,12 @@ def model(
             isa       -= drawdown_isa
             prob += isa >= 0
             isa *= 1.0 + isa_growth_rate_real
+        elif yr == retirement_year:
+            drawdown_isa = isa
+            isa = 0
         else:
             drawdown_isa = 0
+            assert isa == 0
 
         drawdown_gia, cg = gia.flow()
 
