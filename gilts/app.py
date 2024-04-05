@@ -20,7 +20,7 @@ import streamlit as st
 import pandas as pd
 
 
-experimental = '--experimental' in sys.argv[1:]
+experimental = 'experimental' in st.query_params
 
 
 # https://docs.streamlit.io/library/api-reference/utilities/st.set_page_config

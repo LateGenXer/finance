@@ -60,17 +60,12 @@ def test_index_linked(at):
 
 
 def test_experimental_window():
-    argv = sys.argv
-    try:
-        sys.argv = ['gilts/app.py', '--experimental']
-        at = AppTest.from_file("gilts/app.py", default_timeout=default_timeout)
-        at.run()
-        assert not at.exception
+    at = AppTest.from_file("gilts/app.py", default_timeout=default_timeout)
+    at.query_params['experimental'] = ''
+    at.run()
+    assert not at.exception
 
-        window = at.slider(key="window")
-        window.set_value(2)
-        at.run()
-        assert not at.exception
-
-    finally:
-        sys.argv = argv
+    window = at.slider(key="window")
+    window.set_value(2)
+    at.run()
+    assert not at.exception
