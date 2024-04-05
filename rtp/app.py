@@ -98,21 +98,22 @@ def load_state(data, override):
 # Allow to override initial state on development enviroments
 
 devel = False
-if len(sys.argv) == 2:
-    devel = True
-    data = open(sys.argv[1], 'rt').read()
-    load_state(data, override=False)
-else:
-    try:
-        from devel import state as devel_state
-    except ImportError:
-        pass
-    else:
+if "PYTEST_CURRENT_TEST" not in os.environ:
+    if len(sys.argv) == 2:
         devel = True
-        with st.expander("Devel..."):
-            st.write(devel_state)
-            for key, value in devel_state.items():
-                st.session_state.setdefault(key, value)
+        data = open(sys.argv[1], 'rt').read()
+        load_state(data, override=False)
+    else:
+        try:
+            from devel import state as devel_state
+        except ImportError:
+            pass
+        else:
+            devel = True
+            with st.expander("Devel..."):
+                st.write(devel_state)
+                for key, value in devel_state.items():
+                    st.session_state.setdefault(key, value)
 for key, value in default_state.items():
     st.session_state.setdefault(key, value)
 
