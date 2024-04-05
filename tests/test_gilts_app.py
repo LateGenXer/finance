@@ -19,16 +19,9 @@ except ImportError:
 default_timeout = 10
 
 
-# Avoid slider state corruption due to the formating.
-def reset_slider(at, key):
-    slider = at.select_slider(key=key)
-    slider.set_value(f'{slider.value:.0%}')
-
-
 def run(at):
     at.run()
     assert not at.exception
-    reset_slider(at, 'marginal_income_tax')
 
 
 @pytest.fixture(scope="function")

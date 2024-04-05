@@ -6,21 +6,12 @@ except ImportError:
     pytest.skip("No Streamlit; skipping.", allow_module_level=True)
 
 
-# Avoid slider state corruption due to the formating.
-def reset_slider(at, key):
-    slider = at.select_slider(key=key)
-    slider.set_value(f'{slider.value:.0%}')
-
-
 def run(at):
     at.run()
-    reset_slider(at, 'marginal_income_tax_1')
-    reset_slider(at, 'marginal_income_tax_2')
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="function")
 def at():
-    print("--- at- ----")
     at = AppTest.from_file("rtp/app.py", default_timeout=10)
     run(at)
     return at
