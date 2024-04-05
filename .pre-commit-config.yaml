@@ -1,0 +1,23 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+  hooks:
+  - id: check-added-large-files
+  - id: check-ast
+  - id: check-toml
+  - id: check-yaml
+  - id: check-xml
+  - id: check-executables-have-shebangs
+  - id: check-shebang-scripts-are-executable
+  - id: trailing-whitespace
+- repo: local
+  hooks:
+  - id: pytest
+    name: pytest
+    language: system
+    entry: pipenv run pytest -n auto
+    require_serial: true
+    pass_filenames: false
+    always_run: true
+    verbose: true
+    stages: [pre-push]
