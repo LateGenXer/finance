@@ -19,21 +19,18 @@ except ImportError:
 default_timeout = 10
 
 
-def run(at):
-    at.run()
-    assert not at.exception
-
-
 @pytest.fixture(scope="function")
 def at():
     at = AppTest.from_file("gilts/app.py", default_timeout=default_timeout)
-    run(at)
+    at.run()
+    assert not at.exception
     return at
 
 
 def test_run(at):
     # Ensure no state corruption
-    run(at)
+    at.run()
+    assert not at.exception
 
 
 def test_monthly(at):
@@ -41,7 +38,8 @@ def test_monthly(at):
     frequency = at.radio(key="frequency")
     assert frequency.value == "Yearly"
     frequency.set_value("Monthly")
-    run(at)
+    at.run()
+    assert not at.exception
 
 
 def test_start_date(at):
@@ -49,14 +47,16 @@ def test_start_date(at):
     assert start_date.value is None
     today = datetime.datetime.utcnow().date()
     start_date.set_value(today.replace(year=today.year + 10, month=4, day=6))
-    run(at)
+    at.run()
+    assert not at.exception
 
 
 def test_index_linked(at):
     # Toggle Joint checkbox
     index_linked = at.toggle(key="index_linked")
     index_linked.set_value(not index_linked.value)
-    run(at)
+    at.run()
+    assert not at.exception
 
 
 def test_experimental_window():
@@ -64,11 +64,13 @@ def test_experimental_window():
     try:
         sys.argv = ['gilts/app.py', '--experimental']
         at = AppTest.from_file("gilts/app.py", default_timeout=default_timeout)
-        run(at)
+        at.run()
+        assert not at.exception
 
         window = at.slider(key="window")
         window.set_value(2)
-        run(at)
+        at.run()
+        assert not at.exception
 
     finally:
         sys.argv = argv

@@ -6,20 +6,16 @@ except ImportError:
     pytest.skip("No Streamlit; skipping.", allow_module_level=True)
 
 
-def run(at):
-    at.run()
-
-
 @pytest.fixture(scope="function")
 def at():
     at = AppTest.from_file("rtp/app.py", default_timeout=10)
-    run(at)
+    at.run()
     return at
 
 
 def test_run(at):
     # Ensure no state corruption
-    run(at)
+    at.run()
     assert not at.exception
 
 
@@ -34,7 +30,7 @@ def test_joint(at):
     # Toggle Joint checkbox
     joint = at.checkbox(key="joint")
     joint.set_value(not joint.value)
-    run(at)
+    at.run()
     assert not at.exception
 
 
@@ -46,7 +42,7 @@ def test_lacs(at, submit):
     lacs = at.checkbox(key="lacs")
     lacs.set_value(not lacs.value)
     submit.click()
-    run(at)
+    at.run()
     assert not at.exception
 
 
@@ -59,7 +55,7 @@ def test_lump_sum(at, submit):
     assert lump_sum.value == 0
     lump_sum.set_value(1000)
     submit.click()
-    run(at)
+    at.run()
     assert not at.exception
 
 
@@ -70,7 +66,7 @@ def test_error(at, submit):
     retirement_income_net = at.number_input(key="retirement_income_net")
     retirement_income_net.set_value(1000000)
     submit.click()
-    run(at)
+    at.run()
     assert not at.exception
     assert len(at.error) == 1
 
