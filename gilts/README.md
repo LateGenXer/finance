@@ -35,9 +35,10 @@ I am not a financial or tax adviser.
 ## Known issues
 
 * For start dates in the future, early coupons are not reinvested.
-* The tool does not yet consider the possibility of selling gilts before maturity, which might be advantageous, especially with index-linked gilts and/or high income marginal tax rates, as good gilts became fewer and further apart.
+* The tool does not yet consider the possibility of selling gilts before maturity, which might be advantageous, especially with index-linked gilts and/or high income marginal tax rates, as low coupon gilts are fewer and further apart.
 * The tool does not consider BoE's yield or inflation curves.
-* It does not take special care with index-linked gilts whose redemption value is know (due to the indexation lag) and therefore are more akin to conventional gilts.
+* It does not take special care with index-linked gilts whose redemption value is known (due to the indexation lag) and therefore are more akin to conventional gilts.
+* Accrued interest for non-standard first coupon periods is not always accurate.
 
 ## Questions
 
@@ -53,6 +54,14 @@ I am not a financial or tax adviser.
   Try [here](https://www.reddit.com/user/LateGenXer/) but no promise.
 
 ## Additional resources
+
+### Recommended reading
+
+* [CG Asset Management](https://www.cgasset.com/insights/)'s _Introduction to Index-Linked Bonds Webinar_, [Slides](https://www.cgasset.com/2024/02/21/introduction-to-index-linked-bonds-webinar-slides/), [Recording](https://www.cgasset.com/2024/02/21/introduction-to-index-linked-bonds/))
+* PIMCO's [_Everything you need to know about bonds_](https://europe.pimco.com/en-eu/resources/education/everything-you-need-to-know-about-bonds)
+* [Occam Investing's articles on bonds](https://occaminvesting.co.uk/portfolio-construction/)
+
+### Tools
 
 * [Index-linked gilt ladder spreadsheet](https://www.lemonfool.co.uk/viewtopic.php?p=621213#p621213)
 * [The Lemon Fool's _Gilts and Bonds_ forum](https://www.lemonfool.co.uk/viewforum.php?f=52)
