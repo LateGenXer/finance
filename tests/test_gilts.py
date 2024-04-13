@@ -137,6 +137,12 @@ def test_tradeweb(caplog, issued, row):
     accrued_interest = float(row['Accrued Interest'])
     dirty_price = float(row['Dirty Price'])
 
+    if conventional or gilt.lag == 8:
+        assert clean_price + accrued_interest == approx(dirty_price, abs=1e-6)
+    else:
+        index_ratio = gilt.index_ratio(settlement_date)
+        assert clean_price * index_ratio + accrued_interest == approx(dirty_price, abs=1e-6)
+
     abs_tol = 1e-6 if conventional or gilt.lag != 8 else 1e-4
     assert gilt.accrued_interest(settlement_date) == approx(accrued_interest, abs=abs_tol)
     assert gilt.dirty_price(clean_price, settlement_date) == approx(dirty_price, abs=abs_tol)
