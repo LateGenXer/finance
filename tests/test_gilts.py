@@ -311,7 +311,7 @@ def test_il_cash_flows(issued, entry):
     settlement_date = next_business_day(datetime.date(2023, 1, 1))
 
     name, dividends = entry
-    for gilt in issued.filter(index_linked=True):
+    for gilt in issued.filter(index_linked=True, settlement_date=settlement_date):
         if gilt.name == name:
             cash_flows = dict(gilt.cash_flows(max(settlement_date, gilt.issue_date)))
 
@@ -382,7 +382,7 @@ def test_il_estimated_redemption(issued, entry):
     assert issued.rpi_series.last_date() == datetime.date(2023, 10, 1)
 
     name, redemption_0, redemption_3 = entry
-    for gilt in issued.filter(index_linked=True):
+    for gilt in issued.filter(index_linked=True, settlement_date=settlement_date):
         if gilt.name == name:
             years = (gilt.maturity - settlement_date).days / 365.25
 

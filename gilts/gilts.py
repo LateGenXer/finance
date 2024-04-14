@@ -398,11 +398,20 @@ class Issued:
         assert mo
         return float(mo.group('unit')) + cls._fractions[mo.group('fraction')]
 
-    def filter(self, index_linked):
+    def filter(self, index_linked, settlement_date=None):
         type_ = 'Index-linked' if index_linked else 'Conventional'
         for g in self.all:
-            if g.type_ == type_:
-                yield g
+            if g.type_ != type_:
+                continue
+            # Per https://www.dmo.gov.uk/responsibilities/gilt-market/about-gilts/ :
+            # "If an investor purchases a gilt for settlement on the final day
+            # of the ex-dividend period, then they will be entitled to both the
+            # final dividend and the principal repayment at redemption of the
+            # gilt. Trades cannot settle after the final day within the
+            # ex-dividend period."
+            if settlement_date is not None and settlement_date > g.ex_dividend_date(g.maturity):
+                continue
+            yield g
 
 
 class Prices:
@@ -468,7 +477,7 @@ class GiltPrices(Prices):
 def yield_curve(issued, prices, index_linked=False):
     settlement_date = next_business_day(issued.close_date)
     data = []
-    for g in issued.filter(index_linked):
+    for g in issued.filter(index_linked, settlement_date):
         isin = g.isin
         tidm = prices.lookup_tidm(isin)
         clean_price = prices.get_price(tidm)
@@ -586,12 +595,11 @@ class BondLadder:
 
         # Add bond coupon/redemption events
         holdings = []
-        for g in self.issued.filter(self.index_linked):
+        for g in self.issued.filter(self.index_linked, settlement_date):
             coupon = g.coupon
             issue_date = g.issue_date
             maturity = g.maturity
-            if maturity <= settlement_date:
-                continue
+            assert maturity > settlement_date
             # XXX handle this better
             if maturity > shift_year(last_consuption, self.lag):
                 continue

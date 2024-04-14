@@ -57,6 +57,7 @@ I am not a financial or tax adviser.
 
 ### Recommended reading
 
+* DMO's [_About gilts_](https://www.dmo.gov.uk/responsibilities/gilt-market/about-gilts/)
 * [CG Asset Management](https://www.cgasset.com/insights/)'s _Introduction to Index-Linked Bonds Webinar_, [Slides](https://www.cgasset.com/2024/02/21/introduction-to-index-linked-bonds-webinar-slides/), [Recording](https://www.cgasset.com/2024/02/21/introduction-to-index-linked-bonds/))
 * PIMCO's [_Everything you need to know about bonds_](https://europe.pimco.com/en-eu/resources/education/everything-you-need-to-know-about-bonds)
 * [Occam Investing's articles on bonds](https://occaminvesting.co.uk/portfolio-construction/)
