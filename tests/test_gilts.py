@@ -16,6 +16,9 @@ from rpi import RPI
 from gilts.gilts import *
 
 
+data_dir = os.path.join(os.path.dirname(__file__), 'data')
+
+
 @pytest.mark.parametrize("coupon_date,xd_date", [
     # https://docs.londonstockexchange.com/sites/default/files/documents/dmo-private-investor-guide-to-gilts.pdf
     ((2004,  9,  7), (2004,  8, 26)),
@@ -28,17 +31,17 @@ def test_ex_dividend_date(coupon_date, xd_date):
 
 @pytest.fixture
 def issued():
-    rpi_filename = os.path.join(os.path.dirname(__file__), '..', 'tests', 'rpi-series-20231115.csv')
+    rpi_filename = os.path.join(data_dir, 'rpi-series-20231115.csv')
     rpi_series = RPI(rpi_filename)
-    filename = os.path.join(os.path.dirname(__file__), 'dmo-D1A-20231201.xml')
+    filename = os.path.join(data_dir, 'dmo-D1A-20231201.xml')
     return Issued(filename, rpi_series=rpi_series)
 
 
-gilts_closing_prices_csv = os.path.join(os.path.dirname(__file__), 'gilts-closing-prices-20231201.csv')
+gilts_closing_prices_csv = os.path.join(data_dir, 'gilts-closing-prices-20231201.csv')
 
 
 # https://reports.tradeweb.com/closing-prices/gilts/ > Type: Gilts Only > Export
-tradeweb_csv = os.path.join(os.path.dirname(__file__), 'Tradeweb_FTSE_ClosePrices_20231201.csv')
+tradeweb_csv = os.path.join(data_dir, 'Tradeweb_FTSE_ClosePrices_20231201.csv')
 
 
 class TradewebClosePrices(Prices):
@@ -84,7 +87,7 @@ def prices():
 
 @pytest.mark.parametrize('prices', [
     pytest.param(GiltPrices(None), id="cached"),
-    pytest.param(GiltPrices(os.path.join(os.path.dirname(__file__), 'gilts-closing-prices-20231201.csv')), id="local"),
+    pytest.param(GiltPrices(os.path.join(data_dir, 'gilts-closing-prices-20231201.csv')), id="local"),
     pytest.param(TradewebClosePrices(), id="tradeweb"),
 ])
 def test_prices(prices):

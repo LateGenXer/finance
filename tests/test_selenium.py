@@ -140,7 +140,7 @@ def test_file_upload(page):
 
     # https://www.selenium.dev/documentation/webdriver/elements/file_upload/
     s = driver.find_element(By.XPATH, "//input[@type='file']")
-    s.send_keys(os.path.join(os.path.dirname(__file__), 'test_schedule.csv'))
+    s.send_keys(os.path.join(os.path.dirname(__file__), 'data', 'test_schedule.csv'))
 
     time.sleep(3)
 
