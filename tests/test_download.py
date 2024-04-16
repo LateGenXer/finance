@@ -19,7 +19,7 @@ from download import download
 
 
 def test_static():
-    url = 'https://httpbin.org/cache'
+    url = 'https://httpbun.org/cache'
     filename = 'test_download_static.bin'
 
     # Download
@@ -37,7 +37,7 @@ def test_static():
 
 
 def test_dynamic():
-    url = 'https://httpbin.org/bytes/128'
+    url = 'https://httpbun.org/bytes/128'
     filename = 'test_download_dynamic.bin'
 
     # Download
@@ -55,7 +55,7 @@ def test_dynamic():
 
 
 def test_ttl():
-    url = 'https://httpbin.org/bytes/128'
+    url = 'https://httpbun.org/bytes/128'
     filename = 'test_download_ttl.bin'
 
     # Download
@@ -85,18 +85,18 @@ def test_content_type():
     # Download
     if os.path.exists(filename):
         os.unlink(filename)
-    download('https://httpbin.org/xml', filename, content_type='application/xml')
+    download('https://httpbun.org/bytes/128', filename, content_type='application/octet-stream')
     assert os.path.isfile(filename)
     os.unlink(filename)
 
     with pytest.raises(ValueError):
-        download('https://httpbin.org/html', filename, content_type='application/xml')
+        download('https://httpbun.org/html', filename, content_type='application/xml')
     assert not os.path.isfile(filename)
 
 
 def test_content_length():
     last_modfiied = 'Fri, 08 Dec 2023 20:03:24 GMT'
-    url = 'https://httpbin.org/response-headers?Last-modified=' + urllib.parse.quote_plus(last_modfiied)
+    url = 'https://httpbun.org/response-headers?Last-modified=' + urllib.parse.quote_plus(last_modfiied)
     filename = 'test_download_content_length.bin'
 
     if os.path.exists(filename):
@@ -112,7 +112,7 @@ def test_content_length():
 
 
 def test_404():
-    url = 'https://httpbin.org/status/404'
+    url = 'https://httpbun.org/status/404'
     filename = 'test_download_404.bin'
 
     assert not os.path.isfile(filename)
@@ -123,7 +123,7 @@ def test_404():
 
 def test_filename():
     filename = 'test_download_filename.bin'
-    url = f'https://httpbin.org/anything/{filename}'
+    url = f'https://httpbun.org/anything/{filename}'
 
     if os.path.exists(filename):
         os.unlink(filename)
@@ -133,7 +133,7 @@ def test_filename():
 
 
 def test_main():
-    url = 'https://httpbin.org/bytes/128'
+    url = 'https://httpbun.org/bytes/128'
     filename = 'test_download_main.bin'
 
     from download import __file__ as download_path
