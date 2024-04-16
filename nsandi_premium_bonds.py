@@ -12,7 +12,7 @@
 
 import sys
 import random
-import multiprocessing
+import multiprocessing.dummy
 
 import numpy as np
 
@@ -125,7 +125,7 @@ def median_mc(n, N):
     assert our_bonds < total_bonds
     p = our_bonds / total_bonds
 
-    pool = multiprocessing.Pool((multiprocessing.cpu_count() + 1) // 2)
+    pool = multiprocessing.dummy.Pool((multiprocessing.cpu_count() + 1) // 2)
 
     nchunks = (N + 1) // chunk
 
@@ -135,12 +135,16 @@ def median_mc(n, N):
     return median
 
 
-if __name__ == '__main__':
+def main(args):
     print(f'Mean:   {mean():.2%}')
-    for arg in sys.argv[1:]:
+    for arg in args:
         n = int(arg)
         print(f'{n}:')
         m = median(n)
         print(f'  Median (accurate):  {m:4.0f} {m/n:.2%}')
         m = median_mc(n, 512*1024)
         print(f'  Median (MC):        {m:4.0f} {m/n:.2%}')
+
+
+if __name__ == '__main__': # pragma: no cover
+    main(sys.argv[1:])
