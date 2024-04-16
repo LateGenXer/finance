@@ -25,7 +25,7 @@ jobs:
     - run: pipenv run pip list
     - if: ${{ github.event_name == 'pull_request' }}
       run: pipenv run pre-commit run --show-diff-on-failure --color always --all-files --hook-stage pre-commit
-    - run: pipenv run pytest -n auto --cov
+    - run: pipenv run pytest -n auto --cov=.
     - run: pipenv run coverage xml
     - uses: codecov/codecov-action@v4
       env:
