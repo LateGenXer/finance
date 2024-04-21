@@ -18,6 +18,7 @@ I am not a financial or tax adviser.
 
 ## Recent changes
 
+- Treat index-linked gilts whose redemption value is known as conventional gilts.
 - Allow to set a start date in the future.
 - Automatically download latest issued gilts from DMO's website.
 - Always present UK local time.

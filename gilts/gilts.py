@@ -254,6 +254,21 @@ class IndexLinkedGilt(Gilt):
             ref_rpi = self.rpi_series.extrapolate_from_index(month_idx, inflation_rate)
         return round(ref_rpi, 5)
 
+    # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf
+    # Annex B: Method of indexation for index-linked gilts with a 3-month indexation lag
+    # When does the redemption payment become known?
+    def is_redemption_fixed(self):
+        d = self.maturity.replace(day = 1)
+        if self.lag == 3:
+            if self.maturity.day > 1:
+                d = shift_month(d, -2)
+            else:
+                d = shift_month(d, -3)
+        else:
+            assert self.lag == 8
+            d = shift_month(d, -8)
+        return self.rpi_series.last_date() >= d
+
     def index_ratio(self, settlement_date, inflation_rate=None):
         if inflation_rate is None:
             inflation_rate = self.inflation_rate
@@ -401,8 +416,6 @@ class Issued:
     def filter(self, index_linked, settlement_date=None):
         type_ = 'Index-linked' if index_linked else 'Conventional'
         for g in self.all:
-            if g.type_ != type_:
-                continue
             # Per https://www.dmo.gov.uk/responsibilities/gilt-market/about-gilts/ :
             # "If an investor purchases a gilt for settlement on the final day
             # of the ex-dividend period, then they will be entitled to both the
@@ -410,6 +423,13 @@ class Issued:
             # gilt. Trades cannot settle after the final day within the
             # ex-dividend period."
             if settlement_date is not None and settlement_date > g.ex_dividend_date(g.maturity):
+                continue
+            if g.type_ == 'Index-linked' and g.is_redemption_fixed():
+                if type_ == 'Conventional':
+                    yield g
+                else:
+                    continue
+            if g.type_ != type_:
                 continue
             yield g
 
