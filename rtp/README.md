@@ -52,9 +52,7 @@ This tool makes the following simplifying assumptions:
 
 ## Limitations
 
-* Capital Gains Tax (CGT) is _overestimated_.  CGT rate depends on the marginal income tax rate.  This implies a non-linearity which can't be modeled as an ordinary linear programming problems.
-
-* Equally, income tax after the Personal Allowance disappears is overestimated.  This is because the marginal income tax rate drops from 60% back to 45%, which can't be accurately modeled as a linear programming problem.
+* Income tax after the Personal Allowance disappears is overestimated.  This is because the marginal income tax rate drops from 60% back to 45%, which can't be accurately modeled as a linear programming problem.
 
 * It cannot model post-retirement scenarios yet.  In particular, it assumes all pension funds are uncrystalized (that no TFC, drawdown, or UFPLS was taken.)
 
@@ -62,9 +60,9 @@ This tool makes the following simplifying assumptions:
 
 * It doesn't model mortality or the impact of different asset allocations on IHT.
 
-* It ignores dividend allowance and dividence tax.
+* It ignores dividend allowance and dividend tax.
 
-* It does not consider cash, or tax efficient products such as NS&I Premium Bonds and individual Gilts.
+* It does not consider cash, or tax advantaged products such as NS&I Premium Bonds or individual gilts.
 
 ## Known issues
 
