@@ -147,10 +147,14 @@ def uk_tax_lp(prob, gross_income, cg, marriage_allowance=0):
     higher_rate_allowance = pa_limit - personal_allowance - basic_rate_allowance
     # FIXME: we can't model the 45% tax rate, as it's no longer convex
 
-    income_pa              = lp.LpVariable(f'income_pa_{uid}', 0, personal_allowance)
-    income_basic_rate      = lp.LpVariable(f'income_basic_rate_{uid}', 0, basic_rate_allowance)
-    income_higher_rate     = lp.LpVariable(f'income_higher_rate_{uid}', 0, higher_rate_allowance)
-    income_adjusted_rate = lp.LpVariable(f'income_adjusted_rate_{uid}', 0)
+    income_pa                = lp.LpVariable(f'income_pa_{uid}', 0, personal_allowance)
+    income_basic_rate        = lp.LpVariable(f'income_basic_rate_{uid}', 0, basic_rate_allowance)
+    if marriage_allowance == 0:
+        income_higher_rate   = lp.LpVariable(f'income_higher_rate_{uid}', 0, higher_rate_allowance)
+        income_adjusted_rate = lp.LpVariable(f'income_adjusted_rate_{uid}', 0)
+    else:
+        income_higher_rate   = 0
+        income_adjusted_rate = 0
 
     prob += income_pa + income_basic_rate + income_higher_rate + income_adjusted_rate == gross_income
 
@@ -595,19 +599,18 @@ def model(
                 tax_1 = income_gross_1 * marginal_income_tax_1
                 tax_2 = income_gross_2 * marginal_income_tax_2
                 cgt = uk_cgt_lp(prob, cg, cgt_rate, N*cgt_allowance)
-            elif marriage_allowance and income_state_2 <= UK.income_tax_threshold_20:
-                prob += income_gross_1 <= UK.income_tax_threshold_40
-                prob += income_gross_2 <= UK.income_tax_threshold_20
-                tax_1 = income_tax_lp(prob, income_gross_1, [(income_tax_threshold_20 + UK.marriage_allowance, 0.00), (None, 0.20)])
-                tax_2 = income_tax_lp(prob, income_gross_2, [(income_tax_threshold_20 - UK.marriage_allowance, 0.00), (None, 0.20)])
-                cgt_rate = cgt_rates[0] # Basic rate
-                cgt = uk_cgt_lp(prob, cg, cgt_rate, N*cgt_allowance)
             else:
                 cg_1 = lp.LpVariable(f'cg_1@{yr}', 0)
                 cg_2 = lp.LpVariable(f'cg_2@{yr}', 0)
                 prob += cg_1 + cg_2 == cg
-                tax_1, cgt_1 = uk_tax_lp(prob, income_gross_1, cg_1)
-                tax_2, cgt_2 = uk_tax_lp(prob, income_gross_2, cg_2)
+                if marriage_allowance and income_state_2 <= UK.income_tax_threshold_20:
+                    prob += income_gross_1 <= UK.income_tax_threshold_40
+                    prob += income_gross_2 <= UK.income_tax_threshold_20
+                    tax_1, cgt_1 = uk_tax_lp(prob, income_gross_1, cg_1, marriage_allowance=marriage_allowance)
+                    tax_2, cgt_2 = uk_tax_lp(prob, income_gross_2, cg_2, marriage_allowance=-marriage_allowance)
+                else:
+                    tax_1, cgt_1 = uk_tax_lp(prob, income_gross_1, cg_1)
+                    tax_2, cgt_2 = uk_tax_lp(prob, income_gross_2, cg_2)
                 cgt = cgt_1 + cgt_2
         elif country == 'PT':
             income_gross = (income_gross_1 + tfc_1 +
