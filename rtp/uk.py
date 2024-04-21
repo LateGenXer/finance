@@ -95,35 +95,3 @@ def income_tax(gross_income, marriage_allowance = 0):
         print(45, taxable_income_45 * 0.45)
 
     return tax
-
-
-def gross_income(net_income_):
-    assert net_income_ >= 0
-
-    abs_tol = 0.01
-
-    income = net_income_
-    income_tax_band_00 = min(income, income_tax_threshold_20)
-    income -= income_tax_band_00
-    income_tax_band_20 = min(income, (income_tax_threshold_40 - income_tax_threshold_20)*0.80)
-    income -= income_tax_band_20
-    income_tax_band_40 = min(income, (pa_limit                - income_tax_threshold_40)*0.60)
-    income -= income_tax_band_40
-    income_tax_band_60 = min(income, 2*income_tax_threshold_20*0.40)
-    income -= income_tax_band_60
-
-    assert income_tax_threshold_45 == pa_limit + 2*income_tax_threshold_20
-    income_tax_band_45 = income
-
-    gross_income  = income_tax_band_00
-    assert gross_income <= income_tax_threshold_20 + abs_tol
-    gross_income += income_tax_band_20 / 0.80
-    assert gross_income <= income_tax_threshold_40 + abs_tol
-    gross_income += income_tax_band_40 / 0.60
-    assert gross_income <= pa_limit + abs_tol
-    gross_income += income_tax_band_60 / 0.40
-    assert gross_income <= pa_limit + 2*income_tax_threshold_20 + abs_tol
-    assert gross_income <= income_tax_threshold_45 + abs_tol
-    gross_income += income_tax_band_45 / 0.55
-
-    return gross_income

@@ -357,6 +357,31 @@ cgt_rate_map = {
     0.45: cgt_rates[1],
 }
 
+
+def solve(prob):
+    prob.checkDuplicateVars()
+
+    #prob.writeLP('retirement.lp')
+
+    solvers = lp.listSolvers(onlyAvailable=True)
+    if 'PULP_CBC_CMD' in solvers:
+        solver = lp.PULP_CBC_CMD(msg=0)
+    else:
+        assert 'COIN_CMD' in solvers
+        solver = lp.COIN_CMD(msg=0)
+
+    status = prob.solve(solver)
+    if status != lp.LpStatusOptimal:
+        statusMsg = {
+            lp.LpStatusNotSolved: "Not Solved",
+            lp.LpStatusOptimal: "Optimal",
+            lp.LpStatusInfeasible: "Infeasible",
+            lp.LpStatusUnbounded: "Unbounded",
+            lp.LpStatusUndefined: "Undefined",
+        }.get(status, "Unexpected")
+        raise ValueError(f"Failed to solve the problem ({statusMsg})")
+
+
 def model(
         joint,
         dob_1,
@@ -628,27 +653,7 @@ def model(
         net_worth = sipp_1.uf + sipp_2.uf + sipp_1.df + sipp_2.df + isa + gia.value()
         prob.setObjective(-net_worth)
 
-    prob.checkDuplicateVars()
-
-    #prob.writeLP('retirement.lp')
-
-    solvers = lp.listSolvers(onlyAvailable=True)
-    if 'PULP_CBC_CMD' in solvers:
-        solver = lp.PULP_CBC_CMD(msg=0)
-    else:
-        assert 'COIN_CMD' in solvers
-        solver = lp.COIN_CMD(msg=0)
-
-    status = prob.solve(solver)
-    if status != lp.LpStatusOptimal:
-        statusMsg = {
-            lp.LpStatusNotSolved: "Not Solved",
-            lp.LpStatusOptimal: "Optimal",
-            lp.LpStatusInfeasible: "Infeasible",
-            lp.LpStatusUnbounded: "Unbounded",
-            lp.LpStatusUndefined: "Undefined",
-        }.get(status, "Unexpected")
-        raise ValueError(f"Failed to solve the problem ({statusMsg})")
+    solve(prob)
 
     result.net_worth_end = normalize(lp.value(sipp_1.uf + sipp_1.df + sipp_2.uf + sipp_2.df + isa + gia.value()), 0)
 

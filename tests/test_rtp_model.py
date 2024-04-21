@@ -5,6 +5,9 @@ import pytest
 import uk
 import model
 
+import test_tax_uk
+
+from model import lp
 
 
 @pytest.mark.parametrize('lump_sum', [0, 1000])
@@ -47,3 +50,14 @@ def test_model(joint, sipp_extra_contrib, lacs, retirement_country, retirement_i
     }
 
     model.run(params)
+
+
+@pytest.mark.parametrize("gr_income,tx", test_tax_uk.test_cases)
+def test_uk_income_tax_lp(gr_income, tx):
+    if gr_income > uk.income_tax_threshold_45:
+        pytest.skip()
+    prob = lp.LpProblem("test_uk_income_tax_lp")
+    tax = model.uk_income_tax_lp(prob, gr_income)
+    prob.setObjective(tax)
+    model.solve(prob)
+    assert lp.value(tax) == pytest.approx(tx, abs=1e-2)
