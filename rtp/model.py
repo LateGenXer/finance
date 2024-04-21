@@ -196,6 +196,14 @@ def aa_lbound(marginal_income_tax):
     }[marginal_income_tax]
 
 
+marginal_income_tax_to_base_salary = {
+    0.00: 0,
+    0.20: income_tax_threshold_20,
+    0.40: income_tax_threshold_40,
+    0.45: income_tax_threshold_45,
+}
+
+
 # https://www.investopedia.com/terms/i/inflation_adjusted_return.asp
 def inflation_ajusted_return(return_rate, inflation_rate):
     return (1.0 + return_rate) / (1.0 + inflation_rate) - 1.0
@@ -489,6 +497,11 @@ def model(
     if max_income:
         retirement_income_net = lp.LpVariable("income", 0)
 
+    base_salary_1 = marginal_income_tax_to_base_salary[marginal_income_tax_1]
+    base_salary_2 = marginal_income_tax_to_base_salary[marginal_income_tax_2]
+    base_income_tax_1, _ = UK.tax(base_salary_1, 0)
+    base_income_tax_2, _ = UK.tax(base_salary_2, 0)
+
     # XXX: Lump sum analysis
     if lump_sum:
         ls_sipp_1 = lp.LpVariable("ls_sipp_1", 0)
@@ -594,15 +607,15 @@ def model(
 
         if uk_yr:
             # UK
+            cg_1 = lp.LpVariable(f'cg_1@{yr}', 0)
+            cg_2 = lp.LpVariable(f'cg_2@{yr}', 0)
+            prob += cg_1 + cg_2 == cg
             if yr < retirement_year:
-                cgt_rate = min(cgt_rate_map[marginal_income_tax_1], cgt_rate_map[marginal_income_tax_2])
-                tax_1 = income_gross_1 * marginal_income_tax_1
-                tax_2 = income_gross_2 * marginal_income_tax_2
-                cgt = uk_cgt_lp(prob, cg, cgt_rate, N*cgt_allowance)
+                tax_1, cgt_1 = uk_tax_lp(prob, base_salary_1 + income_gross_1, cg_1)
+                tax_2, cgt_2 = uk_tax_lp(prob, base_salary_2 + income_gross_2, cg_2)
+                tax_1 -= base_income_tax_1
+                tax_2 -= base_income_tax_2
             else:
-                cg_1 = lp.LpVariable(f'cg_1@{yr}', 0)
-                cg_2 = lp.LpVariable(f'cg_2@{yr}', 0)
-                prob += cg_1 + cg_2 == cg
                 if marriage_allowance and income_state_2 <= UK.income_tax_threshold_20:
                     prob += income_gross_1 <= UK.income_tax_threshold_40
                     prob += income_gross_2 <= UK.income_tax_threshold_20
@@ -611,7 +624,7 @@ def model(
                 else:
                     tax_1, cgt_1 = uk_tax_lp(prob, income_gross_1, cg_1)
                     tax_2, cgt_2 = uk_tax_lp(prob, income_gross_2, cg_2)
-                cgt = cgt_1 + cgt_2
+            cgt = cgt_1 + cgt_2
         elif country == 'PT':
             income_gross = (income_gross_1 + tfc_1 +
                             income_gross_2 + tfc_2)
