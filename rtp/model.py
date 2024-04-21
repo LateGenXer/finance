@@ -129,23 +129,6 @@ def income_tax_lp(prob, gross_income, income_tax_bands, factor=1.0):
     return tax
 
 
-uk_income_tax_bands = [
-    (income_tax_threshold_20,  0.00),
-    (income_tax_threshold_40,  0.20),
-    (               pa_limit,  0.40),
-    (                   None,  0.60), # 0.40 + 0.5*0.40
-    # FIXME: we can't model the 45% tax rate, as it's no longer convex
-]
-
-
-def uk_income_tax_lp(prob, gross_income):
-    # Although the following condition is necessary for accurate tax
-    # modeling, but it would effectively lead to the maximization of the
-    # marginal 60% income tax band.
-    #prob += gross_income <= pa_limit + 2*income_tax_threshold_20
-    return income_tax_lp(prob, gross_income, uk_income_tax_bands)
-
-
 def uk_cgt_lp(prob, cg, cgt_rate, cgt_allowance):
     global uid
     cg_00 = lp.LpVariable(f'cgt_{uid}_00', 0, cgt_allowance)
@@ -154,6 +137,41 @@ def uk_cgt_lp(prob, cg, cgt_rate, cgt_allowance):
     prob += cg_00 + cg_xx == cg
     tax = cg_xx * cgt_rate
     return tax
+
+
+def uk_tax_lp(prob, gross_income, cg, marriage_allowance=0):
+    global uid
+
+    personal_allowance    = income_tax_threshold_20 + marriage_allowance
+    basic_rate_allowance  = income_tax_threshold_40 - income_tax_threshold_20
+    higher_rate_allowance = pa_limit - personal_allowance - basic_rate_allowance
+    # FIXME: we can't model the 45% tax rate, as it's no longer convex
+
+    income_pa              = lp.LpVariable(f'income_pa_{uid}', 0, personal_allowance)
+    income_basic_rate      = lp.LpVariable(f'income_basic_rate_{uid}', 0, basic_rate_allowance)
+    income_higher_rate     = lp.LpVariable(f'income_higher_rate_{uid}', 0, higher_rate_allowance)
+    income_adjusted_rate = lp.LpVariable(f'income_adjusted_rate_{uid}', 0)
+
+    prob += income_pa + income_basic_rate + income_higher_rate + income_adjusted_rate == gross_income
+
+    income_tax = income_basic_rate    * 0.20 \
+               + income_higher_rate   * 0.40 \
+               + income_adjusted_rate * 0.60
+
+    cg_allowance   = lp.LpVariable(f'cg_pa_{uid}', 0, UK.cgt_allowance)
+    cg_basic_rate  = lp.LpVariable(f'cg_basic_rate_{uid}', 0)
+    cg_higher_rate = lp.LpVariable(f'cg_higher_rate_{uid}', 0)
+
+    prob += cg_allowance + cg_basic_rate + cg_higher_rate == cg
+
+    prob += income_pa + income_basic_rate + cg_basic_rate <= income_tax_threshold_40
+
+    cgt = cg_basic_rate  * 0.10 \
+        + cg_higher_rate * 0.20
+
+    uid += 1
+
+    return income_tax, cgt
 
 
 def pt_income_tax_lp(prob, gross_income, factor=1.0):
@@ -576,17 +594,21 @@ def model(
                 cgt_rate = min(cgt_rate_map[marginal_income_tax_1], cgt_rate_map[marginal_income_tax_2])
                 tax_1 = income_gross_1 * marginal_income_tax_1
                 tax_2 = income_gross_2 * marginal_income_tax_2
+                cgt = uk_cgt_lp(prob, cg, cgt_rate, N*cgt_allowance)
             elif marriage_allowance and income_state_2 <= UK.income_tax_threshold_20:
                 prob += income_gross_1 <= UK.income_tax_threshold_40
                 prob += income_gross_2 <= UK.income_tax_threshold_20
                 tax_1 = income_tax_lp(prob, income_gross_1, [(income_tax_threshold_20 + UK.marriage_allowance, 0.00), (None, 0.20)])
                 tax_2 = income_tax_lp(prob, income_gross_2, [(income_tax_threshold_20 - UK.marriage_allowance, 0.00), (None, 0.20)])
                 cgt_rate = cgt_rates[0] # Basic rate
+                cgt = uk_cgt_lp(prob, cg, cgt_rate, N*cgt_allowance)
             else:
-                cgt_rate = cgt_rates[1] # Higher rate
-                tax_1 = uk_income_tax_lp(prob, income_gross_1)
-                tax_2 = uk_income_tax_lp(prob, income_gross_2)
-            cgt = uk_cgt_lp(prob, cg, cgt_rate, N*cgt_allowance)
+                cg_1 = lp.LpVariable(f'cg_1@{yr}', 0)
+                cg_2 = lp.LpVariable(f'cg_2@{yr}', 0)
+                prob += cg_1 + cg_2 == cg
+                tax_1, cgt_1 = uk_tax_lp(prob, income_gross_1, cg_1)
+                tax_2, cgt_2 = uk_tax_lp(prob, income_gross_2, cg_2)
+                cgt = cgt_1 + cgt_2
         elif country == 'PT':
             income_gross = (income_gross_1 + tfc_1 +
                             income_gross_2 + tfc_2)

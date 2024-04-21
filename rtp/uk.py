@@ -108,9 +108,3 @@ def tax(income, capital_gains = 0, marriage_allowance = 0):
     capital_gains_tax += higher_rate_capital_gains * cgt_rates[1]
 
     return income_tax, capital_gains_tax
-
-
-def income_tax(gross_income, marriage_allowance = 0):
-    income_tax, capital_gain_tax = tax(gross_income, capital_gains=0, marriage_allowance=marriage_allowance)
-    assert capital_gain_tax == 0
-    return income_tax

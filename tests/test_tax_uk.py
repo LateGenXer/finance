@@ -25,8 +25,12 @@ combined_test_cases = [
     (income_tax_threshold_40, basic_rate_allowance*0.20, cgt_allowance + 1, 0.20),
     (income_tax_threshold_40 + 1, basic_rate_allowance*0.20 + 0.40, 0, 0),
     (pa_limit, basic_rate_allowance*0.20 + (pa_limit - income_tax_threshold_40) * 0.40, 0, 0),
+    (pa_limit, basic_rate_allowance*0.20 + (pa_limit - income_tax_threshold_40) * 0.40, cgt_allowance, 0),
+    (pa_limit, basic_rate_allowance*0.20 + (pa_limit - income_tax_threshold_40) * 0.40, cgt_allowance + 1, 0.20),
     (pa_limit + 1, basic_rate_allowance*0.20 + (pa_limit - income_tax_threshold_40) * 0.40 + 0.40*1.5, 0, 0),
     (income_tax_threshold_45, basic_rate_allowance*0.20 + (income_tax_threshold_45 - basic_rate_allowance) * 0.40, 0, 0),
+    (income_tax_threshold_45, basic_rate_allowance*0.20 + (income_tax_threshold_45 - basic_rate_allowance) * 0.40, cgt_allowance, 0),
+    (income_tax_threshold_45, basic_rate_allowance*0.20 + (income_tax_threshold_45 - basic_rate_allowance) * 0.40, cgt_allowance + 1, 0.20),
     (income_tax_threshold_45 + 1, basic_rate_allowance*0.20 + (income_tax_threshold_45 - basic_rate_allowance) * 0.40 + 0.45, 0, 0),
 ]
 
@@ -36,12 +40,3 @@ def test_tax(income, cg, income_tax, cgt):
     income_tax_, cgt_ = tax(income, cg)
     assert income_tax_ == pytest.approx(income_tax, abs=1e-2)
     assert cgt_ == pytest.approx(cgt, abs=1e-2)
-
-
-test_cases = [(income, income_tax) for (income, income_tax, cg, cgt) in combined_test_cases if cg == 0]
-
-
-@pytest.mark.parametrize("gr_income,tx", test_cases)
-def test_income_tax(gr_income, tx):
-    tax = income_tax(gr_income)
-    assert tax == pytest.approx(tx, abs=1e-2)
