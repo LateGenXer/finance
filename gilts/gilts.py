@@ -132,14 +132,14 @@ class Gilt:
             # Standard dividend periods
             interest_days = (settlement_date - prev_coupon_date).days
             accrued_interest = interest_days/full_coupon_days
-            if settlement_date >= xd_date:
+            if settlement_date > xd_date:
                 accrued_interest -= 1
         elif period == SHORT:
             # Short first dividend period
             # See DMO's Formulae for Calculating Gilt Prices from Yields, Section 3, (2), Short first dividend periods
             interest_days = (settlement_date - self.issue_date).days
             coupon_days = (next_coupon_date - self.issue_date).days
-            if settlement_date < xd_date:
+            if settlement_date <= xd_date:
                 accrued_interest = interest_days/full_coupon_days
             else:
                 accrued_interest = (interest_days - coupon_days)/full_coupon_days
@@ -153,7 +153,7 @@ class Gilt:
                 accrued_interest = interest_days / prev_full_coupon_days
             else:
                 interest_days = (settlement_date - prev_coupon_date).days
-                if settlement_date < xd_date:
+                if settlement_date <= xd_date:
                     accrued_interest = (prev_coupon_date - self.issue_date).days / prev_full_coupon_days \
                                      + interest_days / full_coupon_days
                 else:
@@ -237,7 +237,7 @@ class Gilt:
         assert s >= 181 and s <= 184
 
         xd_date = self.ex_dividend_date(next_coupon_date)
-        if settlement_date >= xd_date:
+        if settlement_date > xd_date:
             d1 = 0
 
         if logger.isEnabledFor(logging.DEBUG):
