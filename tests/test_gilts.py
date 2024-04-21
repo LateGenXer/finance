@@ -40,57 +40,17 @@ def issued(scope='module'):
 gilts_closing_prices_csv = os.path.join(data_dir, 'gilts-closing-prices-20231201.csv')
 
 
-# https://reports.tradeweb.com/closing-prices/gilts/ > Type: Gilts Only > Export
-tradeweb_csv = os.path.join(data_dir, 'Tradeweb_FTSE_ClosePrices_20231201.csv')
-
-
-class TradewebClosePrices(Prices):
-
-    def __init__(self, filename=tradeweb_csv):
-        Prices.__init__(self)
-
-        self.tidms = {}
-        for row in csv.DictReader(open(gilts_closing_prices_csv, 'rt')):
-            tidm = row['tidm']
-            isin = row['isin']
-            self.tidms[isin] = tidm
-
-        self.prices = {}
-        for row in self.parse(filename):
-            isin = row['ISIN']
-            price = float(row['Clean Price'])
-            tidm = self.tidms[isin]
-            self.prices[tidm] = price
-            self.datetime = datetime.datetime.strptime(row['Close of Business Date'], '%d/%m/%Y')
-        self.datetime = self.datetime.replace(hour=23, minute=59, second=59)
-
-    @staticmethod
-    def parse(filename=tradeweb_csv):
-        for row in csv.DictReader(open(filename, 'rt', encoding='utf-8-sig')):
-            if row['Type'] in ('Conventional', 'Index-linked'):
-                yield row
-
-    def lookup_tidm(self, isin):
-        return self.tidms[isin]
-
-    def get_price(self, tidm):
-        return self.prices[tidm]
-
-    def get_prices_date(self):
-        return self.datetime
-
-
 @pytest.fixture
 def prices(scope='module'):
-    return TradewebClosePrices()
+    return GiltPrices(gilts_closing_prices_csv)
 
 
-@pytest.mark.parametrize('prices', [
-    pytest.param(GiltPrices(None), id="cached"),
-    pytest.param(GiltPrices(os.path.join(data_dir, 'gilts-closing-prices-20231201.csv')), id="local"),
-    pytest.param(TradewebClosePrices(), id="tradeweb"),
+@pytest.mark.parametrize('filename', [
+    pytest.param(None, id="cached"),
+    pytest.param(gilts_closing_prices_csv, id="local"),
 ])
-def test_prices(prices):
+def test_prices(filename):
+    prices = GiltPrices(filename)
     isin, tidm = 'GB00BBJNQY21', 'TR68'
     assert prices.lookup_tidm(isin) == tidm
     assert prices.get_price(tidm) >= 0
@@ -117,8 +77,18 @@ def tradeweb_issued(scope='module'):
     return entries
 
 
+# https://reports.tradeweb.com/closing-prices/gilts/ > Type: Gilts Only > Export
+tradeweb_csv = os.path.join(data_dir, 'Tradeweb_FTSE_ClosePrices_20231201.csv')
+
+
+def tradeweb_parse(filename=tradeweb_csv):
+    for row in csv.DictReader(open(filename, 'rt', encoding='utf-8-sig')):
+        if row['Type'] in ('Conventional', 'Index-linked'):
+            yield row
+
+
 @pytest.mark.parametrize("row", [
-    pytest.param(row, id=row['Gilt Name']) for row in TradewebClosePrices.parse(tradeweb_csv)
+    pytest.param(row, id=row['Gilt Name']) for row in tradeweb_parse(tradeweb_csv)
 ])
 def test_tradeweb(caplog, tradeweb_issued, row):
     caplog.set_level(logging.DEBUG, logger="gilts")
