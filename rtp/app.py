@@ -306,7 +306,6 @@ formatters = {
     'contrib_2': delta_format,
     'isa_delta': delta_format,
     'gia_delta': delta_format,
-    'income_surplus': delta_format,
     'lta_ratio_1':  perc_format,
     'lta_ratio_2':  perc_format,
     'income_tax_rate_1': perc_format,
@@ -459,7 +458,6 @@ with st.expander("Abbreviations..."):
 * **GIA**: General Investment Account
 * **GI**: Gross Income
 * **NI**: Net Income
-* **Error**: Error relative to target income; should be zero, unless there are modelling errors.
 * **TFC**: Tax Free Cash (25% of the old LTA)
 * **\u0394**: Cash flow, that is, cash going in or out of the pot; excluding growth and tax charges.
 * **IT**: Income Tax

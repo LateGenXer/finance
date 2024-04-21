@@ -57,6 +57,10 @@ class LPState:
     income_state_2: Any
     income_gross_1: Any
     income_gross_2: Any
+    income_net: Any
+    tax_1: Any
+    tax_2: Any
+    cgt: Any
 
 
 @dataclass
@@ -83,7 +87,6 @@ class ResState:
     income_gross_2: float
     cg: float
     income_net: float
-    income_surplus: float
     income_tax_1: float
     income_tax_2: float
     income_tax_rate_1: float
@@ -612,13 +615,14 @@ def model(
             incomings += misc_contrib
         outgoings = tax_1 + tax_2 + cgt
         if yr >= retirement_year:
+            income_net = retirement_income_net
             outgoings += retirement_income_net
             outgoings += contrib_1*0.80
             outgoings += contrib_2*0.80
+        else:
+            income_net = 0
 
-        surplus = incomings - outgoings
-
-        prob += surplus == 0
+        prob += incomings == outgoings
 
         states[yr] = LPState(
             sipp_uf_1=sipp_1.uf,
@@ -644,6 +648,10 @@ def model(
             income_state_2=income_state_2,
             income_gross_1=income_gross_1,
             income_gross_2=income_gross_2,
+            income_net=income_net,
+            tax_1=tax_1,
+            tax_2=tax_2,
+            cgt=cgt,
         )
 
     if max_income:
@@ -666,9 +674,6 @@ def model(
         retirement_income_net = lp.value(retirement_income_net)
 
     for yr in range(present_year, end_year):
-        retirement = yr >= retirement_year
-        uk_yr = not retirement or country == 'UK'
-
         s = states[yr]
         if verbosity > 1:
             if yr == retirement_year:
@@ -707,54 +712,12 @@ def model(
         # Income and Capital Gain Taxes calculation
         income_gross_1 = lp.value(s.income_gross_1)
         income_gross_2 = lp.value(s.income_gross_2)
-        if uk_yr:
-            # UK
-            if yr < retirement_year:
-                cgt_rate = min(cgt_rate_map[marginal_income_tax_1], cgt_rate_map[marginal_income_tax_2])
-                tax_1 = income_gross_1 * marginal_income_tax_1
-                tax_2 = income_gross_2 * marginal_income_tax_2
-            elif marriage_allowance and income_state_2 <= UK.income_tax_threshold_20:
-                tax_1 = UK.income_tax(income_gross_1, UK.marriage_allowance)
-                tax_2 = UK.income_tax(income_gross_2, -UK.marriage_allowance)
-                cgt_rate = cgt_rates[0] # Basic rate
-            else:
-                cgt_rate = cgt_rates[1] # Higher rate
-                tax_1 = UK.income_tax(income_gross_1)
-                tax_2 = UK.income_tax(income_gross_2)
-            cgt = max(cg - N*cgt_allowance, 0) * cgt_rate
-        elif country == 'PT':
-            income_gross = income_gross_1 + income_gross_2
 
-            tax = PT.income_tax(income_gross, factor=N/gbpeur)
-            cgt = cg * PT.cgt_rate
-            if cg >= 0 and False:
-                tax_a = tax
-                income_gross_b = income_gross + cg
-                tax_b = PT.income_tax(income_gross_b, factor=N/gbpeur)
-                cgt_alt = tax_b - tax_a
-                if cgt_alt < cgt:
-                    cgt = cgt_alt
+        income_net = lp.value(s.income_net)
 
-            tax_1 = tax * income_ratio_1
-            tax_2 = tax * income_ratio_2
-        elif country == 'JP':
-            tax_1 = JP.income_tax(income_gross_1, factor=1/gbpjpy)
-            tax_2 = JP.income_tax(income_gross_2, factor=1/gbpjpy)
-            cgt = cg * JP.cgt_rate
-
-        incomings = income_gross_1 + income_gross_2 + drawdown_isa + drawdown_gia
-        if uk_yr:
-            incomings += tfc_1 + tfc_2
-        if yr < retirement_year:
-            incomings += misc_contrib
-        outgoings = tax_1 + tax_2 + cgt
-        if yr >= retirement_year:
-            outgoings += contrib_1*0.80
-            outgoings += contrib_2*0.80
-        surplus = incomings - outgoings
-        income_net = surplus
-        if yr >= retirement_year:
-            surplus -= retirement_income_net
+        tax_1 = lp.value(s.tax_1)
+        tax_2 = lp.value(s.tax_2)
+        cgt = lp.value(s.cgt)
 
         tax_rate_1 = tax_1 / max(income_gross_1, 1)
         tax_rate_2 = tax_2 / max(income_gross_2, 1)
@@ -772,7 +735,7 @@ def model(
                     'SIPP2 [%7.0f %7.0f] (%6.0f %7.0f) %5.1f%%',
                     'ISA %7.0f (%7.0f)',
                     'GIA %7.0f (%7.0f)',
-                    'Inc Gr %6.0f %6.0f Nt %6.0f (%+6.0f)',
+                    'Inc Gr %6.0f %6.0f Nt %6.0f',
                     'Tax %6.0f %4.1f%% %6.0f %4.1f%% %6.0f %4.1f%% %6.0f'
                 )) % (
                     yr,
@@ -781,7 +744,7 @@ def model(
                     sipp_uf_2, sipp_df_2, contrib_2, -tfc_2 - drawdown_2, 100*lta_2/lta,
                     isa, -drawdown_isa,
                     gia, -drawdown_gia,
-                    income_gross_1, income_gross_2, income_net, surplus,
+                    income_gross_1, income_gross_2, income_net,
                     tax_1, 100 * tax_rate_1,
                     tax_2, 100 * tax_rate_2,
                     cgt, 100 * cgt_rate,
@@ -813,7 +776,6 @@ def model(
             income_gross_2=income_gross_2,
             cg=cg,
             income_net=income_net,
-            income_surplus=normalize(surplus, 2),
             income_tax_1=tax_1,
             income_tax_2=tax_2,
             income_tax_rate_1=tax_rate_1,
@@ -860,7 +822,6 @@ column_headers = {
     'income_gross_2': 'GI2',
     'cg': 'CG',
     'income_net': 'NI',
-    'income_surplus': 'Error',
     'income_tax_1': 'IT1',
     'income_tax_rate_1': '(%)',
     'income_tax_2': 'IT2',
@@ -898,7 +859,6 @@ def run(params):
         'contrib_2': delta_format,
         'isa_delta': delta_format,
         'gia_delta': delta_format,
-        'income_surplus': delta_format,
         'lta_ratio_1':  perc_format,
         'lta_ratio_2':  perc_format,
         'income_tax_rate_1': perc_format,
