@@ -330,8 +330,8 @@ class Issued:
                 'maturity': self._parse_date(entry['REDEMPTION_DATE']),
                 'issue_date': self._parse_date(entry['FIRST_ISSUE_DATE']),
             }
-            type_ = entry['INSTRUMENT_TYPE']
-            if type_ == 'Conventional ':
+            type_ = entry['INSTRUMENT_TYPE'].rstrip(' ')
+            if type_ == 'Conventional':
                 gilt = Gilt(**kwargs)
             else:
                 mo = re.match(r'^Index-linked (3|8) months$', type_)
