@@ -100,6 +100,9 @@ def test_tradeweb(caplog, tradeweb_issued, row):
     type_ = row["Type"]
     assert type_ in ["Conventional", "Index-linked"]
 
+    if row['Clean Price'] == 'N/A':
+        pytest.skip()
+
     close_date = datetime.datetime.strptime(row['Close of Business Date'], '%d/%m/%Y').date()
 
     isin = row['ISIN']
