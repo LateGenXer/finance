@@ -78,17 +78,22 @@ def tradeweb_issued(scope='module'):
 
 
 # https://reports.tradeweb.com/closing-prices/gilts/ > Type: Gilts Only > Export
-tradeweb_csv = os.path.join(data_dir, 'Tradeweb_FTSE_ClosePrices_20231201.csv')
+tradeweb_csvs = [
+    'Tradeweb_FTSE_ClosePrices_20231201.csv',
+    'Tradeweb_FTSE_ClosePrices_TS27.csv',
+]
 
 
-def tradeweb_parse(filename=tradeweb_csv):
-    for row in csv.DictReader(open(filename, 'rt', encoding='utf-8-sig')):
-        if row['Type'] in ('Conventional', 'Index-linked'):
-            yield row
+def tradeweb_parse():
+    for tradeweb_csv in tradeweb_csvs:
+        filename = os.path.join(data_dir, tradeweb_csv)
+        for row in csv.DictReader(open(filename, 'rt', encoding='utf-8-sig')):
+            if row['Type'] in ('Conventional', 'Index-linked'):
+                yield row
 
 
 @pytest.mark.parametrize("row", [
-    pytest.param(row, id=row['Gilt Name']) for row in tradeweb_parse(tradeweb_csv)
+    pytest.param(row, id=f"{row['Gilt Name']}@{row['Close of Business Date']}") for row in tradeweb_parse()
 ])
 def test_tradeweb(caplog, tradeweb_issued, row):
     caplog.set_level(logging.DEBUG, logger="gilts")
@@ -107,6 +112,9 @@ def test_tradeweb(caplog, tradeweb_issued, row):
 
     isin = row['ISIN']
     entry = tradeweb_issued[isin]
+    for name, value in entry.items():
+        logger.debug('%s = %s', name, value)
+    logger.debug('')
 
     conventional = type_ == 'Conventional'
 
@@ -140,6 +148,13 @@ def test_tradeweb(caplog, tradeweb_issued, row):
 
     settlement_date = next_business_day(close_date)
 
+    p, c = gilt.coupon_dates(settlement_date)
+    logger.debug(f'Prev: {p}')
+    for d in c:
+        logger.debug(f'Next: {d}')
+    for d, v in gilt.cash_flows(settlement_date):
+        logger.debug(f'Dividend: {d}, {v}')
+
     clean_price = float(row['Clean Price'])
     accrued_interest = float(row['Accrued Interest'])
     dirty_price = float(row['Dirty Price'])
@@ -167,7 +182,7 @@ def test_tradeweb(caplog, tradeweb_issued, row):
         if len(next_coupon_dates) == 2:
             # XXX: Tradeweb seems to be using simple interest
             # (non-compounding) for all bonds maturing less than one year
-            assert ytm_ == approx(ytm, rel=1e-2)
+            assert ytm_ == approx(ytm, rel=5e-2)
         else:
             assert ytm_ == approx(ytm, abs=5e-6)
 

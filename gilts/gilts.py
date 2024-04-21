@@ -53,6 +53,9 @@ logger = logging.getLogger('gilts')
 
 
 
+SHORT, STANDARD, LONG = -1, 0, 1
+
+
 # https://www.dmo.gov.uk/responsibilities/gilt-market/about-gilts/
 class Gilt:
 
@@ -68,23 +71,26 @@ class Gilt:
         self.maturity = maturity
         self.issue_date = issue_date
 
+    # First dividends are often non-standard, being longer/shorter than 6
+    # months.  The used convention is not written anywhere, but we assume
+    # the first dividend period will be between 2 and 8 months.
+    # XXX Another solution would be to infer the first dividend date from
+    # dmo-D1A.xml's CURRENT_EX_DIV_DATE attribute.
+    min_coupon_days = 60
+
     def coupon_dates(self, settlement_date):
         assert settlement_date >= self.issue_date
         assert settlement_date <= self.maturity
         next_coupon_dates = []
         prev_coupon_date = self.maturity
         periods = 0
-        # First dividends are often non-standard, being longer/shorter than 6
-        # months.  The used convention is not written anywhere, but we assume
-        # the first dividend period will be between 2 and 8 months.
-        # XXX Another solution would be to infer the first dividend date from
-        # dmo-D1A.xml's CURRENT_EX_DIV_DATE attribute.
-        while (prev_coupon_date - self.issue_date).days >= 60:
+        while (prev_coupon_date - self.issue_date).days >= self.min_coupon_days:
             next_coupon_dates.append(prev_coupon_date)
             periods += 1
             prev_coupon_date = shift_month(self.maturity, -6*periods)
             if prev_coupon_date < settlement_date:
                 break
+            prev_coupon_date = shift_month(self.maturity, -6*periods)
         previous_coupon_date = prev_coupon_date
         next_coupon_dates.reverse()
         return prev_coupon_date, next_coupon_dates
@@ -100,33 +106,60 @@ class Gilt:
             xd_date = prev_business_day(xd_date)
         return xd_date
 
+    def _period(self, prev_coupon_date):
+        if (prev_coupon_date - self.issue_date).days >= self.min_coupon_days:
+            return STANDARD
+        elif prev_coupon_date <= self.issue_date:
+            return SHORT
+        else:
+            return LONG
+
     # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf Section 3
     # https://docs.londonstockexchange.com/sites/default/files/documents/calculator.xls
     # https://docs.londonstockexchange.com/sites/default/files/documents/accrued-interest-gilts.pdf
     def accrued_interest(self, settlement_date):
         prev_coupon_date, next_coupon_date = self.prev_next_coupon_date(settlement_date)
 
+        dividend = self.coupon / 2
+
         full_coupon_days = (next_coupon_date - prev_coupon_date).days
 
         assert self.issue_date is not None
-        if prev_coupon_date >= self.issue_date:
+        xd_date = self.ex_dividend_date(next_coupon_date)
+
+        period = self._period(prev_coupon_date)
+        if period == STANDARD:
+            # Standard dividend periods
             interest_days = (settlement_date - prev_coupon_date).days
-            coupon_days = full_coupon_days
-        else:
+            accrued_interest = interest_days/full_coupon_days
+            if settlement_date >= xd_date:
+                accrued_interest -= 1
+        elif period == SHORT:
+            # Short first dividend period
             # See DMO's Formulae for Calculating Gilt Prices from Yields, Section 3, (2), Short first dividend periods
             interest_days = (settlement_date - self.issue_date).days
             coupon_days = (next_coupon_date - self.issue_date).days
-
-        coupon = self.coupon / 2
-
-        xd_date = self.ex_dividend_date(next_coupon_date)
-
-        if settlement_date < xd_date:
-            accrued_interest = interest_days/full_coupon_days * coupon
+            if settlement_date < xd_date:
+                accrued_interest = interest_days/full_coupon_days
+            else:
+                accrued_interest = (interest_days - coupon_days)/full_coupon_days
         else:
-            accrued_interest = (interest_days - coupon_days)/full_coupon_days * coupon
+            assert period == LONG
+            # Long first dividend period
+            prev_prev_coupon_date = shift_month(prev_coupon_date, -6)
+            prev_full_coupon_days = (prev_coupon_date - prev_prev_coupon_date).days
+            if settlement_date < prev_coupon_date:
+                interest_days = (settlement_date - self.issue_date).days
+                accrued_interest = interest_days / prev_full_coupon_days
+            else:
+                interest_days = (settlement_date - prev_coupon_date).days
+                if settlement_date < xd_date:
+                    accrued_interest = (prev_coupon_date - self.issue_date).days / prev_full_coupon_days \
+                                     + interest_days / full_coupon_days
+                else:
+                    accrued_interest = interest_days / full_coupon_days - 1
 
-        return accrued_interest
+        return accrued_interest * dividend
 
     def dirty_price(self, clean_price, settlement_date):
         return clean_price + self.accrued_interest(settlement_date=settlement_date)
@@ -139,9 +172,18 @@ class Gilt:
 
         transactions = []
 
-        if prev_coupon_date < self.issue_date:
+        period = self._period(prev_coupon_date)
+        if period == STANDARD:
+            pass
+        else:
             next_coupon_date = next_coupon_dates.pop(0)
-            r = (next_coupon_date - self.issue_date).days / (next_coupon_date - prev_coupon_date).days
+            if period == SHORT:
+                r = (next_coupon_date - self.issue_date).days / (next_coupon_date - prev_coupon_date).days
+            else:
+                assert period == LONG
+                prev_prev_coupon_date = shift_month(prev_coupon_date, -6)
+                r = (prev_coupon_date - self.issue_date).days / (prev_coupon_date - prev_prev_coupon_date).days + 1
+
             transactions.append((next_coupon_date, r*self.coupon/2))
 
         for next_coupon_date in next_coupon_dates:
@@ -161,18 +203,38 @@ class Gilt:
         next_coupon_date = next_coupon_dates[0]
         n = len(next_coupon_dates) - 1
 
-        r = (next_coupon_date - settlement_date).days
-        assert r >= 0
-        s = (next_coupon_date - prev_coupon_date).days
-        assert s >= 181 and s <= 184
-
         c = self.coupon
         f = 2
         d1 = c/f
         d2 = c/f
 
-        if prev_coupon_date < self.issue_date:
+        period = self._period(prev_coupon_date)
+        if period == STANDARD:
+            pass
+        elif period == SHORT:
+            assert prev_coupon_date <= self.issue_date
+            assert self.issue_date <= next_coupon_date
             d1 *= (next_coupon_date - self.issue_date).days/(next_coupon_date - prev_coupon_date).days
+        else:
+            assert period == LONG
+            prev_prev_coupon_date = shift_month(prev_coupon_date, -6)
+            d1 *= 1 + (prev_coupon_date - self.issue_date).days/(prev_coupon_date - prev_prev_coupon_date).days
+            if settlement_date <= prev_coupon_date:
+                next_coupon_date = prev_coupon_date
+                prev_coupon_date = prev_prev_coupon_date
+                assert prev_coupon_date <= self.issue_date
+                assert self.issue_date <= next_coupon_date
+                n += 1
+                d2 = d1
+                d1 = 0
+
+        assert prev_coupon_date < settlement_date
+        assert settlement_date <= next_coupon_date
+
+        r = (next_coupon_date - settlement_date).days
+        assert r >= 0
+        s = (next_coupon_date - prev_coupon_date).days
+        assert s >= 181 and s <= 184
 
         xd_date = self.ex_dividend_date(next_coupon_date)
         if settlement_date >= xd_date:
