@@ -30,7 +30,7 @@ def test_ex_dividend_date(coupon_date, xd_date):
 
 
 @pytest.fixture
-def issued():
+def issued(scope='module'):
     rpi_filename = os.path.join(data_dir, 'rpi-series-20231115.csv')
     rpi_series = RPI(rpi_filename)
     filename = os.path.join(data_dir, 'dmo-D1A-20231201.xml')
@@ -81,7 +81,7 @@ class TradewebClosePrices(Prices):
 
 
 @pytest.fixture
-def prices():
+def prices(scope='module'):
     return TradewebClosePrices()
 
 
@@ -108,10 +108,19 @@ def test_yield_curve(issued, prices, index_linked, show_plots):
         plt.savefig(os.devnull, format='svg')
 
 
+@pytest.fixture
+def tradeweb_issued(scope='module'):
+    entries = {}
+    for entry in csv.DictReader(open(os.path.join(data_dir, 'dmo_issued.csv'), 'rt')):
+        isin = entry['ISIN_CODE']
+        entries[isin] = entry
+    return entries
+
+
 @pytest.mark.parametrize("row", [
     pytest.param(row, id=row['Gilt Name']) for row in TradewebClosePrices.parse(tradeweb_csv)
 ])
-def test_tradeweb(caplog, issued, row):
+def test_tradeweb(caplog, tradeweb_issued, row):
     caplog.set_level(logging.DEBUG, logger="gilts")
 
     for name, value in row.items():
@@ -121,19 +130,41 @@ def test_tradeweb(caplog, issued, row):
     type_ = row["Type"]
     assert type_ in ["Conventional", "Index-linked"]
 
-    isin = row['ISIN']
-    gilt = issued.isin[isin]
+    close_date = datetime.datetime.strptime(row['Close of Business Date'], '%d/%m/%Y').date()
 
-    assert gilt.type_ == type_
+    isin = row['ISIN']
+    entry = tradeweb_issued[isin]
+
     conventional = type_ == 'Conventional'
 
     coupon = float(row['Coupon'])
-    assert gilt.coupon == coupon
 
     maturity = datetime.datetime.strptime(row['Maturity'], '%d/%m/%Y').date()
-    assert gilt.maturity == maturity
 
-    close_date = datetime.datetime.strptime(row['Close of Business Date'], '%d/%m/%Y').date()
+    name = entry['INSTRUMENT_NAME']
+    kwargs = {
+        'name': name,
+        'isin': entry['ISIN_CODE'],
+        'coupon': Issued._parse_coupon(name),
+        'maturity': Issued._parse_date(entry['REDEMPTION_DATE']),
+        'issue_date': Issued._parse_date(entry['FIRST_ISSUE_DATE']),
+    }
+    if type_ == 'Conventional':
+        gilt = Gilt(**kwargs)
+    else:
+        # Truncate RPI series to match close TradeWeb close date
+        rpi_series = RPI()
+        index = rpi_series.lookup_index(close_date)
+        rpi_series.series = rpi_series.series[:index]
+
+        kwargs['base_rpi'] = float(entry['BASE_RPI_87'])
+        kwargs['rpi_series'] = rpi_series
+        gilt = IndexLinkedGilt(**kwargs)
+
+    assert gilt.maturity == maturity
+    assert gilt.type_ == type_
+    assert gilt.coupon == coupon
+
     settlement_date = next_business_day(close_date)
 
     clean_price = float(row['Clean Price'])
