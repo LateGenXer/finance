@@ -71,27 +71,46 @@ assert tfca * 4 == lta
 isa_allowance = 20000
 
 
-def income_tax(gross_income, marriage_allowance = 0):
-    # https://www.gov.uk/income-tax-rates/income-over-100000
-    personal_allowance = max(income_tax_threshold_20 + marriage_allowance - max(gross_income - pa_limit, 0)*0.5, 0)
-    taxable_income = max(gross_income - personal_allowance, 0)
+def _split(allowance, income):
+    used = min(allowance, income)
+    allowance -= used
+    income -= used
+    return allowance, income, used
+
+
+def tax(income, capital_gains = 0, marriage_allowance = 0):
 
     assert income_tax_threshold_45 >= pa_limit + 2*income_tax_threshold_20
-    taxable_income_45 = max(taxable_income - income_tax_threshold_45, 0)
-    taxable_income -= taxable_income_45
 
-    taxable_income_20 = min(taxable_income, income_tax_threshold_40 - income_tax_threshold_20)
-    taxable_income   -= taxable_income_20
-    taxable_income_40 = taxable_income
+    # https://www.gov.uk/income-tax-rates/income-over-100000
+    personal_allowance    = max(income_tax_threshold_20 + marriage_allowance - max(income - pa_limit, 0)*0.5, 0)
+    basic_rate_allowance  = income_tax_threshold_40 - income_tax_threshold_20
+    higher_rate_allowance = income_tax_threshold_45 - personal_allowance - basic_rate_allowance
 
-    tax  = taxable_income_20 * 0.20
-    tax += taxable_income_40 * 0.40
-    tax += taxable_income_45 * 0.45
+    personal_allowance,    income,                 _                  = _split(personal_allowance,    income)
+    basic_rate_allowance,  income,                 basic_rate_income  = _split(basic_rate_allowance,  income)
+    higher_rate_allowance, additional_rate_income, higher_rate_income = _split(higher_rate_allowance, income)
+
+    income_tax  = basic_rate_income      * 0.20
+    income_tax += higher_rate_income     * 0.40
+    income_tax += additional_rate_income * 0.45
 
     if False:
         print("PA", personal_allowance)
-        print(20, taxable_income_20 * 0.20)
+        print(20, basic_rate_income * 0.20)
         print(40, taxable_income_40 * 0.40)
         print(45, taxable_income_45 * 0.45)
 
-    return tax
+    _, capital_gains, _                                    = _split(cgt_allowance,                             capital_gains)
+    _, higher_rate_capital_gains, basic_rate_capital_gains = _split(personal_allowance + basic_rate_allowance, capital_gains)
+
+    capital_gains_tax  = basic_rate_capital_gains  * cgt_rates[0]
+    capital_gains_tax += higher_rate_capital_gains * cgt_rates[1]
+
+    return income_tax, capital_gains_tax
+
+
+def income_tax(gross_income, marriage_allowance = 0):
+    income_tax, capital_gain_tax = tax(gross_income, capital_gains=0, marriage_allowance=marriage_allowance)
+    assert capital_gain_tax == 0
+    return income_tax
