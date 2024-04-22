@@ -253,9 +253,8 @@ class Gilt:
             logger.debug('r = %i', r)
             logger.debug('s = %i', s)
 
+        # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf Section 1
         if n > 0:
-            # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf
-            # Section 1
             def fn(v):
                 return v**(r/s) * (d1 + d2 * v + c * v**2 / (f * (1 - v)) * (1 - v**(n - 1)) + 100 * v**n) - P
 
@@ -263,10 +262,7 @@ class Gilt:
             v = optimize.newton(fn, v0)
             y = (1 / v - 1) * f
         else:
-            # Simple interest, like Tradeweb
-            # https://www.lseg.com/content/dam/ftse-russell/en_us/documents/ground-rules/ftse-actuaries-uk-gilts-index-series-guide-to-calc.pdf
-            # Section 6.1
-            y = ((d1 + 100) / P - 1) / (r / 365)
+            y = f * (((d1 + 100) / P) ** (s/r) - 1)
 
         return y
 

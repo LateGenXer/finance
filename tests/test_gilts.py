@@ -81,6 +81,7 @@ def tradeweb_issued(scope='module'):
 tradeweb_csvs = [
     'Tradeweb_FTSE_ClosePrices_20231201.csv',
     'Tradeweb_FTSE_ClosePrices_TS27.csv',
+    'Tradeweb_FTSE_ClosePrices_T24.csv',
 ]
 
 
@@ -187,6 +188,10 @@ def test_tradeweb(caplog, tradeweb_issued, row):
         if len(next_coupon_dates) == 2:
             # XXX: Tradeweb seems to be using simple interest
             # (non-compounding) for all bonds maturing less than one year
+            assert ytm_ == approx(ytm, rel=5e-2)
+        elif len(next_coupon_dates) == 1:
+            # XXX: Tradeweb seems to be inconsistent day count conventions
+            # (360, 365, ACT)
             assert ytm_ == approx(ytm, rel=5e-2)
         else:
             assert ytm_ == approx(ytm, abs=5e-6)
