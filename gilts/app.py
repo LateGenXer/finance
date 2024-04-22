@@ -323,10 +323,25 @@ with tab3:
     def to_excel(df1, df2):
         stream = io.BytesIO()
         engine = 'xlsxwriter'
-        #engine = 'openpyxl'
         writer = pd.ExcelWriter(stream, engine=engine)
-        df1.to_excel(writer, index=False, float_format='%.2f', sheet_name='Implementation')
+        df1.to_excel(writer, index=False, float_format='%.4f', sheet_name='Implementation')
         df2.to_excel(writer, index=False, float_format='%.2f', sheet_name='CashFlow')
+
+        workbook = writer.book
+        sheet1 = writer.sheets["Implementation"]
+
+        currency_format = workbook.add_format({"num_format": "0.00"})
+        percent_format = workbook.add_format({"num_format": "0.00%"})
+
+        def apply_format(df, sheet, columns, format):
+            names = list(df1.columns)
+            for name in columns:
+                col = names.index(name)
+                sheet1.set_column(col, col, None, format)
+
+        apply_format(df1, sheet1, ["Clean Price", "Dirty Price", "Quantity", "Cost"], currency_format)
+        apply_format(df1, sheet1, ["GRY"], percent_format)
+
         writer.close()
         return stream.getvalue()
 
