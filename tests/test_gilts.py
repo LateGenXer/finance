@@ -156,7 +156,8 @@ def test_tradeweb(caplog, tradeweb_issued, row):
         logger.debug(f'Dividend: {d}, {v}')
 
     clean_price = float(row['Clean Price'])
-    accrued_interest = float(row['Accrued Interest'])
+    accrued_interest = row['Accrued Interest']
+    accrued_interest = 0 if accrued_interest == 'N/A' else float(accrued_interest)
     dirty_price = float(row['Dirty Price'])
 
     if conventional or gilt.lag == 8:
