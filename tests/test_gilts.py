@@ -178,6 +178,10 @@ def test_tradeweb(caplog, tradeweb_issued, row):
 
     logger.debug(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:+.1e})')
 
+    # Ignore yields after last ex-dividend date
+    if settlement_date > gilt.ex_dividend_date(maturity):
+        return
+
     if conventional:
         _, next_coupon_dates = gilt.coupon_dates(settlement_date=settlement_date)
         if len(next_coupon_dates) == 2:
