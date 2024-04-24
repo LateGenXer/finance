@@ -455,11 +455,12 @@ with st.expander("Abbreviations..."):
 * **SP**: State Pension
 * **UF**: Uncrystalized Funds
 * **DF**: Drawdown Funds (for example, _flexi-access drawdown_)
+* **LSA**: [Lump Sum Allowance](https://www.gov.uk/tax-on-your-private-pension/lump-sum-allowance) (25% of the old LTA)
 * **GIA**: General Investment Account
 * **GI**: Gross Income
 * **NI**: Net Income
-* **TFC**: Tax Free Cash (25% of the old LTA)
-* **\u0394**: Cash flow, that is, cash going in or out of the pot; excluding growth and tax charges.
+* **TFC**: Tax Free Cash
+* **\u0394**: Cash flow, that is, cash going in or out of the pot; excluding internal growth.
 * **IT**: Income Tax
 * **CGT**: Capital Gains Tax
 * **LAC**: Lifetime Allowance Charge
