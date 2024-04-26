@@ -149,6 +149,10 @@ def test_tradeweb(caplog, tradeweb_issued, row):
 
     settlement_date = next_business_day(close_date)
 
+    # Tradweb publishes close prices when trading before issued
+    if settlement_date < gilt.issue_date:
+        settlement_date = gilt.issue_date
+
     p, c = gilt.coupon_dates(settlement_date)
     logger.debug(f'Prev: {p}')
     for d in c:
