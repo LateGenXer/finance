@@ -58,10 +58,11 @@ I am not a financial or tax adviser.
 
 ### Recommended reading
 
-* DMO's [_About gilts_](https://www.dmo.gov.uk/responsibilities/gilt-market/about-gilts/)
-* [CG Asset Management](https://www.cgasset.com/insights/)'s _Introduction to Index-Linked Bonds Webinar_, [Slides](https://www.cgasset.com/2024/02/21/introduction-to-index-linked-bonds-webinar-slides/), [Recording](https://www.cgasset.com/2024/02/21/introduction-to-index-linked-bonds/))
-* PIMCO's [_Everything you need to know about bonds_](https://europe.pimco.com/en-eu/resources/education/everything-you-need-to-know-about-bonds)
-* [Occam Investing's articles on bonds](https://occaminvesting.co.uk/portfolio-construction/)
+* Debt Management Office, [_About gilts_ page](https://www.dmo.gov.uk/responsibilities/gilt-market/about-gilts/)
+* CG Asset Management, [_Introduction to Index-Linked Bonds Webinar_](https://www.cgasset.com/category/webinars/?s=index-linked) ([slides](https://www.cgasset.com/2024/02/21/introduction-to-index-linked-bonds-webinar-slides/), [recording](https://player.vimeo.com/video/915128868))
+* PIMCO, [_Everything you need to know about bonds_](https://europe.pimco.com/en-eu/resources/education/everything-you-need-to-know-about-bonds)
+* Occam Investing, [bond articles](https://occaminvesting.co.uk/portfolio-construction/)
+* Office for National Statistics, [_The calculation of interest payable on government gilts_](https://www.ons.gov.uk/economy/governmentpublicsectorandtaxes/publicsectorfinance/methodologies/thecalculationofinterestpayableongovernmentgilts)
 
 ### Tools
 
