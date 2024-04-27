@@ -88,7 +88,17 @@ Date,Value
     st.select_slider("Marginal income tax rate:", value=0.00, options=(0.00, 0.20, 0.40, 0.45), format_func='{:.0%}'.format, key="marginal_income_tax")
 
     st.slider("Cash interest rate:", value=0.0, min_value=0.0, max_value=5.0, step=0.25, format='%.2f%%', key="interest_rate",
-        help="See [BoE's overnight index swap (OIS) instantaneous nominal forward curve](https://www.bankofengland.co.uk/statistics/yield-curves) for expected long term cash interest rate."
+        help="""
+It might be necessary to hold cash balances for long in several cases (e.g, when there are few gilts available, or when withdrawal starts far in the future.)
+Normally one would hold these in a cash savings account or a Money Market Fund, yielding some interest, which can be modelled here.
+
+The value entered here should be an _underestimation_ of the interest rate over the whole period gilts are held.
+
+See [BoE's overnight index swap (OIS) instantaneous nominal forward curve](https://www.bankofengland.co.uk/statistics/yield-curves) for expected long term cash interest rate.
+The value entered here should be well below the minimum estimated interest rate.
+
+Overestimating the cash interest rate might adversely impact the realized return.
+"""
     )
 
     if experimental:
@@ -195,8 +205,11 @@ with tab1:
     if not advanced and start_date is not None:
         msg = f'Coupons received before {date_format(start_date)} will be accumulated as a cash balance and not reinvested.'
         if not st.session_state.interest_rate:
-            msg += '\n\nYou might want to set an interest rate for more meaningful results.'
+            msg += '\n\nYou might want to set a relatively modest cash interest rate for more meaningful results.'
         st.warning(msg, icon="⚠️")
+
+    if st.session_state.interest_rate > 0.50:
+        st.warning("Make sure you don't overestimate cash interest rate.  Check the (?) icon next to it for guidance.", icon="⚠️")
 
     st.info(f'Using gilts in issue on the close of {date_format(issued.close_date)}.', icon="ℹ️")
 
