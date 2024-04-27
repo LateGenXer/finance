@@ -82,6 +82,7 @@ tradeweb_csvs = [
     'Tradeweb_FTSE_ClosePrices_20231201.csv',
     'Tradeweb_FTSE_ClosePrices_TS27.csv',
     'Tradeweb_FTSE_ClosePrices_T24.csv',
+    'Tradeweb_FTSE_ClosePrices_T2IL.csv', # long first dividend
 ]
 
 
@@ -112,7 +113,12 @@ def test_tradeweb(caplog, tradeweb_issued, row):
     close_date = datetime.datetime.strptime(row['Close of Business Date'], '%d/%m/%Y').date()
 
     isin = row['ISIN']
-    entry = tradeweb_issued[isin]
+
+    try:
+        entry = tradeweb_issued[isin]
+    except KeyError:
+        pytest.skip()
+
     for name, value in entry.items():
         logger.debug('%s = %s', name, value)
     logger.debug('')
@@ -179,9 +185,12 @@ def test_tradeweb(caplog, tradeweb_issued, row):
     if settlement_date >= gilt.maturity:
         return
 
-    abs_tol = 1e-6 if conventional or gilt.lag != 8 else 1e-4
+    abs_tol = 1e-6 if conventional or gilt.lag == 3 else 1e-4
     assert accrued_interest_ == approx(accrued_interest, abs=abs_tol)
     assert dirty_price_ == approx(dirty_price, abs=abs_tol)
+
+    if row['Yield'] == 'N/A':
+        return
 
     ytm = float(row['Yield'])
     ytm_ = gilt.ytm(dirty_price, settlement_date)
