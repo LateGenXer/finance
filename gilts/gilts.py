@@ -315,7 +315,7 @@ class IndexLinkedGilt(Gilt):
     # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf
     # Annex B: Method of indexation for index-linked gilts with a 3-month indexation lag
     # When does the redemption payment become known?
-    def is_redemption_fixed(self):
+    def redemption_fixed(self):
         d = self.maturity.replace(day = 1)
         if self.lag == 3:
             if self.maturity.day > 1:
@@ -325,7 +325,10 @@ class IndexLinkedGilt(Gilt):
         else:
             assert self.lag == 8
             d = shift_month(d, -8)
-        return self.rpi_series.last_date() >= d
+        return d
+
+    def is_redemption_fixed(self):
+        return self.rpi_series.last_date() >= self.redemption_fixed()
 
     def index_ratio(self, settlement_date, inflation_rate=None):
         if inflation_rate is None:

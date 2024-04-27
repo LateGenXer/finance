@@ -359,6 +359,31 @@ il_cash_flows = [
 ]
 
 
+@pytest.mark.parametrize("issue_date,maturity,redemption_fixed", [
+    # 3m
+    ("2005-09-22", "2013-12-01", "2013-09-01"),
+    ("2005-09-22", "2013-12-02", "2013-10-01"),
+    ("2005-09-22", "2013-12-31", "2013-10-01"),
+
+    # 8m
+    ("2005-09-21", "2013-12-01", "2013-04-01"),
+    ("2005-09-21", "2013-12-02", "2013-04-01"),
+    ("2005-09-21", "2013-12-31", "2013-04-01"),
+])
+def test_redemption_fixed(issue_date, maturity, redemption_fixed):
+    coupon = 0
+    maturity = datetime.date.fromisoformat(maturity)
+    issue_date = datetime.date.fromisoformat(issue_date)
+    redemption_fixed = datetime.date.fromisoformat(redemption_fixed)
+
+    isin="0"*12
+
+    g = IndexLinkedGilt(name=None, isin=isin, coupon=coupon, maturity=maturity, issue_date=issue_date, base_rpi=100.0, rpi_series = None)
+    redemption_fixed_ = g.redemption_fixed()
+
+    assert redemption_fixed_ == redemption_fixed
+
+
 @pytest.mark.parametrize("entry", il_cash_flows, ids=operator.itemgetter(0))
 def test_il_cash_flows(issued, entry):
     settlement_date = next_business_day(datetime.date(2023, 1, 1))
