@@ -159,12 +159,13 @@ def test_tradeweb(caplog, tradeweb_issued, row):
     if settlement_date < gilt.issue_date:
         settlement_date = gilt.issue_date
 
-    p, c = gilt.coupon_dates(settlement_date)
-    logger.debug(f'Prev: {p}')
-    for d in c:
-        logger.debug(f'Next: {d}')
-    for d, v in gilt.cash_flows(settlement_date):
-        logger.debug(f'Dividend: {d}, {v}')
+    prev_coupon_date, next_coupon_dates = gilt.coupon_dates(settlement_date=settlement_date)
+    if False:
+        logger.debug(f'Prev: {prev_coupon_date}')
+        for d in next_coupon_dates:
+            logger.debug(f'Next: {d}')
+        for d, v in gilt.cash_flows(settlement_date):
+            logger.debug(f'Dividend: {d}, {v}')
 
     clean_price = float(row['Clean Price'])
     accrued_interest = row['Accrued Interest']
@@ -205,7 +206,6 @@ def test_tradeweb(caplog, tradeweb_issued, row):
         return
 
     if conventional:
-        _, next_coupon_dates = gilt.coupon_dates(settlement_date=settlement_date)
         if len(next_coupon_dates) == 2:
             # XXX: Tradeweb seems to be using simple interest
             # (non-compounding) for all bonds maturing less than one year
