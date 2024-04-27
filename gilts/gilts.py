@@ -452,24 +452,37 @@ class Issued:
     def _parse_date(string):
         return datetime.datetime.fromisoformat(string).date()
 
-    _coupon_re = re.compile(r'^(?P<unit>[0-9]+) ?(?P<fraction>|½|¼|¾|[1357]/8) ?%$')
+    _coupon_re = re.compile(r'^(?:(?P<units>[0-9]+) ?)?(?P<fraction>|[½¼¾⅛⅜⅝⅞]|\b1/2|\b[13]/4|\b[1357]/8)%? ')
     _fractions = {
         '':    0.000,
-        '1/8': 0.125, # ⅛
+
+        '⅛':   0.125,
         '¼':   0.250,
-        '3/8': 0.375, # ⅜
+        '⅜':   0.375,
         '½':   0.500,
-        '5/8': 0.625, # ⅝
+        '⅝':   0.625,
         '¾':   0.750,
-        '7/8': 0.875, # ⅞
+        '⅞':   0.875,
+
+        '1/8': 0.125,
+        '1/2': 0.250,
+        '1/4': 0.250,
+        '3/8': 0.375,
+        '5/8': 0.625,
+        '3/4': 0.750,
+        '7/8': 0.875,
     }
     @classmethod
     def _parse_coupon(cls, name):
         # Derive coupon from name
-        coupon = name[:name.index('%') + 1]
-        mo = cls._coupon_re.match(coupon)
+        mo = cls._coupon_re.match(name)
         assert mo
-        return float(mo.group('unit')) + cls._fractions[mo.group('fraction')]
+        units = mo.group('units')
+        fraction = mo.group('fraction')
+        coupon = cls._fractions[fraction]
+        if units is not None:
+            coupon += float(units)
+        return coupon
 
     def filter(self, index_linked, settlement_date=None):
         type_ = 'Index-linked' if index_linked else 'Conventional'
