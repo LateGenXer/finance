@@ -151,6 +151,7 @@ with st.form(key='form'):
 
     tab1, tab2, tab3 = st.tabs(["Basic", "Advanced", "Experimental"])
 
+    # Basic
     with tab1:
 
         col1, col2, col3 = st.columns(3)
@@ -184,6 +185,7 @@ with st.form(key='form'):
             st.number_input('GIAs value:', min_value=0, step=1, key='gia')
             st.number_input('ISAs/GIAs yearly savings:', min_value=0, step=1, key='misc_contrib', help="Until retirement.  The optimization will automatically maximize the ISA allowance.")
 
+    # Advanced
     with tab2:
         col1, col2, col3 = st.columns(3)
 
@@ -199,12 +201,19 @@ with st.form(key='form'):
         with col2:
             st.checkbox("Lifetime Allowance Charges", key="lacs")
 
+            st.checkbox("Marriage Allowance", key="marriage_allowance", disabled=single, help='\n'.join([
+                "Transfer the Marriage Allowance from your partner to you.",
+                "",
+                "This will enforce the [applicable rules](https://www.gov.uk/marriage-allowance#who-can-apply) and might end up constraining the retirement income to ensure income stays withing basic rate.",
+            ]))
+
         with col3:
             st.selectbox("Retirement country:", options=("UK", "PT", "JP"), index=0, key='retirement_country',
                 help="Country to be tax resident from _retirement year_. " +
                 "Values still always in pounds.  Differences in cost of life not considered."
             )
 
+    # Experimental
     with tab3:
         st.warning("These are experimental features which might lead to misleading results.  Carefully read the help before changing any of these parameters!", icon="⚠️")
 
@@ -218,12 +227,6 @@ with st.form(key='form'):
                 "This is not necessarily optimal, but is easy to model and it should be resonably safe.",
                 "",
                 "Still contributions should be checked with utmost care and advice taken before following such plan.",
-            ]))
-
-            st.checkbox("Marriage Allowance", key="marriage_allowance", disabled=single, help='\n'.join([
-                "Transfer the Marriage Allowance from your partner to you.",
-                "",
-                "This will enforce the [applicable rules](https://www.gov.uk/marriage-allowance#who-can-apply) and might end up constraining the retirement income to ensure income stays withing basic rate.",
             ]))
 
         with col2:
