@@ -11,6 +11,7 @@ import io
 import os.path
 import subprocess
 import sys
+import types
 
 import pytest
 
@@ -37,7 +38,7 @@ def test_get_latest_gilt_prices():
     for instrument in content:
         assert 'isin' in instrument
         assert 'tidm' in instrument
-        assert isinstance(instrument['lastprice'], (float, int))
+        assert isinstance(instrument['lastprice'], (float, int, types.NoneType))
 
 
 def test_main():

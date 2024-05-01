@@ -17,6 +17,8 @@ import re
 import requests
 import sys
 
+from pprint import pp
+
 
 __all__ = [
     'lookup_tidm',
@@ -83,7 +85,7 @@ def get_latest_gilt_prices():
         "components": [
             {
                 "componentId": "block_content%3A9524a5dd-7053-4f7a-ac75-71d12db796b4",
-                "parameters":"categories=BONDS&issuers=TRIH&size=100"
+                "parameters": "categories=BONDS&issuers=TRIH&size=100"
             }
         ]
     }
@@ -115,17 +117,32 @@ def main():
     w.writerow(th)
 
     for item in content:
+        isin = item['isin']
         tidm = item['tidm']
 
         data = get_instrument_data(tidm)
-        assert data['currency'] == 'GBP'
 
-        lastclosedate = data['lastclosedate']
-        lastclosedate = datetime.fromisoformat(lastclosedate)
-        lastclosedate = lastclosedate.date()
-        lastclosedate = lastclosedate.isoformat()
+        try:
+            assert data['currency'] == 'GBP'
 
-        tr = [lastclosedate, data['isin'], data['tidm'], data['lastclose']]
+            assert data['tidm'] == tidm
+            assert data['isin'] == isin
+
+            lastclose = data['lastclose']
+            if lastclose is None:
+                # Newly auctioned gilts often start with a null closing price
+                continue
+
+            lastclosedate = data['lastclosedate']
+            lastclosedate = datetime.fromisoformat(lastclosedate)
+            lastclosedate = lastclosedate.date()
+            lastclosedate = lastclosedate.isoformat()
+
+        except:
+            pp(data, stream=sys.stderr)
+            raise
+
+        tr = [lastclosedate, isin, tidm, lastclose]
         w.writerow(tr)
 
 
