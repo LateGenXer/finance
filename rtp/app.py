@@ -120,7 +120,6 @@ for key, value in default_state.items():
 # About
 #
 
-@st.cache_data(ttl=24*3600)
 def about():
     return open(os.path.join(os.path.dirname(__file__), 'README.md'), 'rt').read()
 
