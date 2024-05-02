@@ -212,12 +212,12 @@ def inflation_ajusted_return(return_rate, inflation_rate):
 class DCP:
     """Defined Contribution Pension."""
 
-    def __init__(self, prob, uf, growth_rate_real, inflation_rate, lta, lacs, nmpa):
+    def __init__(self, prob, uf, df, growth_rate_real, inflation_rate, lta, lacs, nmpa):
         self.prob = prob
 
         self.uf = uf
-        self.df = 0
-        self.df_cost = 0
+        self.df = df
+        self.df_cost = df # XXX
 
         self.growth_rate_real = growth_rate_real
         self.inflation_rate = inflation_rate
@@ -426,11 +426,15 @@ def model(
         country,
         sipp_1,
         sipp_2,
+        sipp_df_1,
+        sipp_df_2,
         sipp_growth_rate_1,
         sipp_growth_rate_2,
         sipp_contrib_1,
         sipp_contrib_2,
         sipp_extra_contrib,
+        lta_ratio_1,
+        lta_ratio_2,
         isa,
         isa_growth_rate,
         gia,
@@ -469,7 +473,7 @@ def model(
 
     result = Result()
 
-    result.net_worth_start = normalize(sipp_1 + sipp_2 + isa + gia, 2)
+    result.net_worth_start = normalize(sipp_1 + sipp_df_1 + sipp_2 + sipp_df_2 + isa + gia, 2)
 
     state_pension_1 = UK.state_pension_full * state_pension_years_1 / 35
     state_pension_2 = UK.state_pension_full * state_pension_years_2 / 35
@@ -521,8 +525,11 @@ def model(
     nmpa_1 = nmpa(dob_1)
     nmpa_2 = nmpa(dob_2)
 
-    sipp_1 = DCP(prob=prob, uf=sipp_1, growth_rate_real = sipp_growth_rate_real_1, inflation_rate=inflation_rate, lta=lta, lacs=lacs, nmpa=nmpa_1)
-    sipp_2 = DCP(prob=prob, uf=sipp_2, growth_rate_real = sipp_growth_rate_real_2, inflation_rate=inflation_rate, lta=lta, lacs=lacs, nmpa=nmpa_2)
+    lta_1 = lta * lta_ratio_1
+    lta_2 = lta * lta_ratio_2
+
+    sipp_1 = DCP(prob=prob, uf=sipp_1, df=sipp_df_1, growth_rate_real = sipp_growth_rate_real_1, inflation_rate=inflation_rate, lta=lta_1, lacs=lacs, nmpa=nmpa_1)
+    sipp_2 = DCP(prob=prob, uf=sipp_2, df=sipp_df_2, growth_rate_real = sipp_growth_rate_real_2, inflation_rate=inflation_rate, lta=lta_2, lacs=lacs, nmpa=nmpa_2)
 
     gia = GIA(prob=prob, balance=gia, growth_rate=gia_growth_rate, inflation_rate=inflation_rate)
 

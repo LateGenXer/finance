@@ -19,6 +19,7 @@ I am not a financial or tax adviser.
 
 ## Recent changes
 
+* Allow post-retirement modelling.
 * Model Japan taxation.
 * Experimental Marriage Allowance modelling.
 * Fix incorrectly doubled CGT allowance for single tax payer case.
@@ -43,7 +44,6 @@ This tool makes the following simplifying assumptions:
 ## Limitations
 
 * Income tax after the 45% additional rate threshold is overestimated.  This is because the marginal income tax rate drops from 60% back to 45%, which can't be accurately modeled as a linear programming problem.
-* It cannot model post-retirement scenarios yet.  In particular, it assumes all pension funds are uncrystalized (that no TFC, drawdown, or UFPLS was taken.)
 * It cannot model defined benefits pension pots or annuities yet.
 * It doesn't model mortality or the impact of different asset allocations on IHT.
 * It ignores dividend allowance and dividend tax.

@@ -57,8 +57,13 @@ default_state = {
     "marginal_income_tax_2": 0.2,
     "sipp_1": 750000,
     "sipp_2": 000000,
+    "sipp_df_1": 0,
+    "sipp_df_2": 0,
     "sipp_contrib_1": 0,
     "sipp_contrib_2": uiaa,
+    "sipp_extra_contrib": False,
+    "lta_ratio_1": 100.0,
+    "lta_ratio_2": 100.0,
     "sipp_extra_contrib": False,
     "isa": 250000,
     "gia": 0,
@@ -148,7 +153,7 @@ with st.expander("Upload..."):
 st.checkbox("Joint calculation", key="joint")
 with st.form(key='form'):
 
-    tab1, tab2, tab3 = st.tabs(["Basic", "Advanced", "Experimental"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Basic", "Advanced", "Post-retirement", "Experimental"])
 
     # Basic
     with tab1:
@@ -157,14 +162,19 @@ with st.form(key='form'):
 
         state_pension_years_help = "If in doubt [check on your National Insurance record](https://www.gov.uk/check-state-pension) how many years of full contributions you have, and add how many more years you plan to work or do voluntary contributions."
 
-        marginal_income_tax_help = "Used to estimate income tax from withdrawing more than the Tax Free Cash from a SIPP before retirement."
+        marginal_income_tax_help = "Used to estimate income tax from withdrawing more than the Tax Free Cash from a pension before retirement."
+
+        sipp_help = """_Uncrystalized_ funds held in Defined Benefit Pension schemes.
+
+If pension funds have been accessed as tax-free-allowance or moved into flexi-access drawdown then the appropriate fields in the _Post-retirement_ tab should be filled in.
+"""
 
         with col1:
             st.subheader('You')
             st.number_input('Year of birth:', min_value=1920, max_value=2080, step=1, key='dob_1')
             st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, key='state_pension_years_1', help=state_pension_years_help)
-            st.number_input('SIPP value:', min_value=0, step=1, key='sipp_1')
-            st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=aa, step=1, key='sipp_contrib_1', help="Until retirement")
+            st.number_input('DC pensions value:', min_value=0, step=1, key='sipp_1', help=sipp_help)
+            st.number_input('DC pensions yearly _gross_ contribution:', min_value=0, max_value=aa, step=1, key='sipp_contrib_1', help="Until retirement")
             st.select_slider("Marginal income tax rate:", options=(0.00, 0.20, 0.40, 0.45), format_func='{:.0%}'.format, key="marginal_income_tax_1", help=marginal_income_tax_help)
 
         single = not st.session_state.joint
@@ -172,8 +182,8 @@ with st.form(key='form'):
             st.subheader('Partner')
             st.number_input('Year of birth:', min_value=1920, max_value=2080, step=1, key='dob_2', disabled=single)
             st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, key='state_pension_years_2', disabled=single, help=state_pension_years_help)
-            st.number_input('SIPP value:', min_value=0, step=1, key='sipp_2', disabled=single)
-            st.number_input('SIPP yearly _gross_ contribution:', min_value=0, max_value=aa, step=1, key='sipp_contrib_2', help="Until retirement", disabled=single)
+            st.number_input('DC pensions value:', min_value=0, step=1, key='sipp_2', help=sipp_help, disabled=single)
+            st.number_input('DC pensions yearly _gross_ contribution:', min_value=0, max_value=aa, step=1, key='sipp_contrib_2', help="Until retirement", disabled=single)
             st.select_slider("Marginal income tax rate:", options=(0.00, 0.20, 0.40, 0.45), format_func='{:.0%}'.format, key="marginal_income_tax_2", disabled=single, help=marginal_income_tax_help)
 
         with col3:
@@ -212,8 +222,31 @@ with st.form(key='form'):
                 "Values still always in pounds.  Differences in cost of life not considered."
             )
 
-    # Experimental
+    # Post-retirement
     with tab3:
+        col1, col2, col3 = st.columns(3)
+
+        lta_ratio_help = '''Percentage of the Lump Sump Allowance left.
+
+This is equivalent to the old Lifetime Allowance percentage.
+'''
+        sipp_df_help = '''Pension funds hold in flex-acces drawdown.'''
+
+        with col1:
+            st.subheader('You')
+            st.number_input('Lum Sump Allowance (%):', min_value=0, max_value=100, step=1, key='lta_ratio_1')
+            st.number_input('DC pension flexi-access drawdown funds:', min_value=0, step=1, key='sipp_df_1', help=sipp_df_help)
+
+        with col2:
+            st.subheader('Partner')
+            st.number_input('Lum Sump Allowance (%):', min_value=0, max_value=100, step=1, key='lta_ratio_2', disabled=single)
+            st.number_input('DC pensions flexi-access drawdown funds:', min_value=0, step=1, key='sipp_df_2', disabled=single)
+
+        with col3:
+            st.subheader('Shared')
+
+    # Experimental
+    with tab4:
         st.warning("These are experimental features which might lead to misleading results.  Carefully read the help before changing any of these parameters!", icon="⚠️")
 
         col1, col2 = st.columns(2)
@@ -261,6 +294,8 @@ state_xforms =  {
     'sipp_growth_rate_2': perc_xform,
     'isa_growth_rate': perc_xform,
     'gia_growth_rate': perc_xform,
+    'lta_ratio_1': perc_xform,
+    'lta_ratio_2': perc_xform,
 }
 for key, xform in state_xforms.items():
     params[key] = xform(st.session_state[key])
