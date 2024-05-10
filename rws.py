@@ -8,12 +8,15 @@
 import os
 import sys
 import datetime
+import math
 
 import jax.scipy.optimize
 import jax.nn
 
 import jax.numpy as jnp
 import numpy as onp
+
+import scipy.stats
 
 import pandas as pd
 
@@ -48,35 +51,47 @@ def utility(c, n=1.5):
         return c ** (1.0 - n) / (1.0 - n)
 
 
-def consumption(w, P, r, N):
+def consumption(w, P, R, N):
     assert len(w) + 1 == N
 
     w = jnp.concatenate((w, jnp.array([1.0])))
 
-    Wc = 1 - w
-    Wc *= 1 + r
-    Wc = jnp.cumprod(Wc)
+    Wc = (1 - w) * R
+    print(w.shape, R.shape, Wc.shape)
+    Wc = jnp.cumprod(Wc, axis=-1)
 
-    p1 = P*Wc
-    p0 = jnp.concatenate((jnp.array([P]), p1[:-1]))
+    p1 = P * Wc
+    print(p1.shape)
+
+    M = len(R)
+    print(R.shape)
+
+    p0 = jnp.concatenate((jnp.full([M, 1], P), p1[:, :-1]), axis=-1)
 
     c = p0*w
+    print(c.shape)
+
+
 
     return c
 
 
-def expected_utility(w, P, r, N, px):
+def expected_utility(w, P, R, N, px):
 
     assert len(w) + 1 == N
 
     w = jax.nn.sigmoid(w)
 
-    c = consumption(w, P, r, N)
+    c = consumption(w, P, R, N)
 
     u = utility(c)
 
-    #return -jnp.sum(u)
-    return -jnp.dot(u, px)
+    #u = jnp.sum(u, axis=-1)
+    u = jnp.dot(u, px)
+
+    u = -jnp.mean(u)
+    return u
+
 
 
 # https://jax.readthedocs.io/en/latest/_autosummary/jax.scipy.optimize.OptimizeResults.html
@@ -88,6 +103,26 @@ status_to_msg = {
     5: 'max line search iters reached',
     -1: 'undefined',
 }
+
+
+def constant_returns(r, N):
+    return (1.0 + r) ** onp.arange(1, N + 1).reshape((1, N))
+
+
+# https://en.wikipedia.org/wiki/Geometric_Brownian_motion
+def black_scholes_sample(mu, sigma, N, M=1):
+    W = onp.cumsum(scipy.stats.norm.rvs(size = (M, N)), axis=0)
+    t = onp.arange(N)
+    R = onp.exp((mu - sigma * sigma * 0.5)*t + sigma*W)
+    return R
+
+def constant_returns(r, N):
+    return onp.full((1, N), 1.0 + r)
+
+def black_scholes_sample(mu, sigma, N, M=1):
+    W = scipy.stats.norm.rvs(size = (M, N))
+    R = onp.exp((mu - sigma * sigma * 0.5) + sigma*W)
+    return R
 
 
 def model(P, cur_age, r):
@@ -111,28 +146,44 @@ def model(P, cur_age, r):
 
     assert len(qx) == N
 
+    M = 1024
+
+    if False:
+        R = constant_returns(r, N)
+    else:
+        mu = math.log(1.0 + r)
+        sigma = math.log(1.0 + r*4)
+        mu = math.log(1.0 + 4.33e-2)
+        sigma = math.log(1.0 + 16.08e-2)
+        R = black_scholes_sample(mu, sigma, N, M)
+    Rm = onp.exp(onp.mean(onp.log(R), axis=0)) - 1
+    print(Rm)
+    #sys.exit()
+
     w0 = 1.0 / (N - onp.arange(N))
-    #w0 = onp.full([N], 0.5/N)
+    w0 = onp.full([N], 0.5/N)
     w0 = w0[:-1]
     print("w0", w0)
 
     w0 = inv_sigmoid(w0)
     w0 = w0.astype(onp.float32)
     w0 = onp.minimum(w0, float32_max)
-    print("inv_sigmoid(w0)", w0)
 
+    print("C0", onp.mean(consumption(jax.nn.sigmoid(w0), P, R, N), axis=0))
+    U0 = expected_utility(w0, P, R, N, px)
+    print("U0", U0)
     print()
 
     # Optimize through JAX's automatic differentiation and  gradient descent algorithms
     P0 = 100
-    if int(os.environ.get('GRAD', '0')) == 0:
+    if int(os.environ.get('GRAD', '1')) == 0:
         # https://github.com/google/jax/blob/main/jax/_src/scipy/optimize/bfgs.py
         options = {
             'gtol': 1e-3,
             'line_search_maxiter': 256,
             'maxiter': N*256,
         }
-        result = jax.scipy.optimize.minimize(expected_utility, w0, (P0, r, N, px), method="BFGS", options=options)
+        result = jax.scipy.optimize.minimize(expected_utility, w0, (P0, R, N, px), method="BFGS", options=options)
         if not result.success:
             status = int(result.status)
             raise ValueError(status_to_msg.get(status, repr(status)))
@@ -141,7 +192,7 @@ def model(P, cur_age, r):
         maxiter = 1024
         initial_learning_rate = 2**-1
         decay = initial_learning_rate / maxiter
-        fun = lambda w: expected_utility(w, P0, r, N, px)
+        fun = lambda w: expected_utility(w, P0, R, N, px)
         grad_X = jax.value_and_grad(fun)
         grad_X = jax.jit(grad_X)
         w = w0
@@ -165,16 +216,16 @@ def model(P, cur_age, r):
 
     w_ = onp.asarray(jax.nn.sigmoid(w))
 
-    Ue = expected_utility(inv_sigmoid(we), P, r, N, px)
-    U  = expected_utility(inv_sigmoid(w_), P, r, N, px)
+    Ue = expected_utility(inv_sigmoid(we), P, R, N, px)
+    U  = expected_utility(inv_sigmoid(w_), P, R, N, px)
 
-    c  = onp.asarray(consumption(w_, P, r, N))
-    ce = onp.asarray(consumption(we, P, r, N))
+    c  = onp.average(onp.asarray(consumption(w_, P, R, N)), axis=0)
+    ce = onp.average(onp.asarray(consumption(we, P, R, N)), axis=0)
 
     w_ = jnp.concatenate((w_, jnp.array([1.0])))
     we = jnp.concatenate((we, jnp.array([1.0])))
 
-    df = pd.DataFrame(zip(ages, w_, c, we, ce), columns=['Age', 'W', 'C', 'Wref', 'Cref'])
+    df = pd.DataFrame(zip(ages, w_, c, we, ce, Rm), columns=['Age', 'W', 'C', 'Wref', 'Cref', 'Ravg'])
     print(df.to_string(
         index=False,
         justify='right',
@@ -182,6 +233,7 @@ def model(P, cur_age, r):
         formatters = {
             'W': '{:.2%}'.format,
             'Wref': '{:.2%}'.format,
+            'Ravg': '{:+.2%}'.format,
         }
     ))
 
