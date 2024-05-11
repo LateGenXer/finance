@@ -126,13 +126,19 @@ def model(P, cur_age, r):
     yob = cur_year - cur_age
     gender = 'female' # longer life expectancy
     #gender = 'male'
+    gender = 'unisex'
 
-    N = 101 - cur_age
+    # XXX ONS cohort tables have a high survivorship
+    basis = 'cohort' if gender == 'unisex' else 'period'
+
+    max_age = 120 if gender == 'unisex' else 101
+
+    N = max_age - cur_age + 1
     print(N)
 
-    ages = list(range(cur_age, 101))
+    ages = list(range(cur_age, max_age + 1))
 
-    qx = onp.array([mortality(yob + age, age, gender, basis='cohort') for age in ages], dtype=onp.float64)
+    qx = onp.array([mortality(yob + age, age, gender, basis) for age in ages], dtype=onp.float64)
     px = onp.cumprod(1 - qx)
 
     print("px", px)
