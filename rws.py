@@ -57,21 +57,15 @@ def consumption(w, P, R, N):
     w = jnp.concatenate((w, jnp.array([1.0])))
 
     Wc = (1 - w) * R
-    print(w.shape, R.shape, Wc.shape)
     Wc = jnp.cumprod(Wc, axis=-1)
 
     p1 = P * Wc
-    print(p1.shape)
 
     M = len(R)
-    print(R.shape)
 
     p0 = jnp.concatenate((jnp.full([M, 1], P), p1[:, :-1]), axis=-1)
 
     c = p0*w
-    print(c.shape)
-
-
 
     return c
 
@@ -141,8 +135,6 @@ def model(P, cur_age, r):
     qx = onp.array([mortality(yob + age, age, gender, basis='cohort') for age in ages], dtype=onp.float64)
     px = onp.cumprod(1 - qx)
 
-    #px *= 0.96 ** onp.arange(N)
-
     print("px", px)
 
     assert len(qx) == N
@@ -162,7 +154,6 @@ def model(P, cur_age, r):
     #sys.exit()
 
     w0 = 1.0 / (N - onp.arange(N))
-    w0 = onp.full([N], 0.5/N)
     w0 = w0[:-1]
     print("w0", w0)
 
@@ -203,14 +194,15 @@ def model(P, cur_age, r):
             learning_rate = initial_learning_rate / (1 + decay*i)
             w = w - learning_rate * dudw
             e = float(onp.max(onp.abs(jax.nn.sigmoid(w) - jax.nn.sigmoid(wp))))
-            print(u, e)
+            print(f'U = {u:8f}, e = {e:.6e}')
             if e <= 1e-4:
                 break
         print("error",e)
-
-    n = N - onp.arange(N)
+        if e > 1e-4:
+            raise ValueError(e)
 
     # https://www.bogleheads.org/wiki/Amortization_based_withdrawal_formulas#Amortization_based_withdrawal_formula
+    n = N - onp.arange(N)
     we = r / (1 - 1/(1 + r)**n) / (1 + r)
     #we = 1 / (N - onp.arange(N))
     we = we[:-1]
@@ -240,8 +232,6 @@ def model(P, cur_age, r):
     ))
 
     with jnp.printoptions(precision=3, suppress=True):
-        print("sw0", w0)
-        print("sw ", w)
         print("Ue", Ue)
         print("U ", U)
 
