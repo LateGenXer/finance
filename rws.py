@@ -226,7 +226,7 @@ def model(P, cur_age, r):
     w_ = jnp.concatenate((w_, jnp.array([1.0])))
     we = jnp.concatenate((we, jnp.array([1.0])))
 
-    df = pd.DataFrame(zip(ages, w_, c, we, ce, Rm), columns=['Age', 'W', 'C', 'Wref', 'Cref', 'Ravg'])
+    df = pd.DataFrame(zip(ages, w_, c, we, ce, Rm, px), columns=['Age', 'W', 'C', 'Wref', 'Cref', 'Ravg', 'Survival'])
     print(df.to_string(
         index=False,
         justify='right',
@@ -235,6 +235,7 @@ def model(P, cur_age, r):
             'W': '{:.2%}'.format,
             'Wref': '{:.2%}'.format,
             'Ravg': '{:+.2%}'.format,
+            'Survival': '{:+.2%}'.format,
         }
     ))
 
