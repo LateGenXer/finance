@@ -88,6 +88,7 @@ def expected_utility(w, P, R, N, px):
 
     #u = jnp.sum(u, axis=-1)
     u = jnp.dot(u, px)
+    u *= 1/onp.sum(px)
 
     u = -jnp.mean(u)
     return u
