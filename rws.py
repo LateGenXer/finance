@@ -9,6 +9,7 @@ import os
 import sys
 import datetime
 import math
+import typing
 
 import jax.scipy.optimize
 import jax.nn
@@ -20,9 +21,45 @@ import scipy.stats
 
 import pandas as pd
 
+from numpy.typing import ArrayLike
+
 from rtp import uk
 
 from data.mortality import mortality
+from data.boe import yield_curves
+
+
+cur_year = datetime.datetime.utcnow().year
+
+yc = yield_curves()
+
+
+def annuity_rate(cur_age, kind, gender='unisex'):
+    yob = cur_year - cur_age
+
+    basis = 'cohort' if gender == 'unisex' else 'period'
+    basis = 'cohort'
+
+    ages = list(range(cur_age, 121))
+
+    p = 1
+    npv = 0
+    s = yc[f'{kind}_Spot']
+    for age in ages:
+        years = age - cur_age
+        index = float(years)
+        index = max(index,  0.5)
+        index = min(index, 40.0)
+        rate = s[index]
+        if False:
+            print(f'{years:2d}  {r:6.2%}  {p:7.2%}')
+        npv += p * (1 + rate)**-years
+        qx = mortality(yob + age, age, gender=gender, basis=basis)
+        p *= 1 - qx
+
+    ar = 1.0/npv
+
+    return ar
 
 
 # TODO: Use https://jax.readthedocs.io/en/latest/persistent_compilation_cache.html ?
@@ -51,32 +88,43 @@ def utility(c, n=1.5):
         return c ** (1.0 - n) / (1.0 - n)
 
 
-def consumption(w, P, R, N):
-    assert len(w) + 1 == N
+class Params(typing.NamedTuple):
 
-    w = jnp.concatenate((w, jnp.array([1.0])))
+    P: float
+    R: ArrayLike
+    N: int
+    px: ArrayLike
+    ar: float
+
+
+def consumption(w, aw, params):
+    P = params.P
+    R = params.R
+    ar = params.ar
 
     Wc = (1 - w) * R
     Wc = jnp.cumprod(Wc, axis=-1)
 
-    p1 = P * Wc
+    p1 = Wc
 
     M = len(R)
 
-    p0 = jnp.concatenate((jnp.full([M, 1], P), p1[:, :-1]), axis=-1)
+    p0 = jnp.concatenate((jnp.full([M, 1], 1), p1[:, :-1]), axis=-1)
 
     c = p0*w
+
+    if params.ar:
+        c = c * (1 - aw) + aw * params.ar
+
+    c = c * P
 
     return c
 
 
-def expected_utility(w, P, R, N, px):
+def expected_utility(w, aw, params):
+    px = params.px
 
-    assert len(w) + 1 == N
-
-    w = jax.nn.sigmoid(w)
-
-    c = consumption(w, P, R, N)
+    c = consumption(w, aw, params)
 
     u = utility(c)
 
@@ -85,7 +133,19 @@ def expected_utility(w, P, R, N, px):
     u *= 1/onp.sum(px)
 
     u = -jnp.mean(u)
+
     return u
+
+
+def loss(x, params):
+    N = params.N
+
+    assert len(x) == N
+
+    w, aw = unpack(x)
+    assert len(w) == N
+
+    return expected_utility(w, aw, params)
 
 
 
@@ -101,18 +161,8 @@ status_to_msg = {
 
 
 def constant_returns(r, N):
-    return (1.0 + r) ** onp.arange(1, N + 1).reshape((1, N))
-
-
-# https://en.wikipedia.org/wiki/Geometric_Brownian_motion
-def black_scholes_sample(mu, sigma, N, M=1):
-    W = onp.cumsum(scipy.stats.norm.rvs(size = (M, N)), axis=0)
-    t = onp.arange(N)
-    R = onp.exp((mu - sigma * sigma * 0.5)*t + sigma*W)
-    return R
-
-def constant_returns(r, N):
     return onp.full((1, N), 1.0 + r)
+
 
 def black_scholes_sample(mu, sigma, N, M=1):
     W = scipy.stats.norm.rvs(size = (M, N))
@@ -120,13 +170,31 @@ def black_scholes_sample(mu, sigma, N, M=1):
     return R
 
 
+def pack(w, aw):
+    x = onp.concatenate((w[:-1], onp.array([aw])))
+    x = inv_sigmoid(x)
+    x = x.astype(onp.float32)
+    x = onp.minimum(x, float32_max)
+    return x
+
+
+def unpack(x):
+    x = jax.nn.sigmoid(x)
+    w = jnp.concatenate((x[:-1], jnp.array([1.0], dtype=x.dtype)))
+    aw = x[-1]
+    return w, aw
+
+
 def model(P, cur_age, r):
 
-    cur_year = datetime.datetime.utcnow().year
     yob = cur_year - cur_age
     gender = 'female' # longer life expectancy
     #gender = 'male'
     gender = 'unisex'
+
+    ar = annuity_rate(cur_age, 'Real')
+    #ar *= 0.0
+    print(f'Annuity Rate: £{100000*ar:,.2f} / £100k')
 
     # XXX ONS cohort tables have a high survivorship
     basis = 'cohort' if gender == 'unisex' else 'period'
@@ -152,28 +220,27 @@ def model(P, cur_age, r):
     else:
         mu = math.log(1.0 + r)
         sigma = math.log(1.0 + r*4)
-        mu = math.log(1.0 + 4.33e-2)
-        sigma = math.log(1.0 + 16.08e-2)
+        #mu = math.log(1.0 + 4.33e-2)
+        #sigma = math.log(1.0 + 16.08e-2)
         R = black_scholes_sample(mu, sigma, N, M)
     Rm = onp.exp(onp.mean(onp.log(R), axis=0)) - 1
+    #Rm = onp.median(R, axis=0) - 1
     print(Rm)
     #sys.exit()
 
+
+    params = Params(P=100, R=R, N=N, px=px, ar=ar)
+
     w0 = 1.0 / (N - onp.arange(N))
-    w0 = w0[:-1]
-    print("w0", w0)
+    aw0 = 0.5
+    x0 = pack(w0, aw0)
 
-    w0 = inv_sigmoid(w0)
-    w0 = w0.astype(onp.float32)
-    w0 = onp.minimum(w0, float32_max)
-
-    print("C0", onp.mean(consumption(jax.nn.sigmoid(w0), P, R, N), axis=0))
-    U0 = expected_utility(w0, P, R, N, px)
+    print("C0", onp.mean(consumption(w0, aw0, params), axis=0))
+    U0 = expected_utility(w0, aw0, params)
     print("U0", U0)
     print()
 
     # Optimize through JAX's automatic differentiation and  gradient descent algorithms
-    P0 = 100
     if int(os.environ.get('GRAD', '1')) == 0:
         # https://github.com/google/jax/blob/main/jax/_src/scipy/optimize/bfgs.py
         options = {
@@ -181,50 +248,65 @@ def model(P, cur_age, r):
             'line_search_maxiter': 256,
             'maxiter': N*256,
         }
-        result = jax.scipy.optimize.minimize(expected_utility, w0, (P0, R, N, px), method="BFGS", options=options)
+        result = jax.scipy.optimize.minimize(loss, x0, (params,), method="BFGS", options=options)
         if not result.success:
             status = int(result.status)
             raise ValueError(status_to_msg.get(status, repr(status)))
         w = result.x
     else:
-        maxiter = 1024
+        maxiter = 1024 * 4
         initial_learning_rate = 2**-1
         decay = initial_learning_rate / maxiter
-        fun = lambda w: expected_utility(w, P0, R, N, px)
+        fun = lambda x: loss(x, params)
         grad_X = jax.value_and_grad(fun)
         grad_X = jax.jit(grad_X)
-        w = w0
+        x = x0
+        xsp = onp.asarray(jax.nn.sigmoid(x))
         for i in range(maxiter):
-            wp = w
-            u, dudw = grad_X(w)
+            u, dudx = grad_X(x)
             learning_rate = initial_learning_rate / (1 + decay*i)
-            w = w - learning_rate * dudw
-            e = float(onp.max(onp.abs(jax.nn.sigmoid(w) - jax.nn.sigmoid(wp))))
+            x = x - learning_rate * dudx
+            xs = onp.asarray(jax.nn.sigmoid(x))
+            e = onp.max(onp.abs(xs - xsp))
             print(f'U = {u:8f}, e = {e:.6e}')
             if e <= 1e-4:
                 break
+            xsp = xs
         print("error",e)
         if e > 1e-4:
             raise ValueError(e)
 
+    params = Params(P=P, R=R, N=N, px=px, ar=ar)
+
     # https://www.bogleheads.org/wiki/Amortization_based_withdrawal_formulas#Amortization_based_withdrawal_formula
     n = N - onp.arange(N)
     we = r / (1 - 1/(1 + r)**n) / (1 + r)
-    #we = 1 / (N - onp.arange(N))
-    we = we[:-1]
+    #we = onp.flip(1/onp.cumsum(1/onp.cumprod(onp.flip(1 + Rm))))
 
-    w_ = onp.asarray(jax.nn.sigmoid(w))
+    w, aw = unpack(x)
+    w = onp.asarray(w)
+    aw = float(aw)
 
-    Ue = expected_utility(inv_sigmoid(we), P, R, N, px)
-    U  = expected_utility(inv_sigmoid(w_), P, R, N, px)
+    print(f'AW = {aw:.2%} -> £{P*aw*ar:,.2f}')
 
-    c  = onp.average(onp.asarray(consumption(w_, P, R, N)), axis=0)
-    ce = onp.average(onp.asarray(consumption(we, P, R, N)), axis=0)
+    awe = 0
 
-    w_ = jnp.concatenate((w_, jnp.array([1.0])))
-    we = jnp.concatenate((we, jnp.array([1.0])))
+    Ue = expected_utility(we, awe, params)
+    U  = expected_utility(w,   aw, params)
 
-    df = pd.DataFrame(zip(ages, w_, c, we, ce, Rm, px), columns=['Age', 'W', 'C', 'Wref', 'Cref', 'Ravg', 'Survival'])
+    C  = onp.asarray(consumption(w, aw, params))[:,-1]
+    print(C)
+    if False:
+        df = pd.DataFrame(C)
+        df.hist(bins=onp.arange(0, 10000, 100), alpha=0.5)
+        #df.plot.kde()
+        import matplotlib.pyplot as plt
+        plt.show()
+
+    c  = onp.average(onp.asarray(consumption(w,   aw, params)), axis=0)
+    ce = onp.average(onp.asarray(consumption(we, awe, params)), axis=0)
+
+    df = pd.DataFrame(zip(ages, w,  c, we, ce, Rm, px), columns=['Age', 'W', 'C', 'Wref', 'Cref', 'Ravg', 'Survival'])
     print(df.to_string(
         index=False,
         justify='right',
