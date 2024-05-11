@@ -97,10 +97,12 @@ class Params(typing.NamedTuple):
     ar: float
 
 
-def consumption(w, aw, params):
+def consumption(w, aw, cr, params):
     P = params.P
     R = params.R
     ar = params.ar
+
+    R = (R - 1) * (1 - cr) + 1
 
     Wc = (1 - w) * R
     Wc = jnp.cumprod(Wc, axis=-1)
@@ -121,10 +123,10 @@ def consumption(w, aw, params):
     return c
 
 
-def expected_utility(w, aw, params):
+def expected_utility(w, aw, cr, params):
     px = params.px
 
-    c = consumption(w, aw, params)
+    c = consumption(w, aw, cr, params)
 
     u = utility(c)
 
@@ -140,12 +142,13 @@ def expected_utility(w, aw, params):
 def loss(x, params):
     N = params.N
 
-    assert len(x) == N
+    print(len(x), N)
+    assert len(x) == (N - 1)*2 + 1
 
-    w, aw = unpack(x)
+    w, aw, cr = unpack(x)
     assert len(w) == N
 
-    return expected_utility(w, aw, params)
+    return expected_utility(w, aw, cr, params)
 
 
 
@@ -170,8 +173,8 @@ def black_scholes_sample(mu, sigma, N, M=1):
     return R
 
 
-def pack(w, aw):
-    x = onp.concatenate((w[:-1], onp.array([aw])))
+def pack(w, aw, cr):
+    x = onp.concatenate((w[:-1], cr[:-1], onp.array([aw])))
     x = inv_sigmoid(x)
     x = x.astype(onp.float32)
     x = onp.minimum(x, float32_max)
@@ -179,10 +182,12 @@ def pack(w, aw):
 
 
 def unpack(x):
+    N = (len(x) - 1) // 2
     x = jax.nn.sigmoid(x)
-    w = jnp.concatenate((x[:-1], jnp.array([1.0], dtype=x.dtype)))
+    w  = jnp.concatenate((x[:N],    jnp.array([1.0], dtype=x.dtype)))
+    cr = jnp.concatenate((x[N:2*N], jnp.array([1.0], dtype=x.dtype)))
     aw = x[-1]
-    return w, aw
+    return w, aw, cr
 
 
 def model(P, cur_age, r):
@@ -220,11 +225,12 @@ def model(P, cur_age, r):
     else:
         mu = math.log(1.0 + r)
         sigma = math.log(1.0 + r*4)
-        #mu = math.log(1.0 + 4.33e-2)
-        #sigma = math.log(1.0 + 16.08e-2)
+        r = 4.33e-2
+        mu = math.log(1.0 + r)
+        sigma = math.log(1.0 + 16.08e-2)
         R = black_scholes_sample(mu, sigma, N, M)
-    Rm = onp.exp(onp.mean(onp.log(R), axis=0)) - 1
-    #Rm = onp.median(R, axis=0) - 1
+    #Rm = onp.exp(onp.mean(onp.log(R), axis=0)) - 1
+    Rm = onp.median(R, axis=0) - 1
     print(Rm)
     #sys.exit()
 
@@ -233,10 +239,11 @@ def model(P, cur_age, r):
 
     w0 = 1.0 / (N - onp.arange(N))
     aw0 = 0.5
-    x0 = pack(w0, aw0)
+    cr0 = onp.full([N], 5/N)
+    x0 = pack(w0, aw0, cr0)
 
-    print("C0", onp.mean(consumption(w0, aw0, params), axis=0))
-    U0 = expected_utility(w0, aw0, params)
+    print("C0", onp.mean(consumption(w0, aw0, cr0, params), axis=0))
+    U0 = expected_utility(w0, aw0, cr0, params)
     print("U0", U0)
     print()
 
@@ -283,18 +290,19 @@ def model(P, cur_age, r):
     we = r / (1 - 1/(1 + r)**n) / (1 + r)
     #we = onp.flip(1/onp.cumsum(1/onp.cumprod(onp.flip(1 + Rm))))
 
-    w, aw = unpack(x)
+    w, aw, cr = unpack(x)
     w = onp.asarray(w)
     aw = float(aw)
 
-    print(f'AW = {aw:.2%} -> £{P*aw*ar:,.2f}')
+    print(f'Annuity allocation: {aw:.2%} -> £{P*aw*ar:,.2f}/yr')
 
     awe = 0
+    cre = onp.full([N], 0.0)
 
-    Ue = expected_utility(we, awe, params)
-    U  = expected_utility(w,   aw, params)
+    Ue = expected_utility(we, awe, cre, params)
+    U  = expected_utility(w,   aw,  cr, params)
 
-    C  = onp.asarray(consumption(w, aw, params))[:,-1]
+    C  = onp.asarray(consumption(w, aw, cr, params))[:,-1]
     print(C)
     if False:
         df = pd.DataFrame(C)
@@ -303,16 +311,18 @@ def model(P, cur_age, r):
         import matplotlib.pyplot as plt
         plt.show()
 
-    c  = onp.average(onp.asarray(consumption(w,   aw, params)), axis=0)
-    ce = onp.average(onp.asarray(consumption(we, awe, params)), axis=0)
+    _c = onp.asarray(consumption(w,   aw,  cr, params))
+    c05, c50, c95 = onp.percentile(_c, [5, 50, 95], axis=0)
+    ce = onp.median(onp.asarray(consumption(we, awe, cre, params)), axis=0)
 
-    df = pd.DataFrame(zip(ages, w,  c, we, ce, Rm, px), columns=['Age', 'W', 'C', 'Wref', 'Cref', 'Ravg', 'Survival'])
+    df = pd.DataFrame(zip(ages, w,  cr, c05, c50, c95, we, ce, Rm, px), columns=['Age', 'W', 'CashRatio', 'C(05%)', 'C(50%)', 'C(90%)', 'Wref', 'Cref', 'Ravg', 'Survival'])
     print(df.to_string(
         index=False,
         justify='right',
         float_format='£{:,.0f}'.format,
         formatters = {
             'W': '{:.2%}'.format,
+            'CashRatio': '{:.2%}'.format,
             'Wref': '{:.2%}'.format,
             'Ravg': '{:+.2%}'.format,
             'Survival': '{:+.2%}'.format,
@@ -325,4 +335,4 @@ def model(P, cur_age, r):
 
 
 if __name__ == '__main__':
-    model(P = 1e5, cur_age=65, r = .03)
+    model(P = 1e6, cur_age=55, r = .03)
