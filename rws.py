@@ -198,7 +198,8 @@ def model(P, cur_age, r):
     gender = 'unisex'
 
     ar = annuity_rate(cur_age, 'Real')
-    #ar *= 0.0
+    if int(os.environ.get('ANNUITY', '1')) == 0:
+        ar *= 0.0
     print(f'Annuity Rate: £{100000*ar:,.2f} / £100k')
 
     # XXX ONS cohort tables have a high survivorship
@@ -335,4 +336,4 @@ def model(P, cur_age, r):
 
 
 if __name__ == '__main__':
-    model(P = 1e6, cur_age=55, r = .03)
+    model(P = 1e6, cur_age=65, r = .03)
