@@ -34,18 +34,6 @@ def test_joint(at):
     assert not at.exception
 
 
-def test_lacs(at, submit):
-    joint = at.checkbox(key="joint")
-    joint.set_value(True)
-
-    # Toggle LACS checkbox
-    lacs = at.checkbox(key="lacs")
-    lacs.set_value(not lacs.value)
-    submit.click()
-    at.run()
-    assert not at.exception
-
-
 def test_lump_sum(at, submit):
     joint = at.checkbox(key="joint")
     joint.set_value(True)

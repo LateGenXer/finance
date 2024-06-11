@@ -19,6 +19,7 @@ I am not a financial or tax adviser.
 
 ## Recent changes
 
+* Drop LTA modelling.
 * Allow post-retirement modelling.
 * Model Japan taxation.
 * Experimental Marriage Allowance modelling.

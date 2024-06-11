@@ -13,10 +13,9 @@ from model import lp
 @pytest.mark.parametrize('lump_sum', [0, 1000])
 @pytest.mark.parametrize('retirement_income_net', [0, 10000])
 @pytest.mark.parametrize('retirement_country', ['UK', 'PT', 'JP'])
-@pytest.mark.parametrize('lacs', [False, True])
 @pytest.mark.parametrize('sipp_extra_contrib', [False, True])
 @pytest.mark.parametrize('joint,marriage_allowance', [(False, False), (True, False), (True, True)])
-def test_model(joint, sipp_extra_contrib, lacs, retirement_country, retirement_income_net, lump_sum, marriage_allowance):
+def test_model(joint, sipp_extra_contrib, retirement_country, retirement_income_net, lump_sum, marriage_allowance):
     params = {
         "joint": joint,
         "dob_1": 1980,
@@ -46,7 +45,6 @@ def test_model(joint, sipp_extra_contrib, lacs, retirement_country, retirement_i
         "country": retirement_country,
         "retirement_income_net": retirement_income_net,
         "retirement_year": 2045,
-        "lacs": lacs,
         "lump_sum": lump_sum,
         "aa_1": uk.aa,
         "aa_2": uk.uiaa,

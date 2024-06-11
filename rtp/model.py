@@ -44,8 +44,6 @@ class LPState:
     tfc_2: Any
     lta_1: Any
     lta_2: Any
-    lac_1: Any
-    lac_2: Any
     isa: Any
     gia: Any
     cg: Any
@@ -93,7 +91,6 @@ class ResState:
     income_tax_rate_2: float
     cgt: float
     cgt_rate: float
-    lac: float
 
 
 @dataclass
@@ -212,7 +209,7 @@ def inflation_ajusted_return(return_rate, inflation_rate):
 class DCP:
     """Defined Contribution Pension."""
 
-    def __init__(self, prob, uf, df, growth_rate_real, inflation_rate, lta, lacs, nmpa):
+    def __init__(self, prob, uf, df, growth_rate_real, inflation_rate, lta, nmpa):
         self.prob = prob
 
         self.uf = uf
@@ -223,7 +220,6 @@ class DCP:
         self.inflation_rate = inflation_rate
 
         self.lta = lta
-        self.lacs = lacs
 
         self.nmpa = nmpa
 
@@ -231,27 +227,11 @@ class DCP:
         self.uf += contrib
 
     def drawdown(self, drawdown, age):
-        if self.lacs:
-            # Benefit Crystallisation Event 5
-            # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm088650
-            if age == 75:
-                lac = self.bce_5a_5b_lp()
-            else:
-                lac = 0
-
-            # Flexible-Access Drawdown
-            if age >= self.nmpa:
-                tfc, lac_bce1 = self.bce_1_6_lp(age)
-                lac += lac_bce1
-            else:
-                tfc = 0
+        # Flexible-Access Drawdown
+        if age >= self.nmpa:
+            tfc = self.tfc_lp(age)
         else:
-            # Flexible-Access Drawdown
-            if age >= self.nmpa:
-                tfc = self.tfc_lp(age)
-            else:
-                tfc = 0
-            lac = 0
+            tfc = 0
 
         self.df -= drawdown
         self.prob += self.df >= 0
@@ -262,63 +242,7 @@ class DCP:
 
         self.df *= 1.0 + self.growth_rate_real
 
-        return tfc, lac
-
-    def bce_lp(self, lta):
-        global uid
-        crystalized_lta = lp.LpVariable(f'crystalized_lta_{uid}', 0)
-        crystalized_lae = lp.LpVariable(f'crystalized_lae_{uid}', 0)
-        uid += 1
-        lta -= crystalized_lta
-        self.prob += lta >= 0
-        return lta, crystalized_lta, crystalized_lae
-
-    def bce_lac_lp(self, lta, crystalized):
-        lta, crystalized_lta, crystalized_lae = self.bce_lp(lta)
-        self.prob += crystalized_lta + crystalized_lae == crystalized
-        lac = 0.25 * crystalized_lae
-        return lta, lac
-
-    # Benefit Crystallisation Event 5A and 5B
-    # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm088650
-    def bce_5a_5b_lp(self):
-        global uid
-
-        # BCE 5A
-        # https://moneyengineer.co.uk/13-anticipating-pension-growth-and-bce-5a/
-        df_loss = lp.LpVariable(f'df_loss_{uid}', 0)
-        df_gain = lp.LpVariable(f'df_gain_{uid}', 0)
-        uid += 1
-        self.prob += self.df_cost - df_loss + df_gain == self.df
-        self.lta, lac_bce_5a = self.bce_lac_lp(self.lta, df_gain)
-        self.df -= lac_bce_5a
-
-        # BCE 5B
-        # Funds aren't actually crystallized -- just tested and charged -- so LTA
-        # is not updated.
-        _, lac_bce_5b = self.bce_lac_lp(self.lta, self.uf)
-        self.uf -= lac_bce_5b
-
-        lac = lac_bce_5a + lac_bce_5b
-
-        return lac
-
-    # Benefit Crystallisation Event 1 (DD) and 6 (TFC)
-    # https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm062701
-    def bce_1_6_lp(self, age):
-        lac_bce1 = 0
-        self.lta, crystalized_lta, crystalized_lae = self.bce_lp(self.lta)
-        crystalized = crystalized_lta + crystalized_lae
-        self.uf -= crystalized
-        self.prob += self.uf >= 0
-        tfc = crystalized_lta * 0.25
-        dd = crystalized - tfc - lac_bce1
-        if age < 75:
-            lac_bce1 = crystalized_lae * 0.25
-            dd -= lac_bce1
-        self.df += dd
-        self.df_cost += dd
-        return tfc, lac_bce1
+        return tfc
 
     def tfc_lp(self, age):
         global uid
@@ -444,7 +368,6 @@ def model(
         marginal_income_tax_2,
         state_pension_years_1,
         state_pension_years_2,
-        lacs,
         lump_sum,
         aa_1,
         aa_2,
@@ -528,8 +451,8 @@ def model(
     lta_1 = lta * lta_ratio_1
     lta_2 = lta * lta_ratio_2
 
-    sipp_1 = DCP(prob=prob, uf=sipp_1, df=sipp_df_1, growth_rate_real = sipp_growth_rate_real_1, inflation_rate=inflation_rate, lta=lta_1, lacs=lacs, nmpa=nmpa_1)
-    sipp_2 = DCP(prob=prob, uf=sipp_2, df=sipp_df_2, growth_rate_real = sipp_growth_rate_real_2, inflation_rate=inflation_rate, lta=lta_2, lacs=lacs, nmpa=nmpa_2)
+    sipp_1 = DCP(prob=prob, uf=sipp_1, df=sipp_df_1, growth_rate_real = sipp_growth_rate_real_1, inflation_rate=inflation_rate, lta=lta_1, nmpa=nmpa_1)
+    sipp_2 = DCP(prob=prob, uf=sipp_2, df=sipp_df_2, growth_rate_real = sipp_growth_rate_real_2, inflation_rate=inflation_rate, lta=lta_2, nmpa=nmpa_2)
 
     gia = GIA(prob=prob, balance=gia, growth_rate=gia_growth_rate, inflation_rate=inflation_rate)
 
@@ -577,8 +500,8 @@ def model(
         drawdown_1 = lp.LpVariable(f'dd_1@{yr}', 0) if age_1 >= nmpa_1 and (retirement or sipp_contrib_1 <= mpaa) else 0
         drawdown_2 = lp.LpVariable(f'dd_2@{yr}', 0) if age_2 >= nmpa_2 and (retirement or sipp_contrib_2 <= mpaa) else 0
 
-        tfc_1, lac_1 = sipp_1.drawdown(drawdown_1, age=age_1)
-        tfc_2, lac_2 = sipp_2.drawdown(drawdown_2, age=age_2)
+        tfc_1 = sipp_1.drawdown(drawdown_1, age=age_1)
+        tfc_2 = sipp_2.drawdown(drawdown_2, age=age_2)
 
         if uk_yr:
             isa_allowance_yr = isa_allowance*N
@@ -680,8 +603,6 @@ def model(
             tfc_2=tfc_2,
             lta_1=sipp_1.lta,
             lta_2=sipp_2.lta,
-            lac_1=lac_1,
-            lac_2=lac_2,
             isa=isa,
             gia=gia.value(),
             cg=cg,
@@ -768,10 +689,6 @@ def model(
         tax_rate_2 = tax_2 / max(income_gross_2, 1)
         cgt_rate   = cgt   / max(cg, 1)
 
-        lac_1 = lp.value(s.lac_1)
-        lac_2 = lp.value(s.lac_2)
-        lac = lac_1 + lac_2
-
         if verbosity > 0:
             print(' '.join((
                     '%4u:',
@@ -781,7 +698,7 @@ def model(
                     'ISA %7.0f (%7.0f)',
                     'GIA %7.0f (%7.0f)',
                     'Inc Gr %6.0f %6.0f Nt %6.0f',
-                    'Tax %6.0f %4.1f%% %6.0f %4.1f%% %6.0f %4.1f%% %6.0f'
+                    'Tax %6.0f %4.1f%% %6.0f %4.1f%% %6.0f %4.1f%%'
                 )) % (
                     yr,
                     income_state_1 + income_state_2,
@@ -792,10 +709,9 @@ def model(
                     income_gross_1, income_gross_2, income_net,
                     tax_1, 100 * tax_rate_1,
                     tax_2, 100 * tax_rate_2,
-                    cgt, 100 * cgt_rate,
-                    lac
+                    cgt, 100 * cgt_rate
                 ))
-        tax = tax_1 + tax_2 + cgt + lac
+        tax = tax_1 + tax_2 + cgt
         result.total_tax += tax
 
         rs = ResState(
@@ -826,8 +742,7 @@ def model(
             income_tax_rate_1=tax_rate_1,
             income_tax_rate_2=tax_rate_2,
             cgt=cgt,
-            cgt_rate=cgt_rate,
-            lac=lac
+            cgt_rate=cgt_rate
         )
 
         result.data.append(rs)
@@ -873,7 +788,6 @@ column_headers = {
     'income_tax_rate_2': '(%)',
     'cgt': 'CGT',
     'cgt_rate': '(%)',
-    'lac': 'LAC',
 }
 
 

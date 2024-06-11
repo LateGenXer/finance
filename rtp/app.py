@@ -76,7 +76,6 @@ default_state = {
     "retirement_country": "UK",
     "retirement_income_net": 0,
     "retirement_year": 2045,
-    "lacs": False,
     "lump_sum": 0,
     "aa_1": aa,
     "aa_2": uiaa,
@@ -208,8 +207,6 @@ If pension funds have been accessed as tax-free-allowance or moved into flexi-ac
             st.slider("GIAs nominal growth rate:", min_value=0.0, max_value=max_rate, step=0.5, format=growth_rate_format, key="gia_growth_rate")
 
         with col2:
-            st.checkbox("Lifetime Allowance Charges", key="lacs")
-
             st.checkbox("Marriage Allowance", key="marriage_allowance", disabled=single, help='\n'.join([
                 "Transfer the Marriage Allowance from your partner to you.",
                 "",
@@ -364,8 +361,6 @@ s.relabel_index(list(column_headers.values()), axis='columns')
 hidden_columns = []
 if not st.session_state.joint:
     hidden_columns += [name for name in column_headers.keys() if name.endswith('_2')]
-if not st.session_state.lacs:
-    hidden_columns += ['lac']
 if hidden_columns:
     s.hide(axis='columns', subset=hidden_columns)
 
@@ -465,8 +460,6 @@ if True:
     else:
         cdf['Income Tax'] = df['income_tax_1']
     cdf['Capital Gains Tax'] = df['cgt']
-    if st.session_state.lacs:
-        cdf['Lifetime Allowance Charge'] = df['lac']
 
     cdf = cdf.melt('Year', var_name='Tax', value_name='Value')
 
@@ -500,7 +493,6 @@ with st.expander("Abbreviations..."):
 * **\u0394**: Cash flow, that is, cash going in or out of the pot; excluding internal growth.
 * **IT**: Income Tax
 * **CGT**: Capital Gains Tax
-* **LAC**: Lifetime Allowance Charge
 ''')
 
 # https://github.com/streamlit/streamlit/issues/4830#issuecomment-1147878371
