@@ -42,8 +42,8 @@ class LPState:
     contrib_2: Any
     tfc_1: Any
     tfc_2: Any
-    lta_1: Any
-    lta_2: Any
+    lsa_1: Any
+    lsa_2: Any
     isa: Any
     gia: Any
     cg: Any
@@ -75,8 +75,8 @@ class ResState:
     contrib_2: float
     tfc_1: float
     tfc_2: float
-    lta_ratio_1: float
-    lta_ratio_2: float
+    lsa_ratio_1: float
+    lsa_ratio_2: float
     isa: float
     isa_delta: float
     gia: float
@@ -209,7 +209,7 @@ def inflation_ajusted_return(return_rate, inflation_rate):
 class DCP:
     """Defined Contribution Pension."""
 
-    def __init__(self, prob, uf, df, growth_rate_real, inflation_rate, lta, nmpa):
+    def __init__(self, prob, uf, df, growth_rate_real, inflation_rate, lsa, nmpa):
         self.prob = prob
 
         self.uf = uf
@@ -219,7 +219,7 @@ class DCP:
         self.growth_rate_real = growth_rate_real
         self.inflation_rate = inflation_rate
 
-        self.lta = lta
+        self.lsa = lsa
 
         self.nmpa = nmpa
 
@@ -250,8 +250,8 @@ class DCP:
         crystalized_inc = lp.LpVariable(f'crystalized_inc_{uid}', 0)
         uid += 1
         self.prob += 3*crystalized_tfc <= crystalized_inc
-        self.lta -= crystalized_tfc*4
-        self.prob += self.lta >= 0
+        self.lsa -= crystalized_tfc
+        self.prob += self.lsa >= 0
         self.uf -= crystalized_tfc + crystalized_inc
         self.prob += self.uf >= 0
         self.df += crystalized_inc
@@ -357,8 +357,8 @@ def model(
         sipp_contrib_1,
         sipp_contrib_2,
         sipp_extra_contrib,
-        lta_ratio_1,
-        lta_ratio_2,
+        lsa_ratio_1,
+        lsa_ratio_2,
         isa,
         isa_growth_rate,
         gia,
@@ -401,7 +401,7 @@ def model(
     state_pension_1 = UK.state_pension_full * state_pension_years_1 / 35
     state_pension_2 = UK.state_pension_full * state_pension_years_2 / 35
 
-    lta = UK.lta
+    lsa = UK.lsa
 
     sipp_growth_rate_real_1 = inflation_ajusted_return(sipp_growth_rate_1, inflation_rate)
     sipp_growth_rate_real_2 = inflation_ajusted_return(sipp_growth_rate_2, inflation_rate)
@@ -409,9 +409,6 @@ def model(
 
     assert sipp_contrib_1 <= UK.aa
     assert sipp_contrib_2 <= UK.aa
-
-    lta_1 = lta
-    lta_2 = lta
 
     if country == 'PT':
         gbpeur = hmrc.exchange_rate('EUR')
@@ -448,11 +445,11 @@ def model(
     nmpa_1 = nmpa(dob_1)
     nmpa_2 = nmpa(dob_2)
 
-    lta_1 = lta * lta_ratio_1
-    lta_2 = lta * lta_ratio_2
+    lsa_1 = lsa * lsa_ratio_1
+    lsa_2 = lsa * lsa_ratio_2
 
-    sipp_1 = DCP(prob=prob, uf=sipp_1, df=sipp_df_1, growth_rate_real = sipp_growth_rate_real_1, inflation_rate=inflation_rate, lta=lta_1, nmpa=nmpa_1)
-    sipp_2 = DCP(prob=prob, uf=sipp_2, df=sipp_df_2, growth_rate_real = sipp_growth_rate_real_2, inflation_rate=inflation_rate, lta=lta_2, nmpa=nmpa_2)
+    sipp_1 = DCP(prob=prob, uf=sipp_1, df=sipp_df_1, growth_rate_real = sipp_growth_rate_real_1, inflation_rate=inflation_rate, lsa=lsa_1, nmpa=nmpa_1)
+    sipp_2 = DCP(prob=prob, uf=sipp_2, df=sipp_df_2, growth_rate_real = sipp_growth_rate_real_2, inflation_rate=inflation_rate, lsa=lsa_2, nmpa=nmpa_2)
 
     gia = GIA(prob=prob, balance=gia, growth_rate=gia_growth_rate, inflation_rate=inflation_rate)
 
@@ -601,8 +598,8 @@ def model(
             contrib_2=contrib_2,
             tfc_1=tfc_1,
             tfc_2=tfc_2,
-            lta_1=sipp_1.lta,
-            lta_2=sipp_2.lta,
+            lsa_1=sipp_1.lsa,
+            lsa_2=sipp_2.lsa,
             isa=isa,
             gia=gia.value(),
             cg=cg,
@@ -658,8 +655,8 @@ def model(
         tfc_1 = lp.value(s.tfc_1)
         tfc_2 = lp.value(s.tfc_2)
 
-        lta_1 = lp.value(s.lta_1)
-        lta_2 = lp.value(s.lta_2)
+        lsa_1 = lp.value(s.lsa_1)
+        lsa_2 = lp.value(s.lsa_2)
 
         isa = lp.value(s.isa)
         gia = lp.value(s.gia)
@@ -702,8 +699,8 @@ def model(
                 )) % (
                     yr,
                     income_state_1 + income_state_2,
-                    sipp_uf_1, sipp_df_1, contrib_1, -tfc_1 - drawdown_1, 100*lta_1/lta,
-                    sipp_uf_2, sipp_df_2, contrib_2, -tfc_2 - drawdown_2, 100*lta_2/lta,
+                    sipp_uf_1, sipp_df_1, contrib_1, -tfc_1 - drawdown_1, 100*lsa_1/lsa,
+                    sipp_uf_2, sipp_df_2, contrib_2, -tfc_2 - drawdown_2, 100*lsa_2/lsa,
                     isa, -drawdown_isa,
                     gia, -drawdown_gia,
                     income_gross_1, income_gross_2, income_net,
@@ -727,8 +724,8 @@ def model(
             sipp_delta_2=normalize(-drawdown_2, 2),
             tfc_1=normalize(tfc_1, 2),
             tfc_2=normalize(tfc_2, 2),
-            lta_ratio_1=normalize(lta_1/lta, 4),
-            lta_ratio_2=normalize(lta_2/lta, 4),
+            lsa_ratio_1=normalize(lsa_1/lsa, 4),
+            lsa_ratio_2=normalize(lsa_2/lsa, 4),
             isa=isa,
             isa_delta=normalize(-drawdown_isa, 2),
             gia=normalize(gia, 2),
@@ -766,13 +763,13 @@ column_headers = {
     'tfc_1': 'TFC1',
     'sipp_df_1': 'DF1',
     'sipp_delta_1': '(\u0394)',
-    'lta_ratio_1': 'LSA1',
+    'lsa_ratio_1': 'LSA1',
     'sipp_uf_2': 'UF2',
     'contrib_2': '(+\u0394)',
     'tfc_2': 'TFC2',
     'sipp_df_2': 'DF2',
     'sipp_delta_2': '(\u0394)',
-    'lta_ratio_2': 'LSA2',
+    'lsa_ratio_2': 'LSA2',
 
     'isa': 'ISAs',
     'isa_delta': '(\u0394)',
@@ -818,8 +815,8 @@ def run(params):
         'contrib_2': delta_format,
         'isa_delta': delta_format,
         'gia_delta': delta_format,
-        'lta_ratio_1':  perc_format,
-        'lta_ratio_2':  perc_format,
+        'lsa_ratio_1':  perc_format,
+        'lsa_ratio_2':  perc_format,
         'income_tax_rate_1': perc_format,
         'income_tax_rate_2': perc_format,
         'cgt_rate':     perc_format,

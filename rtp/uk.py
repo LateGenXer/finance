@@ -64,9 +64,8 @@ aa       = 60000
 aa_taper = 10000
 mpaa     = 10000
 
-lta = 1073100
-tfca = 268275
-assert tfca * 4 == lta
+# https://www.gov.uk/tax-on-your-private-pension/lump-sum-allowance
+lsa = 268275
 
 isa_allowance = 20000
 

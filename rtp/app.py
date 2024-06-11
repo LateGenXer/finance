@@ -62,8 +62,7 @@ default_state = {
     "sipp_contrib_1": 0,
     "sipp_contrib_2": uiaa,
     "sipp_extra_contrib": False,
-    "lta_ratio_1": 100.0,
-    "lta_ratio_2": 100.0,
+    "lsa_ratio_1": 100.0,
     "sipp_extra_contrib": False,
     "isa": 250000,
     "gia": 0,
@@ -223,7 +222,7 @@ If pension funds have been accessed as tax-free-allowance or moved into flexi-ac
     with tab3:
         col1, col2, col3 = st.columns(3)
 
-        lta_ratio_help = '''Percentage of the Lump Sump Allowance left.
+        lsa_ratio_help = '''Percentage of the Lump Sump Allowance left.
 
 This is equivalent to the old Lifetime Allowance percentage.
 '''
@@ -231,12 +230,12 @@ This is equivalent to the old Lifetime Allowance percentage.
 
         with col1:
             st.subheader('You')
-            st.number_input('Lum Sump Allowance (%):', min_value=0, max_value=100, step=1, key='lta_ratio_1')
+            st.number_input('Lum Sump Allowance (%):', min_value=0, max_value=100, step=1, key='lsa_ratio_1')
             st.number_input('DC pension flexi-access drawdown funds:', min_value=0, step=1, key='sipp_df_1', help=sipp_df_help)
 
         with col2:
             st.subheader('Partner')
-            st.number_input('Lum Sump Allowance (%):', min_value=0, max_value=100, step=1, key='lta_ratio_2', disabled=single)
+            st.number_input('Lum Sump Allowance (%):', min_value=0, max_value=100, step=1, key='lsa_ratio_2', disabled=single)
             st.number_input('DC pensions flexi-access drawdown funds:', min_value=0, step=1, key='sipp_df_2', disabled=single)
 
         with col3:
@@ -291,8 +290,8 @@ state_xforms =  {
     'sipp_growth_rate_2': perc_xform,
     'isa_growth_rate': perc_xform,
     'gia_growth_rate': perc_xform,
-    'lta_ratio_1': perc_xform,
-    'lta_ratio_2': perc_xform,
+    'lsa_ratio_1': perc_xform,
+    'lsa_ratio_2': perc_xform,
 }
 for key, xform in state_xforms.items():
     params[key] = xform(st.session_state[key])
@@ -340,8 +339,8 @@ formatters = {
     'contrib_2': delta_format,
     'isa_delta': delta_format,
     'gia_delta': delta_format,
-    'lta_ratio_1':  perc_format,
-    'lta_ratio_2':  perc_format,
+    'lsa_ratio_1':  perc_format,
+    'lsa_ratio_2':  perc_format,
     'income_tax_rate_1': perc_format,
     'income_tax_rate_2': perc_format,
     'cgt_rate':     perc_format,
@@ -378,10 +377,10 @@ if True:
     # https://matplotlib.org/stable/tutorials/colors/colormaps.html
     s.background_gradient(cmap='Wistia', text_color_threshold=0, subset=['income_gross_1', 'income_gross_2'], vmin=0, vmax=100000)
     s.background_gradient(cmap='Oranges', subset=['income_tax_rate_1', 'income_tax_rate_2', 'cgt_rate'], vmin=0, vmax=1)
-    s.background_gradient(cmap='magma', subset=['lta_ratio_1', 'lta_ratio_2'], vmin=0, vmax=1)
+    s.background_gradient(cmap='magma', subset=['lsa_ratio_1', 'lsa_ratio_2'], vmin=0, vmax=1)
 
     # https://pandas.pydata.org/docs/user_guide/style.html#Bar-charts
-    #s.bar(subset=['lta_ratio_1', 'lta_ratio_2'], align='left', color='#d65f5f', vmin=0, vmax=1)
+    #s.bar(subset=['lsa_ratio_1', 'lsa_ratio_2'], align='left', color='#d65f5f', vmin=0, vmax=1)
 
 # Charts
 if True:
