@@ -211,15 +211,18 @@ with tab1:
     if st.session_state.interest_rate > 0.50:
         st.warning("Make sure you don't overestimate cash interest rate.  Check the (?) icon next to it for guidance.", icon="⚠️")
 
-    st.info(f'Using gilts in issue on the close of {date_format(issued.close_date)}.', icon="ℹ️")
+    msg  = 'Using:'
+    msg += f'\n- gilts in issue on the close of {date_format(issued.close_date)}'
 
     prices_date = prices.get_prices_date()
     prices_date = prices_date.astimezone(ZoneInfo("Europe/London"))
-    st.info(f'Using prices from {date_format(prices_date)}, {prices_date:%H:%M (%Z)}.', icon="ℹ️")
+    msg += f';\n- prices from {date_format(prices_date)}, {prices_date:%H:%M (%Z)}'
 
     if index_linked:
-        st.info(f'Using published RPI until {rpi_series.last_date():%B %Y}.', icon="ℹ️")
+        msg += f';\n- RPI published on {date_format(rpi_series.release_date)}'
+    msg += '.'
 
+    st.info(msg, icon="ℹ️")
 
     df = bl.buy_df
 

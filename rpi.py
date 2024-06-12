@@ -59,10 +59,11 @@ class RPI:
 
     def __init__(self, filename=None):
         if filename is None:
-            self.series = self._load()
+            self.series, self.release_date = self._load()
         else:
-            self.series = self.parse(filename, ignore_date=True)
+            self.series, self.release_date = self.parse(filename, ignore_date=True)
         assert self.series
+        assert self.release_date >= self.last_date()
 
     _url = 'https://www.ons.gov.uk/generator?format=csv&uri=/economy/inflationandpriceindices/timeseries/chaw/mm23'
     _filename = os.path.join(os.path.dirname(__file__), 'rpi-series.csv')
@@ -88,10 +89,13 @@ class RPI:
         series = []
         next_year = RPI.ref_year
         next_month = 1
+        release_date = None
         for row in csv.reader(stream):
             assert len(row) == 2
             date, value = row
-            if date == "Next release":
+            if date == "Release date":
+                release_date = datetime.datetime.strptime(value, '%d-%m-%Y').date()
+            elif date == "Next release":
                 mo = _next_release_re.match(value)
                 assert mo
                 year = int(mo.group('year'))
@@ -101,19 +105,20 @@ class RPI:
                 if datetime.datetime.utcnow().date() > next_release and not ignore_date:
                     logger.warning(f'{filename} has been superseded on {next_release}')
                     raise OutOfDateError
-            mo = _monthly_re.match(date)
-            if not mo:
-                continue
-            year = int(mo.group('year'))
-            month = _months.index(mo.group('month')) + 1
-            date = datetime.date(year, month, 1)
-            value = float(value)
-            assert year == next_year
-            assert month == next_month
-            series.append(value)
-            next_year += next_month // 12
-            next_month = next_month % 12 + 1
-        return series
+            else:
+                mo = _monthly_re.match(date)
+                if not mo:
+                    continue
+                year = int(mo.group('year'))
+                month = _months.index(mo.group('month')) + 1
+                date = datetime.date(year, month, 1)
+                value = float(value)
+                assert year == next_year
+                assert month == next_month
+                series.append(value)
+                next_year += next_month // 12
+                next_month = next_month % 12 + 1
+        return series, release_date
 
     # https://www.dmo.gov.uk/media/0ltegugd/igcalc.pdf
     def lookup_index(self, date):

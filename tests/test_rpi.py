@@ -59,4 +59,4 @@ def test_rpi():
 def test_rpi_superseded():
     filename = os.path.join(os.path.dirname(__file__), 'data', 'rpi-series-20231115.csv')
     with pytest.raises(OutOfDateError):
-        rpi = RPI.parse(filename)
+        series, release_date = RPI.parse(filename)
