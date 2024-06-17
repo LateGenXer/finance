@@ -9,6 +9,7 @@ matplotlib = "*"
 scipy = "*"
 xlrd = "*"
 xlsxwriter = "*"
+numpy = "~=1.26"
 
 [dev-packages]
 coverage = "*"
