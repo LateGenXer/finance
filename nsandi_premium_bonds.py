@@ -83,29 +83,42 @@ def median(n):
 
     our_bonds = n // 25
 
+    # Probability of winning exactly one prize
     p = our_bonds / total_bonds
 
+    # Truncated length of the Probability Mass Functions (PMF).
+    # We ignore the right tail (ie, very large prizes) since it won't affect the median.
     N = 50000 // 25
 
-    dist0 = np.zeros(N)
-    dist0[0] = 1.0
+    # Start with a PMF zero, that os, 100% change of receiving £0
+    pmf0 = np.zeros(N)
+    pmf0[0] = 1.0
+
     for value, volume in prizes:
         assert value % 25 == 0
 
-        dist1 = np.zeros(N)
+        # The PMF of all prizes of equal value is given by the Bernoulli distribuion
+        pmf1 = np.zeros(N)
         for k in range(0, min(N // value, 12*volume) + 1):
-            dist1[k * value // 25] = binomial(k, 12*volume, p)
-        assert dist1.sum() >= .99
+            pmf1[k * value // 25] = binomial(k, 12*volume, p)
 
-        dist0 = combine(dist0, dist1)
+        # Ensure the truncated PMF captures the bulk of the probability mass
+        assert pmf1.sum() >= .99
 
-    cum = np.cumsum(dist0)
-    median = np.searchsorted(cum, 0.5, side='right')
+        # The PMF of the sum of the prize PMF can
+        # https://en.wikipedia.org/wiki/Convolution_of_probability_distributions
+        pmf0 = combine(pmf0, pmf1)
+
+    # Obtain the median through the Cumulative Mass Function (CMF)
+    cmf = np.cumsum(pmf0)
+    median = np.searchsorted(cmf, 0.5, side='right')
     median *= 25
     return median
 
 
+# Divide samples in this number of chunks for efficiency.
 chunk = 1024
+
 
 def sample(p):
     prize = np.zeros([chunk], dtype=np.int64)
@@ -115,6 +128,8 @@ def sample(p):
     return prize
 
 
+# Obtain the median through Monte Carlo simulation using multiple threads.
+# Essentially used to verify the correctness of the median() function above.
 def median_mc(n, N):
     assert n > 0
     assert n <= 50000
