@@ -90,7 +90,7 @@ def median(n):
     # We ignore the right tail (ie, very large prizes) since it won't affect the median.
     N = 50000 // 25
 
-    # Start with a PMF zero, that os, 100% change of receiving £0
+    # Start with a PMF zero, that is, 100% chance of receiving £0
     pmf0 = np.zeros(N)
     pmf0[0] = 1.0
 
