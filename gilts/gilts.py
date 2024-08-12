@@ -423,8 +423,7 @@ class Issued:
             # Check ex-dividend dates match when testing
             if "PYTEST_CURRENT_TEST" in os.environ:
                 current_xd_date = self._parse_date(entry['CURRENT_EX_DIV_DATE'])
-                settlement_date = next_business_day(self.close_date)
-                _, next_coupon_date = gilt.prev_next_coupon_date(settlement_date)
+                _, next_coupon_date = gilt.prev_next_coupon_date(self.close_date)
                 assert gilt.ex_dividend_date(next_coupon_date) == current_xd_date
 
             self.all.append(gilt)
