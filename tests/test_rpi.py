@@ -19,8 +19,6 @@ from rpi import RPI, OutOfDateError
 
 def _test(rpi):
 
-    rpi = RPI()
-
     assert len(rpi.series) >= 442
 
     assert rpi.lookup(date(1987,  1,  1)) == 100.0
