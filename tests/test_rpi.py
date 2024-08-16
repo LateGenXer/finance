@@ -15,6 +15,7 @@ import pytest
 from pytest import approx
 
 from rpi import RPI, OutOfDateError
+from download import download
 
 
 def _test(rpi):
@@ -51,6 +52,15 @@ def test_rpi():
     _test(rpi)
 
     rpi = RPI()
+    _test(rpi)
+
+
+def test_rpi_latest():
+    url = 'https://www.ons.gov.uk/generator?format=csv&uri=/economy/inflationandpriceindices/timeseries/chaw/mm23'
+    filename = 'rpi-series-latest.csv'
+    download(url, filename)
+
+    rpi = RPI(filename)
     _test(rpi)
 
 

@@ -65,16 +65,14 @@ class RPI:
         assert self.series
         assert self.release_date >= self.last_date()
 
-    _url = 'https://www.ons.gov.uk/generator?format=csv&uri=/economy/inflationandpriceindices/timeseries/chaw/mm23'
+    _url = 'https://lategenxer.github.io/finance/rpi-series.csv'
     _filename = os.path.join(os.path.dirname(__file__), 'rpi-series.csv')
 
     @classmethod
+    @caching.cache_data(ttl=15*60)
     def _load(cls):
-        try:
-            return cls.parse(cls._filename)
-        except (FileNotFoundError, OutOfDateError):
-            download(RPI._url, cls._filename)
-            return cls.parse(cls._filename)
+        download(RPI._url, cls._filename)
+        return cls.parse(cls._filename)
 
     def last_date(self):
         months = len(self.series) - 1
@@ -83,7 +81,6 @@ class RPI:
         return datetime.date(year, month, 1)
 
     @staticmethod
-    @caching.cache_data(ttl=24*3600)
     def parse(filename, ignore_date=False):
         stream = open(filename, 'rt')
         series = []

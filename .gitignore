@@ -140,4 +140,5 @@ dmypy.json
 _site/
 
 rpi-series.csv
+rpi-series-latest.csv
 selenium.png
