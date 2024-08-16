@@ -17,6 +17,7 @@ on:
       - main
     paths:
       - .github/workflows/gh-pages.yml
+      - .github/scripts/gh-pages.sh
       - download.py
       - lse.py
 
@@ -43,16 +44,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-      - name: Create bare-bones site
-        run: mkdir _site
-      - name: Download Gilts in Issue from DMO
-        run: python download.py 'https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A' _site/dmo-D1A.xml text/xml
-      - name: Download Gilts Closing Prices from LSE
-        run: python lse.py > _site/gilts-closing-prices.csv
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v4
+      - run: .github/scripts/gh-pages.sh
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
