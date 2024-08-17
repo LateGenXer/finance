@@ -285,7 +285,7 @@ with tab1:
         xAxis = alt.Axis(format=".2~f", values=[0, 1, 2, 3, 5, 10, 15, 30, 50], title="Maturity (years)")
         yDomainMax = int(math.ceil(df['Yield'].max() + 0.25))
         yScale = alt.Scale(zero=True, domain=[0, yDomainMax])
-        yTitle = 'Nominal yield (%)' if index_linked else 'Yield (%)'
+        yTitle = 'Real yield (%)' if index_linked else 'Yield (%)'
         yAxis = alt.Axis(format=".2~f", values=list(range(0, yDomainMax + 1)), title=yTitle)
 
         chart = (

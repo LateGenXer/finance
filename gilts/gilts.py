@@ -576,8 +576,13 @@ def yield_curve(issued, prices, index_linked=False):
         clean_price = prices.get_price(tidm)
         dirty_price = g.dirty_price(clean_price, settlement_date)
 
-        ytm = g.ytm(dirty_price, settlement_date) * 100.0
+        ytm = g.ytm(dirty_price, settlement_date)
+        if index_linked:
+            ytm = (1.0 + ytm)/(1.0 + IndexLinkedGilt.inflation_rate) - 1.0
+        ytm *= 100.0
+
         maturity = (g.maturity - issued.close_date).days / 365.25
+
         data.append((maturity, ytm, tidm))
 
     return pd.DataFrame(data, columns=['Maturity', 'Yield', 'TIDM'])
@@ -848,7 +853,7 @@ class BondLadder:
             g = h.gilt
             ytm = g.ytm(h.dirty_price, settlement_date=settlement_date)
             if self.index_linked:
-                ytm = (1 + ytm)/(1 + 0.03) - 1
+                ytm = (1.0 + ytm)/(1.0 + IndexLinkedGilt.inflation_rate) - 1.0
             buy_rows.append({
                 'Instrument': g.short_name(),
                 'TIDM': h.tidm,

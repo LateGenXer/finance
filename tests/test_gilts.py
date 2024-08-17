@@ -196,8 +196,8 @@ def test_tradeweb(caplog, tradeweb_issued, row):
     ytm = float(row['Yield'])
     ytm_ = gilt.ytm(dirty_price, settlement_date)
     if not conventional:
-        ytm_ = (1 + ytm_)/(1 + .03) - 1
-    ytm_ *= 100
+        ytm_ = (1.0 + ytm_)/(1.0 + IndexLinkedGilt.inflation_rate) - 1.0
+    ytm_ *= 100.0
 
     logger.debug(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:+.1e})')
 
