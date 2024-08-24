@@ -14,7 +14,10 @@
 
 
 import datetime
+import math
 import sys
+
+from decimal import Decimal
 
 
 def translate(istream, ostream):
@@ -30,9 +33,9 @@ def translate(istream, ostream):
 
         if event in ('B', 'BUY'):
             shares, price, charges, tax = fields[3:]
-            float_tax = float(tax)
+            float_tax = Decimal(tax)
             if float_tax:
-                charges = f'{float(charges) + float_tax:.2f}'
+                charges = str(Decimal(charges) + float_tax)
             row = ['BUY', date, company, shares, price, charges]
         elif event in ('S', 'SELL'):
             shares, price, charges, tax = fields[3:]
@@ -41,11 +44,16 @@ def translate(istream, ostream):
             row = ['SELL', date, company, shares, price, charges]
         elif event == 'R':
             factor, = fields[3:]
-            float_factor = float(factor)
+            float_factor = Decimal(factor)
             if float_factor >= 1:
                 row = ['UNSPLIT', date, company, factor]
             else:
-                row = ['SPLIT', date, company, f'{1.0 / float_factor:.6g}']
+                float_factor = Decimal(1) / float_factor
+                int_factor = round(float_factor)
+                print(float_factor, int_factor)
+                assert math.isclose(float_factor, int_factor, abs_tol=.05)
+                factor = str(int_factor)
+                row = ['SPLIT', date, company, factor]
         elif event == 'B/S':
             # Ignore header
             continue
