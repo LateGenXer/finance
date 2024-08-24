@@ -15,11 +15,12 @@
 
 import datetime
 import sys
-import csv
 
 
 def translate(istream, ostream):
-    for fields in csv.reader(istream, delimiter='\t'):
+    for line in istream:
+        line = line.rstrip('\n')
+        fields = line.split()
         if not fields:
             ostream.write('\n')
             continue
