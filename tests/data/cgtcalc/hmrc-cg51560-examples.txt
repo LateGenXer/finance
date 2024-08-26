@@ -1,0 +1,89 @@
+Results generated from www.cgtcalculator.com
+
+SUMMARY INFORMATION
+
+Year    CapitalGain      Exemption    UsePrevLosses   TaperRelief   ChargeableGain      Tax*
+-------------------------------------------------------------------------------------------
+18-19 290    11700  0  0  0  0
+21-22 7    12300  0  0  0  0
+22-23 39    12300  0  0  0  0
+
+*Please note that tax values are based on capital gains only and assume zero income.
+
+TRADE MATCHING INFORMATION
+
+TAX_YEAR 18-19
+
+1. SELL: 2000 Z on 27/02/2019 at £0.26 gives GAIN of £20.00
+Matches with:
+BUY: SECTION 104 HOLDING. 2000 Z shares of 10000 bought at average price of £0.25
+CALCULATION: Gain = £20.00 = ( 2000 * 0.26 - 0.00 )
+- ( 10000 * 0.25 ) * ( 2000 / 10000 )
+
+2. SELL: 3000 shares of 11000 Z on 31/03/2019 at £0.28 gives GAIN of £30.00
+SAME DAY TRADE Matches with:
+BUY: 3000 at price £0.27
+RESULTANT TRADE: S Z  31/03/2019   8000  0.28  0.00  0.00
+CALCULATION: GAIN = £30.00 = ( 11000 * 0.28 - 0.00) * ( 3000 / 11000 )
+- ( 3000 * 0.27 + 0.00 + 0.00)
+
+
+3. SELL: 8000(R) Z on 31/03/2019 at £0.28 gives GAIN of £240.00
+Matches with:
+BUY: SECTION 104 HOLDING. 8000 Z shares of 8000 bought at average price of £0.25
+CALCULATION: Gain = £240.00 = ( 8000 * 0.28 - 0.00 )
+- ( 8000 * 0.25 )
+
+TAX_YEAR 21-22
+
+1. SELL: 1700 Y on 27/03/2022 at £0.11 gives GAIN of £7.00
+Matches with:
+BUY: 30/03/2022 500 Y shares of 500 bought at £0.12
+BUY: SECTION 104 HOLDING. 1200 Y shares of 2500 bought at average price of £0.10
+CALCULATION: Gain = £7.00 = ( 1700 * 0.11 - 0.00 )
+- ( 500 * 0.12 + 0.00 + 0.00 )
+- ( 2500 * 0.10 ) * ( 1200 / 2500 )
+
+TAX_YEAR 22-23
+
+1. SELL: 1000 X on 01/07/2022 at £0.90 gives LOSS of £100.00
+Matches with:
+BUY: 31/07/2022 1000 X shares of 1000 bought at £1.00
+CALCULATION: Loss = £100.00 = ( 1000 * 0.90 - 0.00 )
+- ( 1000 * 1.00 + 0.00 + 0.00 )
+
+2. SELL: 1300 Y on 01/01/2023 at £0.13 gives GAIN of £39.00
+Matches with:
+BUY: SECTION 104 HOLDING. 1300 Y shares of 1300 bought at average price of £0.10
+CALCULATION: Gain = £39.00 = ( 1300 * 0.13 - 0.00 )
+- ( 1300 * 0.10 )
+
+3. SELL: 1000 X on 01/01/2023 at £1.10 gives GAIN of £100.00
+Matches with:
+BUY: SECTION 104 HOLDING. 1000 X shares of 1000 bought at average price of £1.00
+CALCULATION: Gain = £100.00 = ( 1000 * 1.10 - 0.00 )
+- ( 1000 * 1.00 )
+
+
+
+CURRENT PORTFOLIO
+
+Your portfolio is currently empty
+
+STATISTICS
+
+Total amount paid in stamp duty    = £0.00
+Total amount paid in broker's fees = £0.00
+
+Total number of trades =  12
+Total number of buys   =  6
+Total number of sells  =  6
+
+INFO FOR TAX RETURN
+
+18-19: Disposal Proceeds = £3,600.00 , Allowable Costs = £3,310.00 , Disposals = 3
+18-19: Year Gains = £290.00  Year Losses = £0.00
+21-22: Disposal Proceeds = £187.00 , Allowable Costs = £180.00 , Disposals = 1
+21-22: Year Gains = £12.00  Year Losses = £5.00
+22-23: Disposal Proceeds = £2,169.00 , Allowable Costs = £2,130.00 , Disposals = 3
+22-23: Year Gains = £139.00  Year Losses = £100.00

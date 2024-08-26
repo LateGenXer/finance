@@ -1,0 +1,39 @@
+Results generated from www.cgtcalculator.com
+
+SUMMARY INFORMATION
+
+Year    CapitalGain      Exemption    UsePrevLosses   TaperRelief   ChargeableGain      Tax*
+-------------------------------------------------------------------------------------------
+19-20 889    12000  0  0  0  0
+
+*Please note that tax values are based on capital gains only and assume zero income.
+
+TRADE MATCHING INFORMATION
+
+TAX_YEAR 19-20
+
+1. SELL: 10 FOO on 01/01/2020 at £100.00 gives GAIN of £889.00
+SAME DAY TRADE matches with:
+BUY: 10 shares of 10 at price £10.00
+CALCULATION: GAIN = £889.00 = ( 10 * 100.00 - 10.00)
+- ( 10 * 10.00 + 1.00 + 0.00)
+
+
+
+CURRENT PORTFOLIO
+
+Your portfolio is currently empty
+
+STATISTICS
+
+Total amount paid in stamp duty    = £0.00
+Total amount paid in broker's fees = £11.00
+
+Total number of trades =  2
+Total number of buys   =  1
+Total number of sells  =  1
+
+INFO FOR TAX RETURN
+
+19-20: Disposal Proceeds = £1,000.00 , Allowable Costs = £111.00 , Disposals = 1
+19-20: Year Gains = £889.00  Year Losses = £0.00

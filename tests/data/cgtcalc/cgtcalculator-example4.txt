@@ -1,0 +1,47 @@
+Results generated from www.cgtcalculator.com
+
+SUMMARY INFORMATION
+
+Year    CapitalGain      Exemption    UsePrevLosses   TaperRelief   ChargeableGain      Tax*
+-------------------------------------------------------------------------------------------
+16-17 26158    11100  0  0  15058  1505
+
+*Please note that tax values are based on capital gains only and assume zero income.
+
+TRADE MATCHING INFORMATION
+
+TAX_YEAR 16-17
+
+1. SELL: 110000(2) CAR on 01/12/2016 at £2.73545 gives GAIN of £15,631.67
+SAME DAY TRADE matches with:
+BUY: 110000 shares of 150000(4) at price £2.58
+RESULTANT TRADE: B CAR  01/12/2016   40000  2.58  526.66667  0.00
+CALCULATION: GAIN = £15,631.67 = ( 110000 * 2.73545 - 20.00)
+- ( 150000 * 2.58 + 1975.00 + 0.00) * ( 110000 / 150000 )
+
+2. SELL: 20000 CAR on 08/12/2016 at £3.12 gives GAIN of £10,526.67
+Matches with:
+BUY: SECTION 104 HOLDING. 20000 CAR shares of 40000 bought at average price of £2.59317
+CALCULATION: Gain = £10,526.67 = ( 20000 * 3.12 - 10.00 )
+- ( 40000 * 2.59317 ) * ( 20000 / 40000 )
+
+
+
+CURRENT PORTFOLIO
+
+CAR  20000
+
+
+STATISTICS
+
+Total amount paid in stamp duty    = £0.00
+Total amount paid in broker's fees = £2,005.00
+
+Total number of trades =  7
+Total number of buys   =  4
+Total number of sells  =  3
+
+INFO FOR TAX RETURN
+
+16-17: Disposal Proceeds = £363,300.00 , Allowable Costs = £337,142.00 , Disposals = 2
+16-17: Year Gains = £26,158.00  Year Losses = £0.00

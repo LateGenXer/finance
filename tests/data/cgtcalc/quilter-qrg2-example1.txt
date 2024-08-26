@@ -1,0 +1,42 @@
+Results generated from www.cgtcalculator.com
+
+SUMMARY INFORMATION
+
+Year    CapitalGain      Exemption    UsePrevLosses   TaperRelief   ChargeableGain      Tax*
+-------------------------------------------------------------------------------------------
+19-20 1514    12000  0  0  0  0
+
+*Please note that tax values are based on capital gains only and assume zero income.
+
+TRADE MATCHING INFORMATION
+
+TAX_YEAR 19-20
+
+1. SELL: 4000 ABC on 25/02/2020 at £2.62 gives GAIN of £1,514.79
+Matches with:
+BUY: 11/03/2020 500 ABC shares of 500 bought at £2.72
+BUY: SECTION 104 HOLDING. 3500 ABC shares of 11500 bought at average price of £2.17292
+CALCULATION: Gain = £1,514.79 = ( 4000 * 2.62 - 0.00 )
+- ( 500 * 2.72 + 0.00 + 0.00 )
+- ( 11500 * 2.17292 ) * ( 3500 / 11500 )
+
+
+
+CURRENT PORTFOLIO
+
+ABC  8000
+
+
+STATISTICS
+
+Total amount paid in stamp duty    = £0.00
+Total amount paid in broker's fees = £33.55
+
+Total number of trades =  3
+Total number of buys   =  2
+Total number of sells  =  1
+
+INFO FOR TAX RETURN
+
+19-20: Disposal Proceeds = £10,480.00 , Allowable Costs = £8,966.00 , Disposals = 1
+19-20: Year Gains = £1,564.00  Year Losses = £50.00

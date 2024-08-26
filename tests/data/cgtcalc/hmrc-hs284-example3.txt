@@ -1,0 +1,46 @@
+Results generated from www.cgtcalculator.com
+
+SUMMARY INFORMATION
+
+Year    CapitalGain      Exemption    UsePrevLosses   TaperRelief   ChargeableGain      Tax*
+-------------------------------------------------------------------------------------------
+18-19 629    11700  0  0  0  0
+
+*Please note that tax values are based on capital gains only and assume zero income.
+
+TRADE MATCHING INFORMATION
+
+TAX_YEAR 18-19
+
+1. SELL: 700 LOBSTER on 01/05/2018 at £4.80 gives GAIN of £329.33
+Matches with:
+BUY: SECTION 104 HOLDING. 700 LOBSTER shares of 1500 bought at average price of £4.18667
+CALCULATION: Gain = £329.33 = ( 700 * 4.80 - 100.00 )
+- ( 1500 * 4.18667 ) * ( 700 / 1500 )
+
+2. SELL: 400 LOBSTER on 01/02/2019 at £5.20 gives GAIN of £300.33
+Matches with:
+BUY: SECTION 104 HOLDING. 400 LOBSTER shares of 800 bought at average price of £4.18667
+CALCULATION: Gain = £300.33 = ( 400 * 5.20 - 105.00 )
+- ( 800 * 4.18667 ) * ( 400 / 800 )
+
+
+
+CURRENT PORTFOLIO
+
+LOBSTER  400
+
+
+STATISTICS
+
+Total amount paid in stamp duty    = £0.00
+Total amount paid in broker's fees = £435.00
+
+Total number of trades =  4
+Total number of buys   =  2
+Total number of sells  =  2
+
+INFO FOR TAX RETURN
+
+18-19: Disposal Proceeds = £5,440.00 , Allowable Costs = £4,811.00 , Disposals = 2
+18-19: Year Gains = £629.00  Year Losses = £0.00
