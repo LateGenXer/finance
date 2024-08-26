@@ -23,6 +23,8 @@ from decimal import Decimal
 def translate(istream, ostream):
     for line in istream:
         line = line.rstrip('\n')
+        if line.startswith('#'):
+            continue
         fields = line.split()
         if not fields:
             ostream.write('\n')
@@ -39,8 +41,8 @@ def translate(istream, ostream):
             row = ['BUY', date, company, shares, price, charges]
         elif event in ('S', 'SELL'):
             shares, price, charges, tax = fields[3:]
-            float_tax = float(tax)
-            assert float_tax == 0.0
+            float_tax = Decimal(tax)
+            assert not float_tax
             row = ['SELL', date, company, shares, price, charges]
         elif event == 'R':
             factor, = fields[3:]
