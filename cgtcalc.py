@@ -91,6 +91,7 @@ class DisposalResult:
     security: str
     shares: Decimal
     proceeds: Decimal
+    charges: Decimal
     costs: Decimal
     identifications: list
     calculation: str
@@ -231,7 +232,7 @@ class Result:
                         gain = -gain
                     else:
                         sign = 'GAIN'
-                    stream.write(f'{no}. SOLD {disposal.shares} {disposal.security} on {disposal.date:%d/%m/%Y} for {sign} of £{gain}\n')
+                    stream.write(f'{no}. SOLD {disposal.shares} {disposal.security} on {disposal.date:%d/%m/%Y} for £{disposal.proceeds} with £{disposal.charges} charges giving {sign} of £{gain}\n')
                     stream.write('Matches with:\n')
                     for identification in disposal.identifications:
                         stream.write(f'- {identification}\n')
@@ -270,7 +271,7 @@ def add_pool_update(pool_updates, pool, trade, shares, amount):
         date=trade.date,
         trade=trade.kind.name,
         shares=shares,
-        amount=round(amount, 2),
+        amount=dround(amount, 2),
         holding=pool.shares,
         cost=round(pool.cost, 2),
     ))
@@ -365,12 +366,12 @@ def calculate(filename):
         for tr in trades:
             if tr.kind == Kind.BUY:
                 shares, price, charges = tr.params
-                acquisition = Acquisition(shares*price + charges, shares, shares)
+                acquisition = Acquisition(dround(shares*price + charges, 2), shares, shares)
                 assert tr.date not in acquisitions
                 acquisitions[tr.date] = acquisition
             if tr.kind == Kind.SELL:
                 shares, price, charges = tr.params
-                disposal = Disposal(shares*price, charges, shares, shares)
+                disposal = Disposal(dround(shares*price, 2), dround(charges, 2), shares, shares)
                 assert tr.date not in disposals
                 disposals[tr.date] = disposal
 
@@ -426,24 +427,36 @@ def calculate(filename):
             elif tr.kind == Kind.SELL:
                 disposal = disposals[tr.date]
 
-                costs = []
+                costs_values = []
+                costs_calcs = []
                 if disposal.cost:
-                    costs.append(disposal.cost)
+                    costs_values.append(disposal.cost)
+                    costs_calcs.append(str(disposal.cost))
                 identifications = []
                 for identification in disposal.identifications:
                     identified, kind, acquisition_date = identification
                     acquisition = acquisitions[acquisition_date]
-                    identifications.append(f'{kind.name}: {acquisition_date:%d/%m/%Y} {identified} shares of {acquisition.shares} at average cost of {round(acquisition.cost / acquisition.shares, 6)}')
-                    cost = acquisition.cost * identified / acquisition.shares
-                    costs.append(cost)
+                    identifications.append(f'{kind.name}: {acquisition_date:%d/%m/%Y} {identified} shares of {acquisition.shares} for total cost of £{acquisition.cost}')
+                    if identified == acquisition.shares:
+                        costs_values.append(acquisition.cost)
+                        costs_calcs.append(str(acquisition.cost))
+                    else:
+                        costs_values.append(dround(acquisition.cost * identified / acquisition.shares, 2))
+                        costs_calcs.append(f'{acquisition.cost} × {identified} / {acquisition.shares}')
                 if disposal.unidentified:
                     assert pool.cost > 0
                     assert pool.shares >= disposal.unidentified
                     identified = disposal.unidentified
-                    cost = pool.cost * identified / pool.shares
-                    costs.append(cost)
-                    identifications.append(f'SECTION_104: {identified} shares of {pool.shares} at average cost of {round(pool.cost / pool.shares, 6)}')
-                    pool.cost -= cost
+                    identifications.append(f'SECTION_104: {identified} shares of {pool.shares} with total cost of £{dround(pool.cost, 2)}')
+                    if identified == pool.shares:
+                        costs_values.append(pool.cost)
+                        costs_calcs.append(str(dround(pool.cost, 2)))
+                        pool.cost = Decimal(0)
+                    else:
+                        cost = pool.cost * identified / pool.shares
+                        costs_values.append(cost)
+                        costs_calcs.append(f'{dround(pool.cost, 2)} × {identified} / {pool.shares}')
+                        pool.cost -= cost
                     pool.shares -= identified
                     add_pool_update(pool_updates, pool, tr,
                         shares=f'{disposal.unidentified} of {disposal.shares}',
@@ -457,20 +470,28 @@ def calculate(filename):
                     group2_holding -= disposal.shares - group1_holding
                     group1_holding = Decimal(0)
 
-                total_costs = round(sum(costs), 2)
+                total_costs = dround(sum(costs_values), 2)
 
-                costs_calculation = " + ".join([str(round(cost, 2)) for cost in costs])
-                if len(costs) > 1:
-                    costs_calculation = f'({costs_calculation})'
+                if len(costs_calcs) == 0:
+                    costs_calculation = "0"
+                elif len(costs_calcs) == 1:
+                    costs_calculation, = costs_calcs
+                else:
+                    costs_calculation = '(' + ' + '.join(costs_calcs) + ')'
+
+                gain = disposal.proceeds - total_costs
 
                 calculation = f'{disposal.proceeds} - {costs_calculation}'
-                calculation += f' = {disposal.proceeds - total_costs}'
+
+                assert math.isclose(eval(calculation.replace('×', '*')), gain, abs_tol=.01)
+                calculation += f' = {gain}'
 
                 result.add_disposal(DisposalResult(
                     date=tr.date,
                     security=security,
                     shares=disposal.shares,
-                    proceeds=round(disposal.proceeds, 2),
+                    proceeds=disposal.proceeds,
+                    charges=disposal.cost,
                     costs=total_costs,
                     identifications=identifications,
                     calculation=calculation
