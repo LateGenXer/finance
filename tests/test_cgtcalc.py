@@ -12,6 +12,8 @@ import logging
 import operator
 import os.path
 import re
+import subprocess
+import sys
 
 import pytest
 
@@ -122,3 +124,11 @@ def test_calculate(caplog, filename):
             assert abs(gain - expected_gain) <= Decimal('.01')
         else:
             assert round(gain) == round(expected_gain)
+
+
+def test_main():
+    filename = os.path.join(data_dir, 'cgtcalc', 'cgtcalculator-example1.tsv')
+
+    from cgtcalc import __file__ as cgtcalc_path
+
+    subprocess.check_call([sys.executable, cgtcalc_path, filename], stdout=subprocess.DEVNULL)
