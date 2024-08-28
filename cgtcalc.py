@@ -166,17 +166,25 @@ class Result:
         else:
             tax_year_result.gains += gain
 
-        tax_year_result.taxable_gain = max(tax_year_result.proceeds - tax_year_result.costs - tax_year_result.allowance, 0)
-        tax_year_result.carried_losses = max(tax_year_result.costs - tax_year_result.proceeds, 0)
+    def sorted_tax_years(self):
+        tax_years = list(self.tax_years.keys())
+        tax_years.sort()
+        return tax_years
+
+    def finalize(self):
+        self.disposals.sort(key=operator.attrgetter('date'))
+
+        for tax_year in self.sorted_tax_years():
+            tyr = self.tax_years[tax_year]
+
+            tyr.taxable_gain = max(tyr.proceeds - tyr.costs - tyr.allowance, 0)
+            tyr.carried_losses = max(tyr.costs - tyr.proceeds, 0)
 
     def write(self, stream):
         if self.tax_years:
             stream.write('SUMMARY\n\n')
 
-            tax_years = list(self.tax_years.keys())
-            tax_years.sort()
-
-            data = [self.tax_years[tax_year] for tax_year in tax_years]
+            data = [self.tax_years[tax_year] for tax_year in self.sorted_tax_years()]
             self.write_table(stream, data)
 
             stream.write('\n\n')
@@ -495,7 +503,7 @@ def calculate(filename):
         if pool_updates:
             result.section104_tables[security] = pool_updates
 
-    result.disposals.sort(key=operator.attrgetter('date'))
+    result.finalize()
 
     return result
 
