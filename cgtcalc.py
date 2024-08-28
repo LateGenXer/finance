@@ -103,12 +103,83 @@ def date_to_tax_year(date: datetime.date):
         return date.year, date.year + 1
 
 
+# https://www.gov.uk/guidance/capital-gains-tax-rates-and-allowances
+# https://www.rossmartin.co.uk/capital-gains-tax/110-capital-gains-tax-rates-a-allowances
+allowances = {
+    2009: 9600,
+    2010: 10100,
+    2011: 10100,
+    2012: 10600,
+    2013: 10600,
+    2014: 10900,
+    2015: 11000,
+    2016: 11100,
+    2017: 11100,
+    2018: 11300,
+    2019: 11700,
+    2020: 12000,
+    2021: 12300,
+    2022: 12300,
+    2023: 12300,
+    2024: 6000,
+    2025: 3000,
+}
+
+
+@dataclasses.dataclass
+class TaxYearResult:
+    tax_year: str
+    disposals: int = 0
+    proceeds: Decimal = Decimal(0)
+    costs: Decimal = Decimal(0)
+    gains: Decimal = Decimal(0)
+    losses: Decimal = Decimal(0)
+    allowance: int = 0
+    taxable_gain: Decimal = Decimal(0)
+    carried_losses: Decimal = Decimal(0)
+
+
 @dataclasses.dataclass
 class Result:
     disposals: list[tuple] = dataclasses.field(default_factory=list)
     section104_tables: dict[str, list] = dataclasses.field(default_factory=dict)
+    tax_years: dict[tuple[int, int], TaxYearResult] = dataclasses.field(default_factory=dict)
+
+    def add_disposal(self, disposal):
+        self.disposals.append(disposal)
+
+        tax_year = date_to_tax_year(disposal.date)
+
+        try:
+            tax_year_result = self.tax_years[tax_year]
+        except KeyError:
+            allowance = allowances[tax_year[1]]
+            tax_year_result = TaxYearResult(f'{tax_year[0]}/{tax_year[1]}', allowance=allowance)
+            self.tax_years[tax_year] = tax_year_result
+
+        tax_year_result.disposals += 1
+        tax_year_result.proceeds += disposal.proceeds
+        tax_year_result.costs += disposal.costs
+        gain = disposal.proceeds - disposal.costs
+        if gain < Decimal(0):
+            tax_year_result.losses += -gain
+        else:
+            tax_year_result.gains += gain
+
+        tax_year_result.taxable_gain = max(tax_year_result.proceeds - tax_year_result.costs - tax_year_result.allowance, 0)
+        tax_year_result.carried_losses = max(tax_year_result.costs - tax_year_result.proceeds, 0)
 
     def write(self, stream):
+        if self.tax_years:
+            stream.write('SUMMARY\n\n')
+
+            tax_years = list(self.tax_years.keys())
+            tax_years.sort()
+
+            data = [self.tax_years[tax_year] for tax_year in tax_years]
+            self.write_table(stream, data)
+
+            stream.write('\n\n')
 
         if self.disposals:
             disposals_by_tax_year = {}
@@ -127,22 +198,13 @@ class Result:
 
                 disposals = disposals_by_tax_year[tax_year]
 
-                proceeds = Decimal(0)
-                costs = Decimal(0)
-                gains = Decimal(0)
-                losses = Decimal(0)
-
                 for no, disposal in enumerate(disposals, start=1):
-                    proceeds += disposal.proceeds
-                    costs += disposal.costs
                     gain = disposal.proceeds - disposal.costs
                     if gain < Decimal(0):
                         sign = 'LOSS'
                         gain = -gain
-                        losses += gain
                     else:
                         sign = 'GAIN'
-                        gains += gain
                     stream.write(f'{no}. SOLD {disposal.shares} {disposal.security} on {disposal.date:%d/%m/%Y} for {sign} of £{gain}\n')
                     stream.write('Matches with:\n')
                     for identification in disposal.identifications:
@@ -150,11 +212,6 @@ class Result:
                     stream.write(f'Calculation: {disposal.calculation}\n')
                     stream.write('\n')
 
-                tax_year_short = f'{tax_year1 % 100:02d}-{tax_year2 % 100:02d}'
-
-                stream.write(f'{tax_year_short}: Disposal Proceeds = £{proceeds} , Allowable Costs = £{costs} , Disposals = {len(disposals)}\n')
-                stream.write(f'{tax_year_short}: Year Gains = £{gains}  Year Losses = £{losses}\n')
-                stream.write('\n')
                 stream.write('\n')
 
         if self.section104_tables:
@@ -169,10 +226,13 @@ class Result:
                 stream.write('\n')
                 stream.write(f'{security}:\n')
 
-                # TODO: Avoid Pandas
-                df = pd.DataFrame(data)
-                header = [name.title() for name in df.columns.to_list()]
-                stream.write(df.to_string(index=False, na_rep='', header=header) + '\n')
+                self.write_table(stream, data)
+
+    def write_table(self, stream, data):
+        # TODO: Avoid Pandas
+        df = pd.DataFrame(data)
+        header = [name.replace('_', ' ').title() for name in df.columns.to_list()]
+        stream.write(df.to_string(index=False, na_rep='', header=header) + '\n')
 
 
 def is_close_decimal(a, b, abs_tol=Decimal('.01')):
@@ -380,7 +440,7 @@ def calculate(filename):
                 calculation = f'{disposal.proceeds} - {costs_calculation}'
                 calculation += f' = {disposal.proceeds - total_costs}'
 
-                result.disposals.append(DisposalResult(
+                result.add_disposal(DisposalResult(
                     date=tr.date,
                     security=security,
                     shares=disposal.shares,
