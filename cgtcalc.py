@@ -29,7 +29,7 @@ import typing
 
 from collections import namedtuple
 from enum import IntEnum, Enum
-from decimal import Decimal
+from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR
 
 import pandas as pd
 
@@ -126,6 +126,19 @@ allowances = {
 }
 
 
+def dround(d, places=0, rounding=None):
+    assert isinstance(d, Decimal)
+    _, _, exponent = d.as_tuple()
+    if exponent == 'n':
+        return d
+    elif exponent >= -places:
+        assert exponent <= 0
+        return d
+    else:
+        q = Decimal((0, (1,), -places))
+        return d.quantize(q, rounding=rounding)
+
+
 @dataclasses.dataclass
 class TaxYearResult:
     tax_year: str
@@ -176,6 +189,11 @@ class Result:
 
         for tax_year in self.sorted_tax_years():
             tyr = self.tax_years[tax_year]
+
+            tyr.proceeds = dround(tyr.proceeds, rounding=ROUND_FLOOR)
+            tyr.costs    = dround(tyr.costs,    rounding=ROUND_CEILING)
+            tyr.losses   = dround(tyr.losses,   rounding=ROUND_CEILING)
+            tyr.gains    = dround(tyr.gains,    rounding=ROUND_FLOOR)
 
             tyr.taxable_gain = max(tyr.proceeds - tyr.costs - tyr.allowance, 0)
             tyr.carried_losses = max(tyr.costs - tyr.proceeds, 0)
