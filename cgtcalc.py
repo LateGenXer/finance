@@ -480,9 +480,9 @@ def calculate(filename):
 
                 reference_holding, income = tr.params
                 holding = group1_holding + group2_holding
-                if not is_close_decimal(holding, reference_holding):
+                if not (is_close_decimal(reference_holding, holding) or is_close_decimal(reference_holding, pool.shares)):
                     sys.stderr.write(f'warning: CAPRETURN {tr.date:%d/%m/%Y}: expected holding of {holding} {security} but {reference_holding} were specified\n')
-                assert pool.shares <= holding
+                assert pool.shares >= holding
 
                 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57707
                 # Add notional income to the Section 104 pool cost
@@ -496,7 +496,7 @@ def calculate(filename):
 
             elif tr.kind == Kind.CAPRETURN:
                 reference_holding, equalisation = tr.params
-                if not is_close_decimal(group2_holding, reference_holding):
+                if not is_close_decimal(reference_holding, group2_holding):
                     sys.stderr.write(f'warning: CAPRETURN {tr.date:%d/%m/%Y}: expected Group 2 holding of {group2_holding} {security} but {reference_holding} was specified\n')
 
                 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57705
