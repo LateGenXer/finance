@@ -191,11 +191,6 @@ class Result:
         for tax_year in self.sorted_tax_years():
             tyr = self.tax_years[tax_year]
 
-            tyr.proceeds = dround(tyr.proceeds, rounding=ROUND_FLOOR)
-            tyr.costs    = dround(tyr.costs,    rounding=ROUND_CEILING)
-            tyr.losses   = dround(tyr.losses,   rounding=ROUND_CEILING)
-            tyr.gains    = dround(tyr.gains,    rounding=ROUND_FLOOR)
-
             tyr.taxable_gain = max(tyr.proceeds - tyr.costs - tyr.allowance, 0)
             tyr.carried_losses = max(tyr.costs - tyr.proceeds, 0)
 
@@ -366,10 +361,10 @@ def calculate(filename):
         for tr in trades:
             if tr.kind == Kind.BUY:
                 shares, price, charges = tr.params
-                # FIXME: round charges separately
-                cost = shares*price + charges
+                cost = shares*price
                 cost = dround(cost, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
                 cost = dround(cost, 0, ROUND_CEILING)
+                cost += dround(charges, 0, ROUND_CEILING)
                 acquisition = Acquisition(cost, shares, shares)
                 assert tr.date not in acquisitions
                 acquisitions[tr.date] = acquisition
