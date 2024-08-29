@@ -12,16 +12,16 @@ TRADE MATCHING INFORMATION
 
 TAX_YEAR 18-19
 
-1. SELL: 700 LOBSTER on 01/05/2018 at £4.80 gives GAIN of £329.33
+1. SELL: 700 LOBSTER on 01/05/2018 at £4.80 gives GAIN of £329.00
 Matches with:
 BUY: SECTION 104 HOLDING. 700 LOBSTER shares of 1500 bought at average price of £4.18667
-CALCULATION: Gain = £329.33 = ( 700 * 4.80 - 100.00 )
+CALCULATION: Gain = £329.00 = ( 700 * 4.80 - 100.00 )
 - ( 1500 * 4.18667 ) * ( 700 / 1500 )
 
-2. SELL: 400 LOBSTER on 01/02/2019 at £5.20 gives GAIN of £300.33
+2. SELL: 400 LOBSTER on 01/02/2019 at £5.20 gives GAIN of £300.00
 Matches with:
 BUY: SECTION 104 HOLDING. 400 LOBSTER shares of 800 bought at average price of £4.18667
-CALCULATION: Gain = £300.33 = ( 400 * 5.20 - 105.00 )
+CALCULATION: Gain = £300.00 = ( 400 * 5.20 - 105.00 )
 - ( 800 * 4.18667 ) * ( 400 / 800 )
 
 

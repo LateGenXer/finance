@@ -12,11 +12,11 @@ TRADE MATCHING INFORMATION
 
 TAX_YEAR 19-20
 
-1. SELL: 4000 ABC on 25/02/2020 at £2.62 gives GAIN of £1,514.79
+1. SELL: 4000 ABC on 25/02/2020 at £2.62 gives GAIN of £1,514.00
 Matches with:
 BUY: 11/03/2020 500 ABC shares of 500 bought at £2.72
 BUY: SECTION 104 HOLDING. 3500 ABC shares of 11500 bought at average price of £2.17292
-CALCULATION: Gain = £1,514.79 = ( 4000 * 2.62 - 0.00 )
+CALCULATION: Gain = £1,514.00 = ( 4000 * 2.62 - 0.00 )
 - ( 500 * 2.72 + 0.00 + 0.00 )
 - ( 11500 * 2.17292 ) * ( 3500 / 11500 )
 

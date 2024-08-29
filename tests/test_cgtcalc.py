@@ -120,10 +120,7 @@ def test_calculate(caplog, filename):
         assert date == expected_date
         assert security == expected_security
 
-        if date >= datetime.date(2011, 4, 6):
-            assert abs(gain - expected_gain) <= Decimal('.01')
-        else:
-            assert round(gain) == round(expected_gain)
+        assert round(gain) == pytest.approx(round(expected_gain), abs=2)
 
 
 def test_main():

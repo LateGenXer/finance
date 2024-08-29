@@ -49,8 +49,9 @@ def main():
 
     driver.implicitly_wait(20)
 
-    rounding = driver.find_element(By.ID, 'Rounding')
-    rounding.click()
+    if False:
+        rounding = driver.find_element(By.ID, 'Rounding')
+        rounding.click()
 
     for arg in sys.argv[1:]:
         rows = []

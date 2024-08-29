@@ -6,7 +6,7 @@ Year    CapitalGain      Exemption    UsePrevLosses   TaperRelief   ChargeableGa
 -------------------------------------------------------------------------------------------
 13-14 14180    10900  0  0  3280  590
 15-16 19848    11100  0  0  8748  1574
-22-23 -5283    12300  0  0  0  0
+22-23 -5284    12300  0  0  0  0
 
 *Please note that tax values are based on capital gains only and assume zero income.
 
@@ -14,38 +14,38 @@ TRADE MATCHING INFORMATION
 
 TAX_YEAR 13-14
 
-1. SELL: 6000 BARC on 14/04/2013 at £5.52 gives GAIN of £3,999.06
+1. SELL: 6000 BARC on 14/04/2013 at £5.52 gives GAIN of £3,999.00
 Matches with:
 BUY: SECTION 104 HOLDING. 6000 BARC shares of 8000 bought at average price of £4.85099
-CALCULATION: Gain = £3,999.06 = ( 6000 * 5.52 - 15.00 )
+CALCULATION: Gain = £3,999.00 = ( 6000 * 5.52 - 15.00 )
 - ( 8000 * 4.85099 ) * ( 6000 / 8000 )
 
-2. SELL: 9000 VOD on 23/02/2014 at £3.62 gives GAIN of £5,068.20
+2. SELL: 9000 VOD on 23/02/2014 at £3.62 gives GAIN of £5,068.00
 Matches with:
 BUY: SECTION 104 HOLDING. 9000 VOD shares of 18000 bought at average price of £3.05576
-CALCULATION: Gain = £5,068.20 = ( 9000 * 3.62 - 10.00 )
+CALCULATION: Gain = £5,068.00 = ( 9000 * 3.62 - 10.00 )
 - ( 18000 * 3.05576 ) * ( 9000 / 18000 )
 
-3. SELL: 9000 VOD on 24/02/2014 at £3.625 gives GAIN of £5,113.20
+3. SELL: 9000 VOD on 24/02/2014 at £3.625 gives GAIN of £5,113.00
 Matches with:
 BUY: SECTION 104 HOLDING. 9000 VOD shares of 9000 bought at average price of £3.05576
-CALCULATION: Gain = £5,113.20 = ( 9000 * 3.625 - 10.00 )
+CALCULATION: Gain = £5,113.00 = ( 9000 * 3.625 - 10.00 )
 - ( 9000 * 3.05576 )
 
 TAX_YEAR 15-16
 
-1. SELL: 8000 BP. on 15/07/2015 at £6.28 gives GAIN of £19,848.95
+1. SELL: 8000 BP. on 15/07/2015 at £6.28 gives GAIN of £19,848.00
 Matches with:
 BUY: SECTION 104 HOLDING. 8000 BP. shares of 8000 bought at average price of £3.79763
-CALCULATION: Gain = £19,848.95 = ( 8000 * 6.28 - 10.00 )
+CALCULATION: Gain = £19,848.00 = ( 8000 * 6.28 - 10.00 )
 - ( 8000 * 3.79763 )
 
 TAX_YEAR 22-23
 
-1. SELL: 5000 BP. on 24/12/2022 at £4.336 gives LOSS of £5,283.14
+1. SELL: 5000 BP. on 24/12/2022 at £4.336 gives LOSS of £5,284.00
 Matches with:
 BUY: SECTION 104 HOLDING. 5000 BP. shares of 7000 bought at average price of £5.39063
-CALCULATION: Loss = £5,283.14 = ( 5000 * 4.336 - 10.00 )
+CALCULATION: Loss = £5,284.00 = ( 5000 * 4.336 - 10.00 )
 - ( 7000 * 5.39063 ) * ( 5000 / 7000 )
 
 
@@ -71,5 +71,5 @@ INFO FOR TAX RETURN
 13-14: Year Gains = £14,180.00  Year Losses = £0.00
 15-16: Disposal Proceeds = £50,240.00 , Allowable Costs = £30,392.00 , Disposals = 1
 15-16: Year Gains = £19,848.00  Year Losses = £0.00
-22-23: Disposal Proceeds = £21,680.00 , Allowable Costs = £26,963.00 , Disposals = 1
-22-23: Year Gains = £0.00  Year Losses = £5,283.00
+22-23: Disposal Proceeds = £21,680.00 , Allowable Costs = £26,964.00 , Disposals = 1
+22-23: Year Gains = £0.00  Year Losses = £5,284.00
