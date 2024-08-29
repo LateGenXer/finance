@@ -1,0 +1,14 @@
+# Based on Vanguard UK Reporting Fund FAQ guide example calculation
+# https://fund-docs.vanguard.com/uk-reporting-fund-faq.pdf#page=8
+# https://www.vanguard.co.uk/professional/product/fund/equity/9157/global-small-cap-index-fund-gbp-dist
+
+BUY	21/11/2016	IE00B3X1LS57	100	229.2590	0
+SELL	29/12/2016	IE00B3X1LS57	100	231.9236	0
+
+# https://www.gov.uk/hmrc-internal-manuals/investment-funds/ifm13222
+# https://fund-docs.vanguard.com/uk-reporting-fund-faq.pdf
+# https://monevator.com/excess-reportable-income/#comment-1748259
+DIVIDEND	30/12/2016	IE00B3X1LS57	100	14.69
+
+BUY	03/01/2017	IE00B3X1LS57	100	231.7566	0
+SELL	29/03/2017	IE00B3X1LS57	100	238.9156	0

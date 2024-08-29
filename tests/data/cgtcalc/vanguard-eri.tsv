@@ -1,0 +1,9 @@
+# Vanguard UK Reporting Fund FAQ guide example calculation
+# https://fund-docs.vanguard.com/uk-reporting-fund-faq.pdf#page=8
+# https://www.vanguard.co.uk/professional/product/fund/equity/9157/global-small-cap-index-fund-gbp-dist
+
+BUY	21/11/2016	IE00B3X1LS57	100	229.2590	0
+DIVIDEND	30/12/2016	IE00B3X1LS57	100	14.69
+CAPRETURN	30/12/2016	IE00B3X1LS57	100	16.71
+
+SELL	29/03/2017	IE00B3X1LS57	100	238.9156	0
