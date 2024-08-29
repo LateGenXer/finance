@@ -29,7 +29,7 @@ import typing
 
 from collections import namedtuple
 from enum import IntEnum, Enum
-from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR
+from decimal import Decimal, ROUND_HALF_EVEN, ROUND_CEILING, ROUND_FLOOR
 
 import pandas as pd
 
@@ -273,7 +273,7 @@ def add_pool_update(pool_updates, pool, trade, shares, amount):
         shares=shares,
         amount=dround(amount, 2),
         holding=pool.shares,
-        cost=round(pool.cost, 2),
+        cost=dround(pool.cost, 2),
     ))
 
 
@@ -366,12 +366,20 @@ def calculate(filename):
         for tr in trades:
             if tr.kind == Kind.BUY:
                 shares, price, charges = tr.params
-                acquisition = Acquisition(dround(shares*price + charges, 2), shares, shares)
+                # FIXME: round charges separately
+                cost = shares*price + charges
+                cost = dround(cost, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
+                cost = dround(cost, 0, ROUND_CEILING)
+                acquisition = Acquisition(cost, shares, shares)
                 assert tr.date not in acquisitions
                 acquisitions[tr.date] = acquisition
             if tr.kind == Kind.SELL:
                 shares, price, charges = tr.params
-                disposal = Disposal(dround(shares*price, 2), dround(charges, 2), shares, shares)
+                proceeds = shares*price
+                proceeds = dround(proceeds, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
+                proceeds = dround(proceeds, 0, ROUND_FLOOR)
+                charges = dround(charges, 0, ROUND_CEILING)
+                disposal = Disposal(proceeds, charges, shares, shares)
                 assert tr.date not in disposals
                 disposals[tr.date] = disposal
 
@@ -416,7 +424,7 @@ def calculate(filename):
             if tr.kind == Kind.BUY:
                 acquisition = acquisitions[tr.date]
                 if acquisition.unidentified:
-                    pool.cost += acquisition.cost * acquisition.unidentified / acquisition.shares
+                    pool.cost += dround(acquisition.cost * acquisition.unidentified / acquisition.shares, 0, ROUND_CEILING)
                     pool.shares += acquisition.unidentified
                     add_pool_update(pool_updates, pool, tr,
                         shares=f'{acquisition.unidentified} of {acquisition.shares}',
@@ -441,21 +449,21 @@ def calculate(filename):
                         costs_values.append(acquisition.cost)
                         costs_calcs.append(str(acquisition.cost))
                     else:
-                        costs_values.append(dround(acquisition.cost * identified / acquisition.shares, 2))
+                        costs_values.append(dround(acquisition.cost * identified / acquisition.shares, 0, ROUND_CEILING))
                         costs_calcs.append(f'{acquisition.cost} × {identified} / {acquisition.shares}')
                 if disposal.unidentified:
                     assert pool.cost > 0
                     assert pool.shares >= disposal.unidentified
                     identified = disposal.unidentified
-                    identifications.append(f'SECTION_104: {identified} shares of {pool.shares} with total cost of £{dround(pool.cost, 2)}')
+                    identifications.append(f'SECTION_104: {identified} shares of {pool.shares} with total cost of £{pool.cost}')
                     if identified == pool.shares:
                         costs_values.append(pool.cost)
-                        costs_calcs.append(str(dround(pool.cost, 2)))
+                        costs_calcs.append(str(pool.cost))
                         pool.cost = Decimal(0)
                     else:
-                        cost = pool.cost * identified / pool.shares
+                        cost = dround(pool.cost * identified / pool.shares, 0, ROUND_CEILING)
                         costs_values.append(cost)
-                        costs_calcs.append(f'{dround(pool.cost, 2)} × {identified} / {pool.shares}')
+                        costs_calcs.append(f'{pool.cost} × {identified} / {pool.shares}')
                         pool.cost -= cost
                     pool.shares -= identified
                     add_pool_update(pool_updates, pool, tr,
@@ -470,7 +478,7 @@ def calculate(filename):
                     group2_holding -= disposal.shares - group1_holding
                     group1_holding = Decimal(0)
 
-                total_costs = dround(sum(costs_values), 2)
+                total_costs = sum(costs_values)
 
                 if len(costs_calcs) == 0:
                     costs_calculation = "0"
@@ -478,12 +486,13 @@ def calculate(filename):
                     costs_calculation, = costs_calcs
                 else:
                     costs_calculation = '(' + ' + '.join(costs_calcs) + ')'
+                abs_tol = 1.0 * len(costs_calcs)
 
                 gain = disposal.proceeds - total_costs
 
                 calculation = f'{disposal.proceeds} - {costs_calculation}'
 
-                assert math.isclose(eval(calculation.replace('×', '*')), gain, abs_tol=.01)
+                assert math.isclose(eval(calculation.replace('×', '*')), gain, abs_tol=abs_tol)
                 calculation += f' = {gain}'
 
                 result.add_disposal(DisposalResult(
@@ -508,6 +517,7 @@ def calculate(filename):
                 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57707
                 # Add notional income to the Section 104 pool cost
                 assert pool.shares
+                income = dround(income, 0, ROUND_CEILING)
                 pool.cost += income
 
                 add_pool_update(pool_updates, pool, tr,
@@ -524,6 +534,8 @@ def calculate(filename):
                 # Allocate equalisation payments to Group 2 acquisitions in proportion to the remaining holdings
                 assert pool.shares
                 assert pool.cost >= equalisation
+
+                equalisation = dround(equalisation, 0, ROUND_FLOOR)
                 pool.cost -= equalisation
 
                 add_pool_update(pool_updates, pool, tr,
