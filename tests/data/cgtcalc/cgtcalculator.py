@@ -87,6 +87,9 @@ def main():
         name, _ = os.path.splitext(arg)
         open(name + '.txt', 'wt').write(output)
 
+        if False:
+            input()
+
     driver.quit()
 
 

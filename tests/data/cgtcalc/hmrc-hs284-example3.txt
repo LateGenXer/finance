@@ -4,21 +4,21 @@ SUMMARY INFORMATION
 
 Year    CapitalGain      Exemption    UsePrevLosses   TaperRelief   ChargeableGain      Tax*
 -------------------------------------------------------------------------------------------
-18-19 629    11700  0  0  0  0
+23-24 629    6000  0  0  0  0
 
 *Please note that tax values are based on capital gains only and assume zero income.
 
 TRADE MATCHING INFORMATION
 
-TAX_YEAR 18-19
+TAX_YEAR 23-24
 
-1. SELL: 700 LOBSTER on 01/05/2018 at £4.80 gives GAIN of £329.00
+1. SELL: 700 LOBSTER on 01/05/2023 at £4.80 gives GAIN of £329.00
 Matches with:
 BUY: SECTION 104 HOLDING. 700 LOBSTER shares of 1500 bought at average price of £4.18667
 CALCULATION: Gain = £329.00 = ( 700 * 4.80 - 100.00 )
 - ( 1500 * 4.18667 ) * ( 700 / 1500 )
 
-2. SELL: 400 LOBSTER on 01/02/2019 at £5.20 gives GAIN of £300.00
+2. SELL: 400 LOBSTER on 01/02/2024 at £5.20 gives GAIN of £300.00
 Matches with:
 BUY: SECTION 104 HOLDING. 400 LOBSTER shares of 800 bought at average price of £4.18667
 CALCULATION: Gain = £300.00 = ( 400 * 5.20 - 105.00 )
@@ -42,5 +42,5 @@ Total number of sells  =  2
 
 INFO FOR TAX RETURN
 
-18-19: Disposal Proceeds = £5,440.00 , Allowable Costs = £4,811.00 , Disposals = 2
-18-19: Year Gains = £629.00  Year Losses = £0.00
+23-24: Disposal Proceeds = £5,440.00 , Allowable Costs = £4,811.00 , Disposals = 2
+23-24: Year Gains = £629.00  Year Losses = £0.00
