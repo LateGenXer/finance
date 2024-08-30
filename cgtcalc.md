@@ -1,18 +1,33 @@
 # About
 
-**WARNING: `cgtcalc.py` is still very much work in progress!**
+`cgtcalc.py` is a UK Capital Gains Tax calculator writtten in Python.
 
-`cgtcalc.py` is UK Capital Gains Tax calculator.
-
-It is inspired by [other](#Other) free calculators, but unlike most it
-handles notional income and equalisation payments in a consistent manner.
+It is inspired by [other](#Alternative) free CGT calculators, but unlike most
+of them it handles notional income and equalisation payments in a consistent manner.
 
 It is written in Python.
 
+## Disclaimer
 
-## Known issues
+**WARNING: `cgtcalc.py` is still work in progress!**
 
-- Rounding not yet consistent
+I wrote `cgtcalc.py` primarily for helping filing my own Self Assessment.
+It's accurate to the best of my abilities, but I am not an accountant or financial adviser.
+Always check carefully its results and engage a tax advisor in any doubt.
+
+## Behavior
+
+- Followings [share identification rules](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg51560)
+- Rounding done as per HMRC example calculations and Community Forums clarifications:
+  - proceeds and gains always rounded down to whole poound
+  - individual costs (charges, acquisition costs, Section 104 pool cost) and losses always rounded up to whole pound, _before_ addition
+- Number of shares and unit share price kept at full precision
+- Notional income (i.e., reinvested dividends from UK shares, and _Excess Reportable Income_ from offshore reporting funds)
+and equalisation payments by adjusting Section 104 pool cost accordingly.
+
+## Known limitations
+
+- Disposals before 6 April 2008 (when Section 104 rule was introduced) are not supported.
 - Restructurings not yet supported
 
 
@@ -25,88 +40,135 @@ python cgtcalc.py trades.txt
 
 ## Format
 
-`cgtcalc.py` can input in both formats:
-- [CGTCalculator](http://cgtcalculator.com/instructions.htm#tradeformat)
-- [cgtcalc](https://github.com/mattjgalloway/cgtcalc?tab=readme-ov-file#input-data)
+`cgtcalc.py` input format is compatible both with
+[CGTCalculator](http://cgtcalculator.com/instructions.htm#tradeformat) and
+[cgtcalc](https://github.com/mattjgalloway/cgtcalc?tab=readme-ov-file#input-data) formats.
+
+The input consists is a text file, with a line per transaction, each comprised by space separated fields in the form:
+
+```
+kind date security parameter*
+```
+
+The number and meaning of the fields varies with the kind of transaction:
+
+| Kind | Description | Fields |
+| ---- | ----------- | ------ |
+| `B`/`BUY` | Buy transaction | _date_ _security_ _shares_ _price_ _expenses_ [_tax¹_]
+| `S`/`SELL` | Sell transaction | _date_ _security_ _shares_ _price_ _expenses_ [_tax¹_]
+| `DIVIDEND` | Notional income | _ex-dividend-date_ _security_ _holding²_ _income_
+| `CAPRETURN` | Equalisation payment | _ex-dividend-date_ _security_ _group2-holding²_ _equalisation_
+
+Notes:
+1. _tax_ fields of `BUY`/`SELL` transactions are optional, for CGTCalculator compatibility, and are added to the expenses
+2. _holding_ and _group2-holding_ fields are used for consistency check and have no bearing on calculated gains/losses.
+
+Empty lines or lines starting with `#` are ignored.
 
 
 ## Example
 
-```
-python cgtcalc.py tests/data/cgtcalc/cgtcalculator-example1.tsv
-```
+### HMRC HS284 Example 3
+
+This is [Example 3 from Shares Self Assessment helpsheet HS284](https://www.gov.uk/government/publications/shares-and-capital-gains-tax-hs284-self-assessment-helpsheet).
+
+| Kind  | Date       | Company | Shares | Price | Charges |
+| ----- | ---------- | ------- | ------ | ----- | ------- |
+| BUY   | 01/04/2015 | LOBSTER | 1000   | 4.00  | 150     |
+| BUY   | 01/09/2018 | LOBSTER | 500    | 4.10  | 80      |
+| SELL  | 01/05/2023 | LOBSTER | 700    | 4.80  | 100     |
+| SELL  | 01/02/2024 | LOBSTER | 400    | 5.20  | 105     |
 
 ```
-warning: cgtcal.py is still work in progress!
-TAX YEAR 2013/2014
+python cgtcalc.py tests/data/cgtcalc/hmrc-hs284-example3.tsv
+```
 
-1. SOLD 6000 BARC on 14/04/2013 for GAIN of £3999.06
+```
+
+SUMMARY
+
+ Tax Year Disposals Proceeds Costs Gains Losses Allowance Taxable Gain Carried Losses
+2023/2024         2     5440  4811   629      0      6000            0              0
+
+
+TAX YEAR 2023/2024
+
+1. SOLD 700 LOBSTER on 01/05/2023 for £3360 with £100 charges giving GAIN of £329
 Matches with:
-- SECTION_104: 6000 shares of 8000 at average cost of 4.850990
-Calculation: 33120.00 - (15.00 + 29105.94) = 3999.06
+- SECTION_104: 700 shares of 1500 with total cost of £6280
+Calculation: 3360 - (100 + 6280 × 700 / 1500) = 329
 
-2. SOLD 9000 VOD on 23/02/2014 for GAIN of £5068.20
+2. SOLD 400 LOBSTER on 01/02/2024 for £2080 with £105 charges giving GAIN of £300
 Matches with:
-- SECTION_104: 9000 shares of 18000 at average cost of 3.055756
-Calculation: 32580.00 - (10.00 + 27501.80) = 5068.20
-
-3. SOLD 9000 VOD on 24/02/2014 for GAIN of £5113.20
-Matches with:
-- SECTION_104: 9000 shares of 9000 at average cost of 3.055756
-Calculation: 32625.000 - (10.00 + 27501.80) = 5113.200
-
-13-14: Disposal Proceeds = £98325.00 , Allowable Costs = £84144.54 , Disposals = 3
-13-14: Year Gains = £14180.46  Year Losses = £0
-
-
-TAX YEAR 2015/2016
-
-1. SOLD 8000 BP. on 15/07/2015 for GAIN of £19848.95
-Matches with:
-- SECTION_104: 8000 shares of 8000 at average cost of 3.797631
-Calculation: 50240.00 - (10.00 + 30381.05) = 19848.95
-
-15-16: Disposal Proceeds = £50240.00 , Allowable Costs = £30391.05 , Disposals = 1
-15-16: Year Gains = £19848.95  Year Losses = £0
-
-
-TAX YEAR 2022/2023
-
-1. SOLD 5000 BP. on 24/12/2022 for LOSS of £5283.14
-Matches with:
-- SECTION_104: 5000 shares of 7000 at average cost of 5.390629
-Calculation: 21680.000 - (10.00 + 26953.14) = -5283.140
-
-22-23: Disposal Proceeds = £21680.00 , Allowable Costs = £26963.14 , Disposals = 1
-22-23: Year Gains = £0  Year Losses = £5283.14
+- SECTION_104: 400 shares of 800 with total cost of £3349
+Calculation: 2080 - (105 + 3349 × 400 / 800) = 300
 
 
 SECTION 104
 
-BARC:
-      Date Trade       Shares   Amount Holding     Cost
-2010-12-01   BUY 3000 of 3000 14547.30    3000 14547.30
-2010-12-02   BUY 5000 of 5000 24260.62    8000 38807.92
-2013-04-14  SELL 6000 of 6000             2000  9701.98
+LOBSTER:
+      Date Trade       Shares Amount Holding Cost
+2015-04-01   BUY 1000 of 1000   4150    1000 4150
+2018-09-01   BUY   500 of 500   2130    1500 6280
+2023-05-01  SELL   700 of 700            800 3349
 
-BP.:
-      Date Trade       Shares   Amount Holding     Cost
-2013-01-15   BUY 5000 of 5000 18853.75    5000 18853.75
-2013-03-24   BUY 3000 of 3000 11527.30    8000 30381.05
-2015-07-15  SELL 8000 of 8000                0     0.00
-2017-01-22   BUY 5000 of 5000 27634.20    5000 27634.20
-2019-06-22   BUY 2000 of 2000 10100.20    7000 37734.40
-2022-12-24  SELL 5000 of 5000             2000 10781.26
-
-VOD:
-      Date Trade         Shares   Amount Holding     Cost
-2012-09-03   BUY 18000 of 18000 55003.60   18000 55003.60
-2014-02-23  SELL   9000 of 9000             9000 27501.80
-2014-02-24  SELL   9000 of 9000                0     0.00
 ```
 
+## Vanguard UK Reporting Fund FAQ guide example
 
-# Other
+
+| Kind      | Date       | Company      |        |          |         |
+| -----     | ----       | -------      | ------ | -----    | ------- |
+| BUY       | 21/11/2016 | IE00B3X1LS57 | 100    | 229.2590 | 0       |
+| DIVIDEND  | 30/12/2016 | IE00B3X1LS57 | 100    | 14.69    |         |
+| CAPRETURN | 30/12/2016 | IE00B3X1LS57 | 100    | 16.71    |         |
+| SELL      | 29/03/2017 | IE00B3X1LS57 | 100    | 238.9156 | 0       |
+
+
+```
+SUMMARY
+
+ Tax Year Disposals Proceeds Costs Gains Losses Allowance Taxable Gain Carried Losses
+2016/2017         1    23891 22925   966      0     11100            0              0
+
+
+TAX YEAR 2016/2017
+
+1. SOLD 100 IE00B3X1LS57 on 29/03/2017 for £23891 with £0 charges giving GAIN of £966
+Matches with:
+- SECTION_104: 100 shares of 100 with total cost of £22925
+Calculation: 23891 - 22925 = 966
+
+
+SECTION 104
+
+IE00B3X1LS57:
+      Date     Trade     Shares Amount Holding  Cost
+2016-11-21       BUY 100 of 100  22926     100 22926
+2016-12-30  DIVIDEND                15     100 22941
+2016-12-30 CAPRETURN                16     100 22925
+2017-03-29      SELL 100 of 100              0     0
+```
+
+# References
+
+- HMRC:
+  - [Self Assessment: Capital Gains Tax summary notes](https://www.gov.uk/government/publications/self-assessment-capital-gains-summary-sa108)
+  - [Shares and Capital Gains Tax helpsheet HS284](https://www.gov.uk/government/publications/shares-and-capital-gains-tax-hs284-self-assessment-helpsheet/hs284-shares-and-capital-gains-tax-2024)
+  - [Capital Gains Manual](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual)
+- Quilter Capital Gains Tax quick reference guides:
+  - [Quick reference guide 1 - section 104 Holdings](https://www.quilter.com/siteassets/documents/platform/guides-and-brochures/20719-cgt-quick-reference-guide-1-section-104-holdings.pdf)
+  - [Quick reference guide 2 - Share identification rules](https://www.quilter.com/siteassets/documents/platform/guides-and-brochures/20720-cgt-quick-reference-guide-2-share-identification-rules.pdf)
+- abrdn guides:
+  - [Taxation of OEICs and unit trusts](https://techzone.abrdn.com/public/investment/Guide-Taxation-of-Collectives)
+  - [CGT and share matching](https://techzone.abrdn.com/public/personal-taxation/Practical-G-Share-match)
+- Fidelity:
+  - [Taxing calculations: Capital Gains Tax](https://adviserservices.fidelity.co.uk/media/fnw/guides/taxing-calculations-capital-gains-tax.pdf)
+- Vanguard:
+  - [UK Reporting Fund FAQ guide](https://fund-docs.vanguard.com/uk-reporting-fund-faq.pdf)
+
+
+# Alternatives
 
 - [CGTCalculator](http://cgtcalculator.com/instructions.htm#tradeformat)
 - [cgtcalc](https://github.com/mattjgalloway/cgtcalc)

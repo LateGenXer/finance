@@ -555,7 +555,7 @@ def calculate(filename):
 
 
 def main():
-    sys.stderr.write('warning: cgtcal.py is still work in progress!\n')
+    sys.stderr.write('warning: cgtcalc.py is still work in progress!\n\n')
 
     logging.basicConfig(format='%(levelname)s %(message)s', level=logging.INFO)
     for arg in sys.argv[1:]:
