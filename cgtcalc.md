@@ -72,12 +72,12 @@ Empty lines or lines starting with `#` are ignored.
 
 This is [Example 3 from Shares Self Assessment helpsheet HS284](https://www.gov.uk/government/publications/shares-and-capital-gains-tax-hs284-self-assessment-helpsheet).
 
-| Kind  | Date       | Company | Shares | Price | Charges |
-| ----- | ---------- | ------- | ------ | ----- | ------- |
-| BUY   | 01/04/2015 | LOBSTER | 1000   | 4.00  | 150     |
-| BUY   | 01/09/2018 | LOBSTER | 500    | 4.10  | 80      |
-| SELL  | 01/05/2023 | LOBSTER | 700    | 4.80  | 100     |
-| SELL  | 01/02/2024 | LOBSTER | 400    | 5.20  | 105     |
+| Kind  |    Date    | Company | Shares | Price | Charges |
+| ----- | :--------: | ------- | -----: | ----: | ------: |
+| BUY   | 01/04/2015 | LOBSTER |   1000 | 4.00  |     150 |
+| BUY   | 01/09/2018 | LOBSTER |    500 | 4.10  |      80 |
+| SELL  | 01/05/2023 | LOBSTER |    700 | 4.80  |     100 |
+| SELL  | 01/02/2024 | LOBSTER |    400 | 5.20  |     105 |
 
 ```
 python cgtcalc.py tests/data/cgtcalc/hmrc-hs284-example3.tsv
@@ -117,12 +117,12 @@ LOBSTER:
 ## Vanguard UK Reporting Fund FAQ guide example
 
 
-| Kind      | Date       | Company      |        |          |         |
-| -----     | ----       | -------      | ------ | -----    | ------- |
-| BUY       | 21/11/2016 | IE00B3X1LS57 | 100    | 229.2590 | 0       |
-| DIVIDEND  | 30/12/2016 | IE00B3X1LS57 | 100    | 14.69    |         |
-| CAPRETURN | 30/12/2016 | IE00B3X1LS57 | 100    | 16.71    |         |
-| SELL      | 29/03/2017 | IE00B3X1LS57 | 100    | 238.9156 | 0       |
+| Kind      |    Date    | Company      |        |          |         |
+| --------- | :--------: | ------------ | ------ | :------: | ------: |
+| BUY       | 21/11/2016 | IE00B3X1LS57 |    100 | 229.2590 |       0 |
+| DIVIDEND  | 30/12/2016 | IE00B3X1LS57 |    100 |  14.69   |         |
+| CAPRETURN | 30/12/2016 | IE00B3X1LS57 |    100 |  16.71   |         |
+| SELL      | 29/03/2017 | IE00B3X1LS57 |    100 | 238.9156 |       0 |
 
 
 ```
