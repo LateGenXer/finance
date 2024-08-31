@@ -31,8 +31,6 @@ from collections import namedtuple
 from enum import IntEnum, Enum
 from decimal import Decimal, ROUND_HALF_EVEN, ROUND_CEILING, ROUND_FLOOR
 
-import pandas as pd
-
 
 logger = logging.getLogger('cgtcalc')
 
@@ -248,13 +246,42 @@ class Result:
                 stream.write('\n')
                 stream.write(f'{security}:\n')
 
-                self.write_table(stream, data)
+                self.write_table(stream, data, indent='  ')
 
-    def write_table(self, stream, data):
+    def write_table(self, stream, data, indent=''):
+        assert data
         # TODO: Avoid Pandas
-        df = pd.DataFrame(data)
-        header = [name.replace('_', ' ').title() for name in df.columns.to_list()]
-        stream.write(df.to_string(index=False, na_rep='', header=header) + '\n')
+        obj0 = data[0]
+        header = [field.name.replace('_', ' ').title().replace('Delta ', 'Δ') for field in dataclasses.fields(obj0)]
+        rows = [dataclasses.astuple(obj) for obj in data]
+        columns = [list(col) for col in zip(*rows)]
+        assert len(columns) == len(header)
+        for c in range(len(header)):
+            width = len(header[c])
+            column = columns[c]
+            header_just = str.center
+            cell_just = str.rjust
+            for r in range(len(column)):
+                cell = column[r]
+                if isinstance(cell, str):
+                    header_just = str.ljust
+                    cell_just = str.ljust
+                else:
+                    if cell != cell:
+                        # NaN
+                        cell = ''
+                    cell = str(cell)
+                    column[r] = cell
+                width = max(width, len(cell))
+            header[c] = header_just(header[c], width)
+            for r in range(len(column)):
+                column[r] = cell_just(column[r], width)
+
+        h = '  '.join(header)
+        stream.write(indent + h + '\n')
+        stream.write(indent + '─'*len(h) + '\n')
+        for row in zip(*columns):
+            stream.write(indent + '  '.join(row) + '\n')
 
 
 def is_close_decimal(a, b, abs_tol=Decimal('.01')):
