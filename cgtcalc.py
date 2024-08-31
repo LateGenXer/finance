@@ -76,11 +76,11 @@ def identify(disposal, acquisition, kind, acquisition_date):
 @dataclasses.dataclass
 class PoolUpdate:
     date: datetime.date
-    trade: str
-    shares: str
-    amount: Decimal
-    holding: Decimal
-    cost: Decimal
+    description: str
+    identified: Decimal
+    delta_cost: Decimal
+    total_shares: Decimal
+    total_cost: Decimal
 
 
 @dataclasses.dataclass
@@ -288,14 +288,21 @@ def is_close_decimal(a, b, abs_tol=Decimal('.01')):
     return abs(a - b) <= abs_tol
 
 
-def add_pool_update(pool_updates, pool, trade, shares, amount):
+def update_pool(pool_updates, pool, trade, description, delta_cost=Decimal('NaN'), delta_shares=Decimal('NaN')):
+    if not delta_cost.is_nan():
+        pool.cost += delta_cost
+        if not pool.cost:
+            pool.cost = Decimal(0)
+    if not delta_shares.is_nan():
+        pool.shares += delta_shares
+
     pool_updates.append(PoolUpdate(
         date=trade.date,
-        trade=trade.kind.name,
-        shares=shares,
-        amount=dround(amount, 2),
-        holding=pool.shares,
-        cost=dround(pool.cost, 2),
+        description=description.ljust(32),
+        identified=abs(delta_shares),
+        delta_cost=delta_cost,
+        total_shares=pool.shares,
+        total_cost=dround(pool.cost, 2),
     ))
 
 
@@ -446,11 +453,14 @@ def calculate(filename):
             if tr.kind == Kind.BUY:
                 acquisition = acquisitions[tr.date]
                 if acquisition.unidentified:
-                    pool.cost += dround(acquisition.cost * acquisition.unidentified / acquisition.shares, 0, ROUND_CEILING)
-                    pool.shares += acquisition.unidentified
-                    add_pool_update(pool_updates, pool, tr,
-                        shares=f'{acquisition.unidentified} of {acquisition.shares}',
-                        amount=acquisition.cost,
+                    if acquisition.unidentified == acquisition.shares:
+                        delta_cost = acquisition.cost
+                    else:
+                        delta_cost = dround(acquisition.cost * acquisition.unidentified / acquisition.shares, 0, ROUND_CEILING)
+                    update_pool(pool_updates, pool, tr,
+                        description=f'Bought {acquisition.shares} shares for £{acquisition.cost}',
+                        delta_cost=delta_cost,
+                        delta_shares=acquisition.unidentified
                     )
                 group2_holding += acquisition.shares
 
@@ -479,18 +489,17 @@ def calculate(filename):
                     identified = disposal.unidentified
                     identifications.append(f'SECTION_104: {identified} shares of {pool.shares} with total cost of £{pool.cost}')
                     if identified == pool.shares:
-                        costs_values.append(pool.cost)
-                        costs_calcs.append(str(pool.cost))
-                        pool.cost = Decimal(0)
+                        cost = pool.cost
+                        cost_calc = str(cost)
                     else:
                         cost = dround(pool.cost * identified / pool.shares, 0, ROUND_CEILING)
-                        costs_values.append(cost)
-                        costs_calcs.append(f'{pool.cost} × {identified} / {pool.shares}')
-                        pool.cost -= cost
-                    pool.shares -= identified
-                    add_pool_update(pool_updates, pool, tr,
-                        shares=f'{disposal.unidentified} of {disposal.shares}',
-                        amount=Decimal('NaN'),
+                        cost_calc = f'{pool.cost} × {identified} / {pool.shares}'
+                    costs_values.append(cost)
+                    costs_calcs.append(cost_calc)
+                    update_pool(pool_updates, pool, tr,
+                        description=f'Sold {disposal.shares} shares',
+                        delta_shares = -identified,
+                        delta_cost = -cost
                     )
 
                 # Assume FIFO for notional income and equalisation payments
@@ -540,11 +549,10 @@ def calculate(filename):
                 # Add notional income to the Section 104 pool cost
                 assert pool.shares
                 income = dround(income, 0, ROUND_CEILING)
-                pool.cost += income
 
-                add_pool_update(pool_updates, pool, tr,
-                    shares=Decimal('NaN'),
-                    amount=income,
+                update_pool(pool_updates, pool, tr,
+                    description="Notional distribution",
+                    delta_cost=income,
                 )
 
             elif tr.kind == Kind.CAPRETURN:
@@ -558,11 +566,10 @@ def calculate(filename):
                 assert pool.cost >= equalisation
 
                 equalisation = dround(equalisation, 0, ROUND_FLOOR)
-                pool.cost -= equalisation
 
-                add_pool_update(pool_updates, pool, tr,
-                    shares=Decimal('NaN'),
-                    amount=equalisation,
+                update_pool(pool_updates, pool, tr,
+                    description="Equalisation payment",
+                    delta_cost = -equalisation,
                 )
 
                 # Move Group 2 shares into Group 1
