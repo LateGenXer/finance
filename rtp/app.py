@@ -271,7 +271,7 @@ This is equivalent to the old Lifetime Allowance percentage.
 state = {key: value for key, value in st.session_state.items() if key in default_state}
 state['version'] = version
 data = json.dumps(state, sort_keys=True, indent=2)
-timestamp = datetime.datetime.utcnow().isoformat(sep='-', timespec='seconds')
+timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(sep='-', timespec='seconds')
 st.download_button("Download", data, file_name=f"rtp-{timestamp}.json", mime="application/json", help="Download all parameters as a JSON file.", use_container_width=True)
 
 

@@ -58,7 +58,7 @@ st.title('Gilt Ladder Builder')
 with st.sidebar:
     st.header("Parameters")
 
-    today = datetime.datetime.utcnow().date()
+    today = datetime.datetime.now(datetime.timezone.utc).date()
     tab1, tab2 = st.tabs(["Basic", "Advanced"])
     with tab1:
         st.number_input('Withdrawal amount per year:', value=10000, min_value=1, step=1, key='year_amount')

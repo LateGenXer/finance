@@ -595,7 +595,7 @@ EventKind = enum.IntEnum("EventKind", ['CASH_FLOW', 'CONSUMPTION', 'TAX_YEAR_END
 def schedule(count, amount=10000, shift=shift_year, start=None):
     result = []
     if start is None:
-        start = datetime.datetime.utcnow().date()
+        start = datetime.datetime.now(datetime.timezone.utc).date()
         for i in range(count):
             d = shift(start, 1 + i)
             result.append((d, amount))
@@ -635,7 +635,7 @@ class BondLadder:
         self.schedule = schedule
         self.buy_df = None
         self.cash_flow_df = None
-        self.today = datetime.datetime.utcnow().date()
+        self.today = datetime.datetime.now(datetime.timezone.utc).date()
 
     def solve(self):
         today = self.today

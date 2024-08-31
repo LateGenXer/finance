@@ -99,7 +99,7 @@ class RPI:
                 month = _long_months.index(mo.group('month')) + 1
                 day = int(mo.group('day'))
                 next_release = datetime.date(year, month, day)
-                if datetime.datetime.utcnow().date() >= next_release and not ignore_date:
+                if datetime.datetime.now(datetime.timezone.utc).date() >= next_release and not ignore_date:
                     logger.warning(f'{filename} has been superseded on {next_release}')
                     raise OutOfDateError
             else:

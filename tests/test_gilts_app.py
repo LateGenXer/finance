@@ -45,7 +45,7 @@ def test_monthly(at):
 def test_start_date(at):
     start_date = at.date_input(key="start_date")
     assert start_date.value is None
-    today = datetime.datetime.utcnow().date()
+    today = datetime.datetime.now(datetime.timezone.utc).date()
     start_date.set_value(today.replace(year=today.year + 10, month=4, day=6))
     at.run()
     assert not at.exception

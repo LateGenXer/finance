@@ -37,6 +37,6 @@ def exchange_rates(year, month):
 
 
 def exchange_rate(currency):
-    today = datetime.datetime.utcnow().date()
+    today = datetime.datetime.now(datetime.timezone.utc).date()
     rates = exchange_rates(today.year, today.month)
     return rates[currency]
