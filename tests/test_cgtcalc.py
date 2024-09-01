@@ -94,7 +94,7 @@ def parse_cgtcalculator_results(filename):
 def test_calculate(caplog, filename):
     caplog.set_level(logging.DEBUG, logger="cgtcal")
 
-    result = calculate(filename)
+    result = calculate(open(filename, 'rt'))
     stream = io.StringIO()
     result.write(stream)
 

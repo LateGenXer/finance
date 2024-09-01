@@ -7,6 +7,8 @@ of them it handles notional income and equalisation payments in a consistent man
 
 It is written in Python.
 
+A web instance is available [here](https://lategenxer.streamlit.app/CGT_Calculator)
+
 ## Disclaimer
 
 **WARNING: `cgtcalc.py` is still work in progress!**

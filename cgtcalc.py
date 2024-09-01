@@ -336,13 +336,13 @@ def update_pool(pool_updates, pool, trade, description, delta_cost=Decimal('NaN'
     ))
 
 
-def calculate(filename):
+def calculate(stream):
 
     # Parse
     securities = {}
 
     line_no = 0
-    for line in open(filename, 'rt'):
+    for line in stream:
         line_no += 1
         line = line.rstrip('\n')
         if line.startswith('#'):
@@ -618,7 +618,7 @@ def main():
 
     logging.basicConfig(format='%(levelname)s %(message)s', level=logging.INFO)
     for arg in sys.argv[1:]:
-        result = calculate(arg)
+        result = calculate(open(arg, 'rt'))
         result.write(sys.stdout)
 
 
