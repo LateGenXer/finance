@@ -105,24 +105,25 @@ def date_to_tax_year(date: datetime.date):
 # https://www.gov.uk/guidance/capital-gains-tax-rates-and-allowances
 # https://www.rossmartin.co.uk/capital-gains-tax/110-capital-gains-tax-rates-a-allowances
 allowances = {
-    2009: 9600,
-    2010: 10100,
-    2011: 10100,
-    2012: 10600,
-    2013: 10600,
-    2014: 10900,
-    2015: 11000,
-    2016: 11100,
-    2017: 11100,
-    2018: 11300,
-    2019: 11700,
-    2020: 12000,
-    2021: 12300,
-    2022: 12300,
-    2023: 12300,
-    2024: 6000,
-    2025: 3000,
+    (2008, 2009):  9600,
+    (2009, 2010): 10100,
+    (2010, 2011): 10100,
+    (2011, 2012): 10600,
+    (2012, 2013): 10600,
+    (2013, 2014): 10900,
+    (2014, 2015): 11000,
+    (2015, 2016): 11100,
+    (2016, 2017): 11100,
+    (2017, 2018): 11300,
+    (2018, 2019): 11700,
+    (2019, 2020): 12000,
+    (2020, 2021): 12300,
+    (2021, 2022): 12300,
+    (2022, 2023): 12300,
+    (2023, 2024):  6000,
+    (2024, 2025):  3000,
 }
+allowance_latest = allowances[next(reversed(allowances))]
 
 
 def dround(d, places=0, rounding=None):
@@ -165,7 +166,12 @@ class Result:
         try:
             tax_year_result = self.tax_years[tax_year]
         except KeyError:
-            allowance = allowances[tax_year[1]]
+            try:
+                allowance = allowances[tax_year]
+            except KeyError:
+                allowance = allowance_latest
+                sys.stderr.write(f'warning: allowance for {tax_year[0]}/{tax_year[1]} unknown, presuming £{allowance}\n\n')
+
             tax_year_result = TaxYearResult(f'{tax_year[0]}/{tax_year[1]}', allowance=allowance)
             self.tax_years[tax_year] = tax_year_result
 
