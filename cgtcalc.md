@@ -84,34 +84,42 @@ python cgtcalc.py tests/data/cgtcalc/hmrc-hs284-example3.tsv
 ```
 
 ```
-
 SUMMARY
 
- Tax Year Disposals Proceeds Costs Gains Losses Allowance Taxable Gain Carried Losses
-2023/2024         2     5440  4811   629      0      6000            0              0
+Tax Year   Disposals  Proceeds  Costs  Gains  Losses  Allowance  Taxable Gain  Carried Losses
+─────────────────────────────────────────────────────────────────────────────────────────────
+2023/2024          2      5440   4811    629       0       6000             0               0
 
 
 TAX YEAR 2023/2024
 
-1. SOLD 700 LOBSTER on 01/05/2023 for £3360 with £100 charges giving GAIN of £329
-Matches with:
-- SECTION_104: 700 shares of 1500 with total cost of £6280
-Calculation: 3360 - (100 + 6280 × 700 / 1500) = 329
+1. SOLD 700 LOBSTER on 01/05/2023 for £3360 giving GAIN of £329
 
-2. SOLD 400 LOBSTER on 01/02/2024 for £2080 with £105 charges giving GAIN of £300
-Matches with:
-- SECTION_104: 400 shares of 800 with total cost of £3349
-Calculation: 2080 - (105 + 3349 × 400 / 800) = 300
+  Disposal proceeds                                       3360
+  Disposal costs                                          -100
+  Cost of 700 shares of 1500 in S.104 holding for £6280  -2931  (-6280 × 700 / 1500)
+  ──────────────────────────────────────────────────────────────────────────────────
+  Gain                                                     329
+
+2. SOLD 400 LOBSTER on 01/02/2024 for £2080 giving GAIN of £300
+
+  Disposal proceeds                                      2080
+  Disposal costs                                         -105
+  Cost of 400 shares of 800 in S.104 holding for £3349  -1675  (-3349 × 400 / 800)
+  ────────────────────────────────────────────────────────────────────────────────
+  Gain                                                    300
 
 
-SECTION 104
+SECTION 104 HOLDINGS
 
-LOBSTER:
-      Date Trade       Shares Amount Holding Cost
-2015-04-01   BUY 1000 of 1000   4150    1000 4150
-2018-09-01   BUY   500 of 500   2130    1500 6280
-2023-05-01  SELL   700 of 700            800 3349
+LOBSTER
 
+     Date     Description                       Identified  ΔCost  Pool Shares  Pool Cost
+  ───────────────────────────────────────────────────────────────────────────────────────
+  2015-04-01  Bought 1000 shares for £4150            1000   4150         1000       4150
+  2018-09-01  Bought 500 shares for £2130              500   2130         1500       6280
+  2023-05-01  Sold 700 shares                          700  -2931          800       3349
+  2024-02-01  Sold 400 shares                          400  -1675          400       1674
 ```
 
 ## Vanguard UK Reporting Fund FAQ guide example
@@ -128,26 +136,31 @@ LOBSTER:
 ```
 SUMMARY
 
- Tax Year Disposals Proceeds Costs Gains Losses Allowance Taxable Gain Carried Losses
-2016/2017         1    23891 22925   966      0     11100            0              0
+Tax Year   Disposals  Proceeds  Costs  Gains  Losses  Allowance  Taxable Gain  Carried Losses
+─────────────────────────────────────────────────────────────────────────────────────────────
+2016/2017          1     23891  22925    966       0      11100             0               0
 
 
 TAX YEAR 2016/2017
 
-1. SOLD 100 IE00B3X1LS57 on 29/03/2017 for £23891 with £0 charges giving GAIN of £966
-Matches with:
-- SECTION_104: 100 shares of 100 with total cost of £22925
-Calculation: 23891 - 22925 = 966
+1. SOLD 100 IE00B3X1LS57 on 29/03/2017 for £23891 giving GAIN of £966
+
+  Disposal proceeds                                23891
+  Cost of 100 shares in S.104 holding for £22925  -22925
+  ────────────────────────────────────────────────────────
+  Gain                                               966
 
 
-SECTION 104
+SECTION 104 HOLDINGS
 
-IE00B3X1LS57:
-      Date     Trade     Shares Amount Holding  Cost
-2016-11-21       BUY 100 of 100  22926     100 22926
-2016-12-30  DIVIDEND                15     100 22941
-2016-12-30 CAPRETURN                16     100 22925
-2017-03-29      SELL 100 of 100              0     0
+IE00B3X1LS57
+
+     Date     Description                       Identified  ΔCost   Pool Shares  Pool Cost
+  ────────────────────────────────────────────────────────────────────────────────────────
+  2016-11-21  Bought 100 shares for £22926             100   22926          100      22926
+  2016-12-30  Notional distribution                             15          100      22941
+  2016-12-30  Equalisation payment                             -16          100      22925
+  2017-03-29  Sold 100 shares                          100  -22925            0          0
 ```
 
 # References

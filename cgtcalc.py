@@ -91,8 +91,7 @@ class DisposalResult:
     proceeds: Decimal
     charges: Decimal
     costs: Decimal
-    identifications: list
-    calculation: str
+    table: list
 
 
 def date_to_tax_year(date: datetime.date):
@@ -231,17 +230,16 @@ class Result:
                         gain = -gain
                     else:
                         sign = 'GAIN'
-                    stream.write(f'{no}. SOLD {disposal.shares} {disposal.security} on {disposal.date:%d/%m/%Y} for £{disposal.proceeds} with £{disposal.charges} charges giving {sign} of £{gain}\n')
-                    stream.write('Matches with:\n')
-                    for identification in disposal.identifications:
-                        stream.write(f'- {identification}\n')
-                    stream.write(f'Calculation: {disposal.calculation}\n')
+                    stream.write(f'{no}. SOLD {disposal.shares} {disposal.security} on {disposal.date:%d/%m/%Y} for £{disposal.proceeds} giving {sign} of £{gain}\n\n')
+
+                    footer = ('Gain', str(disposal.proceeds - disposal.costs), '')
+                    self._write_table(stream, disposal.table, footer=footer, indent='  ')
                     stream.write('\n')
 
                 stream.write('\n')
 
         if self.section104_tables:
-            stream.write('SECTION 104\n')
+            stream.write('SECTION 104 HOLDINGS\n')
 
             securities = list(self.section104_tables.keys())
             securities.sort()
@@ -250,7 +248,7 @@ class Result:
                 data = self.section104_tables[security]
 
                 stream.write('\n')
-                stream.write(f'{security}:\n')
+                stream.write(f'{security}\n\n')
 
                 self.write_table(stream, data, indent='  ')
 
@@ -260,10 +258,24 @@ class Result:
         obj0 = data[0]
         header = [field.name.replace('_', ' ').title().replace('Delta ', 'Δ') for field in dataclasses.fields(obj0)]
         rows = [dataclasses.astuple(obj) for obj in data]
+        self._write_table(stream, rows, header=header, indent=indent)
+
+    def _write_table(self, stream, rows, header=None, footer=None, indent=''):
         columns = [list(col) for col in zip(*rows)]
-        assert len(columns) == len(header)
-        for c in range(len(header)):
-            width = len(header[c])
+        if header is not None:
+            header = list(header)
+            assert len(header) == len(columns)
+        if footer is not None:
+            footer = list(footer)
+            assert len(footer) == len(columns)
+
+        widths = []
+        for c in range(len(columns)):
+            width = 0
+            if header is not None:
+                width = max(width, len(header[c]))
+            if footer is not None:
+                width = max(width, len(footer[c]))
             column = columns[c]
             header_just = str.center
             cell_just = str.rjust
@@ -279,15 +291,27 @@ class Result:
                     cell = str(cell)
                     column[r] = cell
                 width = max(width, len(cell))
-            header[c] = header_just(header[c], width)
+            if header is not None:
+                header[c] = header_just(header[c], width)
             for r in range(len(column)):
                 column[r] = cell_just(column[r], width)
+            if footer is not None:
+                footer[c] = cell_just(str(footer[c]), width)
+            widths.append(width)
 
-        h = '  '.join(header)
-        stream.write(indent + h + '\n')
-        stream.write(indent + '─'*len(h) + '\n')
+        sep = '  '
+
+        line_width = len(sep.join([' '*width for width in widths]))
+        rule = '─' * line_width
+
+        if header is not None:
+            stream.write(indent + sep.join(header).rstrip() + '\n')
+            stream.write(indent + rule + '\n')
         for row in zip(*columns):
-            stream.write(indent + '  '.join(row) + '\n')
+            stream.write(indent + sep.join(row).rstrip() + '\n')
+        if footer is not None:
+            stream.write(indent + rule + '\n')
+            stream.write(indent + sep.join(footer).rstrip() + '\n')
 
 
 def is_close_decimal(a, b, abs_tol=Decimal('.01')):
@@ -473,35 +497,37 @@ def calculate(filename):
             elif tr.kind == Kind.SELL:
                 disposal = disposals[tr.date]
 
-                costs_values = []
-                costs_calcs = []
+                table = []
+                table.append(('Disposal proceeds', disposal.proceeds, ''))
                 if disposal.cost:
-                    costs_values.append(disposal.cost)
-                    costs_calcs.append(str(disposal.cost))
-                identifications = []
+                    table.append(('Disposal costs', -disposal.cost, ''))
                 for identification in disposal.identifications:
                     identified, kind, acquisition_date = identification
                     acquisition = acquisitions[acquisition_date]
-                    identifications.append(f'{kind.name}: {acquisition_date:%d/%m/%Y} {identified} shares of {acquisition.shares} for total cost of £{acquisition.cost}')
-                    if identified == acquisition.shares:
-                        costs_values.append(acquisition.cost)
-                        costs_calcs.append(str(acquisition.cost))
+                    if kind == Identification.SAME_DAY:
+                        acquisition_date_desc = 'same day'
                     else:
-                        costs_values.append(dround(acquisition.cost * identified / acquisition.shares, 0, ROUND_CEILING))
-                        costs_calcs.append(f'{acquisition.cost} × {identified} / {acquisition.shares}')
+                        assert kind == Identification.BED_AND_BREAKFAST
+                        acquisition_date_desc = f'{acquisition_date} (B&B)'
+                    if identified == acquisition.shares:
+                        description = f'Cost of {acquisition.shares} shares acquired on {acquisition_date_desc} for £{acquisition.cost}'
+                        table.append((description, -acquisition.cost, ''))
+                    else:
+                        description = f'Cost of {identified} shares of {acquisition.shares} acquired on {acquisition_date_desc} for £{acquisition.cost}'
+                        cost = dround(acquisition.cost * identified / acquisition.shares, 0, ROUND_CEILING)
+                        table.append((description, -cost, f'(-{acquisition.cost} × {identified} / {acquisition.shares})'))
                 if disposal.unidentified:
                     assert pool.cost > 0
                     assert pool.shares >= disposal.unidentified
                     identified = disposal.unidentified
-                    identifications.append(f'SECTION_104: {identified} shares of {pool.shares} with total cost of £{pool.cost}')
                     if identified == pool.shares:
+                        description = f'Cost of {pool.shares} shares in S.104 holding for £{pool.cost}'
                         cost = pool.cost
-                        cost_calc = str(cost)
+                        table.append((description, -cost, ''))
                     else:
+                        description = f'Cost of {identified} shares of {pool.shares} in S.104 holding for £{pool.cost}'
                         cost = dround(pool.cost * identified / pool.shares, 0, ROUND_CEILING)
-                        cost_calc = f'{pool.cost} × {identified} / {pool.shares}'
-                    costs_values.append(cost)
-                    costs_calcs.append(cost_calc)
+                        table.append((description, -cost, f'({-pool.cost} × {identified} / {pool.shares})'))
                     update_pool(pool_updates, pool, tr,
                         description=f'Sold {disposal.shares} shares',
                         delta_shares = -identified,
@@ -515,22 +541,16 @@ def calculate(filename):
                     group2_holding -= disposal.shares - group1_holding
                     group1_holding = Decimal(0)
 
-                total_costs = sum(costs_values)
+                gain = Decimal(0)
+                allowable_costs = Decimal(0)
+                for description, cost, calculation in table:
+                    if calculation:
+                        assert math.isclose(eval(calculation.replace('×', '*')), cost, abs_tol=1.0)
+                    gain += cost
+                    if cost < Decimal(0):
+                        allowable_costs -= cost
 
-                if len(costs_calcs) == 0:
-                    costs_calculation = "0"
-                elif len(costs_calcs) == 1:
-                    costs_calculation, = costs_calcs
-                else:
-                    costs_calculation = '(' + ' + '.join(costs_calcs) + ')'
-                abs_tol = 1.0 * len(costs_calcs)
-
-                gain = disposal.proceeds - total_costs
-
-                calculation = f'{disposal.proceeds} - {costs_calculation}'
-
-                assert math.isclose(eval(calculation.replace('×', '*')), gain, abs_tol=abs_tol)
-                calculation += f' = {gain}'
+                assert gain == disposal.proceeds - allowable_costs
 
                 result.add_disposal(DisposalResult(
                     date=tr.date,
@@ -538,9 +558,8 @@ def calculate(filename):
                     shares=disposal.shares,
                     proceeds=disposal.proceeds,
                     charges=disposal.cost,
-                    costs=total_costs,
-                    identifications=identifications,
-                    calculation=calculation
+                    costs=allowable_costs,
+                    table=table
                 ))
 
             elif tr.kind == Kind.DIVIDEND:
