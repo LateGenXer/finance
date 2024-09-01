@@ -64,6 +64,8 @@ transactions = st.text_area(
 
 st.header('Output')
 
+st.warning('cgtcalc.py is still work in progress!')
+
 if transactions:
     stream = io.StringIO(transactions)
 else:
