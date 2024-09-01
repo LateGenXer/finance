@@ -233,7 +233,7 @@ class Result:
                         gain = -gain
                     else:
                         sign = 'GAIN'
-                    stream.write(f'{no}. SOLD {disposal.shares} {disposal.security} on {disposal.date:%d/%m/%Y} for £{disposal.proceeds} giving {sign} of £{gain}\n\n')
+                    stream.write(f'{no}. SOLD {disposal.shares} {disposal.security} on {disposal.date} for £{disposal.proceeds} giving {sign} of £{gain}\n\n')
 
                     footer = ('Gain', str(disposal.proceeds - disposal.costs), '')
                     self._write_table(stream, disposal.table, footer=footer, indent='  ')
@@ -571,7 +571,7 @@ def calculate(stream):
                 reference_holding, income = tr.params
                 holding = group1_holding + group2_holding
                 if not (is_close_decimal(reference_holding, holding) or is_close_decimal(reference_holding, pool.shares)):
-                    result.warnings.append(f'DIVIDEND {tr.date:%d/%m/%Y}: expected holding of {holding} {security} but {reference_holding} were specified')
+                    result.warnings.append(f'DIVIDEND {tr.date:%d/%m/%Y} {security}: expected holding of {holding} {security} but {reference_holding} were specified')
                 assert pool.shares >= holding
 
                 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57707
@@ -587,7 +587,7 @@ def calculate(stream):
             elif tr.kind == Kind.CAPRETURN:
                 reference_holding, equalisation = tr.params
                 if not is_close_decimal(reference_holding, group2_holding):
-                    result.warning(f'CAPRETURN {tr.date:%d/%m/%Y}: expected Group 2 holding of {group2_holding} {security} but {reference_holding} was specified')
+                    result.warning(f'CAPRETURN {tr.date:%d/%m/%Y} {security}: expected Group 2 holding of {group2_holding} {security} but {reference_holding} was specified')
 
                 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57705
                 # Allocate equalisation payments to Group 2 acquisitions in proportion to the remaining holdings
