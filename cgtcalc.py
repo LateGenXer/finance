@@ -427,10 +427,12 @@ def calculate(stream):
         for tr in trades:
             if tr.kind == Kind.BUY:
                 shares, price, charges = tr.params
-                cost = shares*price
+                # XXX: We could track acquisition charges sepearately (and
+                # round it separately) but coalescing into a single figure
+                # greatly simplifies things
+                cost = shares*price + charges
                 cost = dround(cost, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
                 cost = dround(cost, 0, ROUND_CEILING)
-                cost += dround(charges, 0, ROUND_CEILING)
                 acquisition = Acquisition(cost, shares, shares)
                 assert tr.date not in acquisitions
                 acquisitions[tr.date] = acquisition
