@@ -64,7 +64,6 @@ transactions = st.text_area(
 
 st.header('Output')
 
-st.warning('cgtcalc.py is still work in progress!')
 
 if transactions:
     stream = io.StringIO(transactions)
@@ -72,6 +71,8 @@ else:
     stream = open(placeholder_filename, 'rt')
 
 result = calculate(stream)
+for warning in result.warnings:
+    st.warning(warning, icon="⚠️")
 
 calculation = io.StringIO()
 calculation.write('```\n')

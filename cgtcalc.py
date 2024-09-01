@@ -101,6 +101,8 @@ def date_to_tax_year(date: datetime.date):
         return date.year, date.year + 1
 
 
+
+
 # https://www.gov.uk/guidance/capital-gains-tax-rates-and-allowances
 # https://www.rossmartin.co.uk/capital-gains-tax/110-capital-gains-tax-rates-a-allowances
 allowances = {
@@ -153,6 +155,7 @@ class TaxYearResult:
 
 @dataclasses.dataclass
 class Result:
+    warnings: list[str] = dataclasses.field(default_factory=list)
     disposals: list[tuple] = dataclasses.field(default_factory=list)
     section104_tables: dict[str, list] = dataclasses.field(default_factory=dict)
     tax_years: dict[tuple[int, int], TaxYearResult] = dataclasses.field(default_factory=dict)
@@ -169,7 +172,7 @@ class Result:
                 allowance = allowances[tax_year]
             except KeyError:
                 allowance = allowance_latest
-                sys.stderr.write(f'warning: capital gains allowance for {tax_year[0]}/{tax_year[1]} tax year unknown, presuming £{allowance}\n\n')
+                self.warnings.append(f'warning: capital gains allowance for {tax_year[0]}/{tax_year[1]} tax year unknown, presuming £{allowance}')
 
             tax_year_result = TaxYearResult(f'{tax_year[0]}/{tax_year[1]}', allowance=allowance)
             self.tax_years[tax_year] = tax_year_result
@@ -367,8 +370,7 @@ def calculate(stream):
             kind = Kind.SELL
             # Section 104 rules
             if date < datetime.date(2008, 4, 6):
-                sys.stderr.write(f'error: {line_no}: disposals before 6/4/2088 unsupported; replace earlier trades with BUY for Section 104 holding.\n')
-                sys.exit(1)
+                raise NotImplementedError('line {line_no}: disposals before 6/4/2088 unsupported; replace earlier trades with BUY for Section 104 holding.\n')
             if len(params) == 4:
                 tax = params.pop(3)
                 assert not tax
@@ -379,8 +381,7 @@ def calculate(stream):
         elif trade == 'DIVIDEND':
             kind = Kind.DIVIDEND
         elif trade in ('R', 'SPLIT', 'UNSPLIT'):
-            sys.stderr.write(f'error: {line_no}: restructurings not yet implemented.\n')
-            sys.exit(1)
+            raise NotImplementedError(f'line {line_no}: restructurings not yet implemented.\n')
         else:
             raise NotImplementedError(trade)
 
@@ -390,6 +391,7 @@ def calculate(stream):
         trades.append(tr)
 
     result = Result()
+    result.warnings.append('cgtcalc.py is still work in progress!')
 
     for security, trades in securities.items():
         logger.debug('~~~~~~~~ %s ~~~~~~~~~', security)
@@ -567,7 +569,7 @@ def calculate(stream):
                 reference_holding, income = tr.params
                 holding = group1_holding + group2_holding
                 if not (is_close_decimal(reference_holding, holding) or is_close_decimal(reference_holding, pool.shares)):
-                    sys.stderr.write(f'warning: CAPRETURN {tr.date:%d/%m/%Y}: expected holding of {holding} {security} but {reference_holding} were specified\n')
+                    result.warnings.append(f'DIVIDEND {tr.date:%d/%m/%Y}: expected holding of {holding} {security} but {reference_holding} were specified')
                 assert pool.shares >= holding
 
                 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57707
@@ -583,7 +585,7 @@ def calculate(stream):
             elif tr.kind == Kind.CAPRETURN:
                 reference_holding, equalisation = tr.params
                 if not is_close_decimal(reference_holding, group2_holding):
-                    sys.stderr.write(f'warning: CAPRETURN {tr.date:%d/%m/%Y}: expected Group 2 holding of {group2_holding} {security} but {reference_holding} was specified\n')
+                    result.warning(f'CAPRETURN {tr.date:%d/%m/%Y}: expected Group 2 holding of {group2_holding} {security} but {reference_holding} was specified')
 
                 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57705
                 # Allocate equalisation payments to Group 2 acquisitions in proportion to the remaining holdings
@@ -614,11 +616,13 @@ def calculate(stream):
 
 
 def main():
-    sys.stderr.write('warning: cgtcalc.py is still work in progress!\n\n')
-
     logging.basicConfig(format='%(levelname)s %(message)s', level=logging.INFO)
     for arg in sys.argv[1:]:
         result = calculate(open(arg, 'rt'))
+        if result.warnings:
+            for warning in result.warnings:
+                sys.stderr.write(warning + '\n')
+            sys.stderr.write('\n')
         result.write(sys.stdout)
 
 
