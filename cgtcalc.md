@@ -95,7 +95,7 @@ Tax Year   Disposals  Proceeds  Costs  Gains  Losses  Allowance  Taxable Gain  C
 
 TAX YEAR 2023/2024
 
-1. SOLD 700 LOBSTER on 01/05/2023 for £3360 giving GAIN of £329
+1. SOLD 700 LOBSTER on 2023-05-01 for £3360 giving GAIN of £329
 
   Disposal proceeds                                       3360
   Disposal costs                                          -100
@@ -103,7 +103,7 @@ TAX YEAR 2023/2024
   ──────────────────────────────────────────────────────────────────────────────────
   Gain                                                     329
 
-2. SOLD 400 LOBSTER on 01/02/2024 for £2080 giving GAIN of £300
+2. SOLD 400 LOBSTER on 2024-02-01 for £2080 giving GAIN of £300
 
   Disposal proceeds                                      2080
   Disposal costs                                         -105
@@ -145,7 +145,7 @@ Tax Year   Disposals  Proceeds  Costs  Gains  Losses  Allowance  Taxable Gain  C
 
 TAX YEAR 2016/2017
 
-1. SOLD 100 IE00B3X1LS57 on 29/03/2017 for £23891 giving GAIN of £966
+1. SOLD 100 IE00B3X1LS57 on 2017-03-29 for £23891 giving GAIN of £966
 
   Disposal proceeds                                23891
   Cost of 100 shares in S.104 holding for £22925  -22925
