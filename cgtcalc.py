@@ -79,8 +79,8 @@ class PoolUpdate:
     description: str
     identified: Decimal
     delta_cost: Decimal
-    total_shares: Decimal
-    total_cost: Decimal
+    pool_shares: Decimal
+    pool_cost: Decimal
 
 
 @dataclasses.dataclass
@@ -170,7 +170,7 @@ class Result:
                 allowance = allowances[tax_year]
             except KeyError:
                 allowance = allowance_latest
-                sys.stderr.write(f'warning: allowance for {tax_year[0]}/{tax_year[1]} unknown, presuming £{allowance}\n\n')
+                sys.stderr.write(f'warning: capital gains allowance for {tax_year[0]}/{tax_year[1]} tax year unknown, presuming £{allowance}\n\n')
 
             tax_year_result = TaxYearResult(f'{tax_year[0]}/{tax_year[1]}', allowance=allowance)
             self.tax_years[tax_year] = tax_year_result
@@ -307,8 +307,8 @@ def update_pool(pool_updates, pool, trade, description, delta_cost=Decimal('NaN'
         description=description.ljust(32),
         identified=abs(delta_shares),
         delta_cost=delta_cost,
-        total_shares=pool.shares,
-        total_cost=dround(pool.cost, 2),
+        pool_shares=pool.shares,
+        pool_cost=dround(pool.cost, 2),
     ))
 
 
