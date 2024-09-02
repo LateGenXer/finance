@@ -726,7 +726,7 @@ class BondLadder:
                     while consumption_dates and consumption_dates[0] <= d:
                         cd = consumption_dates.pop(0)
                         if maturity < shift_year(cd, self.lag):
-                            sell = lp.LpVariable(f'Sell_{tidm}_{cd.strftime("%Y%m%d")}', 0)
+                            sell = lp.LpVariable(f'Sell_{tidm}_{cd:%Y%m%d}', 0)
                             quantity = quantity - sell
                             prob += quantity >= 0
                             income = income + sell * g.accrued_interest(cd)
@@ -794,20 +794,16 @@ class BondLadder:
                     cash_flows.append(CashFlow(date=ev.date, description=interest_desc, incoming=interest, balance=balance, income=interest))
                 prev_date = ev.date
 
-            cf = CashFlow(date=ev.date, description=ev.description)
 
+            incoming = None
+            outgoing = None
+            income = None
             if ev.kind == EventKind.CONSUMPTION:
                 outgoing = ev.operand
-                cf.outgoing = outgoing
-                balance = balance - outgoing
-                prob += balance >= 0
             elif ev.kind == EventKind.CASH_FLOW:
                 incoming, income = ev.operand
-                cf.incoming = incoming
-                balance = balance + incoming
                 if income is not None:
                     accrued_income = accrued_income + income
-                    cf.income = income
             elif ev.kind == EventKind.TAX_YEAR_END:
                 assert tax_due is None
                 tax_due = accrued_income * self.marginal_income_tax
@@ -815,14 +811,30 @@ class BondLadder:
                 continue
             elif ev.kind == EventKind.TAX_PAYMENT:
                 assert tax_due is not None
-                balance = balance - tax_due
-                prob += balance >= 0
-                cf.outgoing = tax_due
+                outgoing = tax_due
                 tax_due = None
             else:
                 raise ValueError(ev.kind)
 
+            cf = CashFlow(date=ev.date, description=ev.description)
+            if incoming is not None:
+                balance = balance + incoming
+                cf.incoming = incoming
+            if outgoing is not None:
+                if False:  # pragma: no cover
+                    # While simpler, this is numerically unstable
+                    balance = balance - outgoing
+                    prob += balance >= 0
+                else:
+                    # Introducing a variable avoids numerical instability
+                    v = lp.LpVariable(f'balance_{ev.date:%Y%m%d}_{len(cash_flows)}', 0)
+                    prob += v == balance - outgoing
+                    balance = v
+                cf.outgoing = outgoing
+            if income is not None:
+                cf.income = income
             cf.balance = balance
+
             cash_flows.append(cf)
 
         prob.checkDuplicateVars()
