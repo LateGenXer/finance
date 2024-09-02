@@ -788,8 +788,9 @@ class BondLadder:
             if ev.date != prev_date:
                 assert ev.date >= prev_date
                 if self.interest_rate and ev.date <= last_consuption:
-                    interest = balance * self.interest_rate * (ev.date - prev_date).days / 365.25
-                    balance = balance + interest
+                    pro_rata_interest_rate = self.interest_rate * (ev.date - prev_date).days / 365.25
+                    interest = balance * pro_rata_interest_rate
+                    balance = balance * (1.0 + pro_rata_interest_rate)
                     accrued_income = accrued_income + interest
                     cash_flows.append(CashFlow(date=ev.date, description=interest_desc, incoming=interest, balance=balance, income=interest))
                 prev_date = ev.date
