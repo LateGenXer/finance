@@ -9,16 +9,11 @@
 # Python CGT calculator, inspired by http://cgtcalculator.com/ and
 # https://github.com/mattjgalloway/cgtcalc
 #
-# Usage:
-#
-#   python cgtcalc.py input.tsv
-#
-# Accepts input in both formats:
-# - http://cgtcalculator.com/instructions.htm#tradeformat
-# - https://github.com/mattjgalloway/cgtcalc?tab=readme-ov-file#input-data
+# See cgtcalc.md for usage instructions.
 #
 
 
+import argparse
 import dataclasses
 import datetime
 import logging
@@ -339,7 +334,9 @@ def update_pool(pool_updates, pool, trade, description, delta_cost=Decimal('NaN'
     ))
 
 
-def calculate(stream):
+def calculate(stream, rounding=True):
+
+    places = 0 if rounding else 2
 
     # Parse
     securities = {}
@@ -432,7 +429,7 @@ def calculate(stream):
                 # greatly simplifies things
                 cost = shares*price + charges
                 cost = dround(cost, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
-                cost = dround(cost, 0, ROUND_CEILING)
+                cost = dround(cost, places, ROUND_CEILING)
                 acquisition = Acquisition(cost, shares, shares)
                 assert tr.date not in acquisitions
                 acquisitions[tr.date] = acquisition
@@ -440,8 +437,8 @@ def calculate(stream):
                 shares, price, charges = tr.params
                 proceeds = shares*price
                 proceeds = dround(proceeds, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
-                proceeds = dround(proceeds, 0, ROUND_FLOOR)
-                charges = dround(charges, 0, ROUND_CEILING)
+                proceeds = dround(proceeds, places, ROUND_FLOOR)
+                charges = dround(charges, places, ROUND_CEILING)
                 disposal = Disposal(proceeds, charges, shares, shares)
                 assert tr.date not in disposals
                 disposals[tr.date] = disposal
@@ -490,7 +487,7 @@ def calculate(stream):
                     if acquisition.unidentified == acquisition.shares:
                         delta_cost = acquisition.cost
                     else:
-                        delta_cost = dround(acquisition.cost * acquisition.unidentified / acquisition.shares, 0, ROUND_CEILING)
+                        delta_cost = dround(acquisition.cost * acquisition.unidentified / acquisition.shares, places, ROUND_CEILING)
                     update_pool(pool_updates, pool, tr,
                         description=f'Bought {acquisition.shares} shares for £{acquisition.cost}',
                         delta_cost=delta_cost,
@@ -518,7 +515,7 @@ def calculate(stream):
                         table.append((description, -acquisition.cost, ''))
                     else:
                         description = f'Cost of {identified} shares of {acquisition.shares} acquired on {acquisition_date_desc} for £{acquisition.cost}'
-                        cost = dround(acquisition.cost * identified / acquisition.shares, 0, ROUND_CEILING)
+                        cost = dround(acquisition.cost * identified / acquisition.shares, places, ROUND_CEILING)
                         table.append((description, -cost, f'(-{acquisition.cost} × {identified} / {acquisition.shares})'))
                 if disposal.unidentified:
                     assert pool.cost > 0
@@ -530,7 +527,7 @@ def calculate(stream):
                         table.append((description, -cost, ''))
                     else:
                         description = f'Cost of {identified} shares of {pool.shares} in S.104 holding for £{pool.cost}'
-                        cost = dround(pool.cost * identified / pool.shares, 0, ROUND_CEILING)
+                        cost = dround(pool.cost * identified / pool.shares, places, ROUND_CEILING)
                         table.append((description, -cost, f'({-pool.cost} × {identified} / {pool.shares})'))
                     update_pool(pool_updates, pool, tr,
                         description=f'Sold {disposal.shares} shares',
@@ -577,7 +574,7 @@ def calculate(stream):
                 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57707
                 # Add notional income to the Section 104 pool cost
                 assert pool.shares
-                income = dround(income, 0, ROUND_CEILING)
+                income = dround(income, places, ROUND_CEILING)
 
                 update_pool(pool_updates, pool, tr,
                     description="Notional distribution",
@@ -594,7 +591,7 @@ def calculate(stream):
                 assert pool.shares
                 assert pool.cost >= equalisation
 
-                equalisation = dround(equalisation, 0, ROUND_FLOOR)
+                equalisation = dround(equalisation, places, ROUND_FLOOR)
 
                 update_pool(pool_updates, pool, tr,
                     description="Equalisation payment",
@@ -619,13 +616,18 @@ def calculate(stream):
 
 def main():
     logging.basicConfig(format='%(levelname)s %(message)s', level=logging.INFO)
-    for arg in sys.argv[1:]:
-        result = calculate(open(arg, 'rt'))
-        if result.warnings:
-            for warning in result.warnings:
-                sys.stderr.write(warning + '\n')
-            sys.stderr.write('\n')
-        result.write(sys.stdout)
+
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument('--rounding', action=argparse.BooleanOptionalAction, default=True, help='(dis)enable rounding to whole pounds')
+    argparser.add_argument('filename', metavar='FILENAME', help='file with input trades')
+    args = argparser.parse_args()
+
+    result = calculate(open(args.filename, 'rt'), rounding=args.rounding)
+    if result.warnings:
+        for warning in result.warnings:
+            sys.stderr.write(warning + '\n')
+        sys.stderr.write('\n')
+    result.write(sys.stdout)
 
 
 if __name__ == '__main__':

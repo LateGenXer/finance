@@ -44,6 +44,14 @@ from cgtcalc import calculate
 
 
 #
+# Parameters
+#
+
+with st.sidebar:
+    st.header("Parameters")
+    rounding = st.checkbox("Rounding", value=True, key="rounding", help="Round to whole pounds.")
+
+#
 # Input
 #
 
@@ -70,7 +78,7 @@ if transactions:
 else:
     stream = open(placeholder_filename, 'rt')
 
-result = calculate(stream)
+result = calculate(stream, rounding=rounding)
 for warning in result.warnings:
     st.warning(warning, icon="⚠️")
 
