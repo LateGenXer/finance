@@ -535,7 +535,7 @@ def calculate(stream, rounding=True):
                         delta_cost = -cost
                     )
 
-                # Assume FIFO for notional income and equalisation payments
+                # Assume FIFO for notional distributions and equalisation payments
                 if group1_holding >= disposal.shares:
                     group1_holding -= disposal.shares
                 else:
@@ -572,7 +572,7 @@ def calculate(stream, rounding=True):
                 assert pool.shares >= holding
 
                 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57707
-                # Add notional income to the Section 104 pool cost
+                # Add notional distribution to the Section 104 pool cost
                 assert pool.shares
                 income = dround(income, places, ROUND_CEILING)
 

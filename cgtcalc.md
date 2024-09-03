@@ -1,11 +1,9 @@
 # About
 
-`cgtcalc.py` is a UK Capital Gains Tax calculator writtten in Python.
+`cgtcalc.py` is a UK Capital Gains Tax calculator written in Python.
 
 It is inspired by [other](#Alternative) free CGT calculators, but unlike most
-of them it handles notional income and equalisation payments in a consistent manner.
-
-It is written in Python.
+of them it handles notional distributions and equalisation payments in a consistent manner.
 
 A web instance is available [here](https://lategenxer.streamlit.app/CGT_Calculator)
 
@@ -21,7 +19,7 @@ Always check carefully its results and engage a tax advisor in any doubt.
 
 - Followings [share identification rules](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg51560)
 - Rounding done as per HMRC example calculations and Community Forums clarifications:
-  - proceeds and gains always rounded down to whole poound
+  - proceeds and gains always rounded down to whole pound
   - individual costs (charges, acquisition costs, Section 104 pool cost) and losses always rounded up to whole pound, _before_ addition
 - Number of shares and unit share price kept at full precision
 - Notional income (i.e., reinvested dividends from UK shares, and _Excess Reportable Income_ from offshore reporting funds)
@@ -58,12 +56,13 @@ The number and meaning of the fields varies with the kind of transaction:
 | ---- | ----------- | ------ |
 | `B`/`BUY` | Buy transaction | _date_ _security_ _shares_ _price_ _expenses_ [_tax¹_]
 | `S`/`SELL` | Sell transaction | _date_ _security_ _shares_ _price_ _expenses_ [_tax¹_]
-| `DIVIDEND` | Notional income | _ex-dividend-date_ _security_ _holding²_ _income_
-| `CAPRETURN` | Equalisation payment | _ex-dividend-date_ _security_ _group2-holding²_ _equalisation_
+| `DIVIDEND` | Notional distribution² | _ex-dividend-date_ _security_ _holding³_ _income_
+| `CAPRETURN` | Equalisation payment | _ex-dividend-date_ _security_ _group2-holding³_ _equalisation_
 
 Notes:
-1. _tax_ fields of `BUY`/`SELL` transactions are optional, for CGTCalculator compatibility, and are added to the expenses
-2. _holding_ and _group2-holding_ fields are used for consistency check and have no bearing on calculated gains/losses.
+1. _tax_ fields of `BUY`/`SELL` transactions are optional, are supported for CGTCalculator compatibility, and will be added to the expenses
+2. notional distribution is, for example, reinvested dividends in accumulation class of UK Authorized Investments Funds, or Excess Reportable Income in Offshore Funds
+3. _holding_ and _group2-holding_ fields are used for consistency check  and have no bearing on calculated gains/losses.
 
 Empty lines or lines starting with `#` are ignored.
 
@@ -126,6 +125,7 @@ LOBSTER
 
 ## Vanguard UK Reporting Fund FAQ guide example
 
+This is the [Excess Reportable Income example calculation from Vanguard UK Reporting Fund FAQ guide](https://fund-docs.vanguard.com/uk-reporting-fund-faq.pdf#page=8).
 
 | Kind      |    Date    | Company      |        |          |         |
 | --------- | :--------: | ------------ | ------ | :------: | ------: |
@@ -171,6 +171,7 @@ IE00B3X1LS57
   - [Self Assessment: Capital Gains Tax summary notes](https://www.gov.uk/government/publications/self-assessment-capital-gains-summary-sa108)
   - [Shares and Capital Gains Tax helpsheet HS284](https://www.gov.uk/government/publications/shares-and-capital-gains-tax-hs284-self-assessment-helpsheet/hs284-shares-and-capital-gains-tax-2024)
   - [Capital Gains Manual](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual)
+  - [Investment Funds Manual](https://www.gov.uk/hmrc-internal-manuals/investment-funds)
 - Quilter Capital Gains Tax quick reference guides:
   - [Quick reference guide 1 - section 104 Holdings](https://www.quilter.com/siteassets/documents/platform/guides-and-brochures/20719-cgt-quick-reference-guide-1-section-104-holdings.pdf)
   - [Quick reference guide 2 - Share identification rules](https://www.quilter.com/siteassets/documents/platform/guides-and-brochures/20720-cgt-quick-reference-guide-2-share-identification-rules.pdf)
