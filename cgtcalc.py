@@ -181,6 +181,8 @@ class Result:
         else:
             tax_year_result.gains += gain
 
+        assert tax_year_result.proceeds - tax_year_result.costs == tax_year_result.gains - tax_year_result.losses
+
     def sorted_tax_years(self):
         tax_years = list(self.tax_years.keys())
         tax_years.sort()
@@ -196,13 +198,16 @@ class Result:
             tyr.carried_losses = max(tyr.costs - tyr.proceeds, 0)
 
     def write(self, stream):
-        if self.tax_years:
-            stream.write('SUMMARY\n\n')
+        stream.write('SUMMARY\n\n')
 
+        if self.tax_years:
             data = [self.tax_years[tax_year] for tax_year in self.sorted_tax_years()]
             self.write_table(stream, data)
+        else:
+            assert not self.disposals
+            stream.write('No disposals in range.\n')
 
-            stream.write('\n\n')
+        stream.write('\n\n')
 
         if self.disposals:
             disposals_by_tax_year = {}
@@ -249,6 +254,33 @@ class Result:
                 stream.write(f'{security}\n\n')
 
                 self.write_table(stream, data, indent='  ')
+
+    def filter_tax_year(self, tax_year):
+        try:
+            tyr = self.tax_years[tax_year]
+        except KeyError:
+            self.tax_years = {}
+        else:
+            self.tax_years = {tax_year: tyr}
+
+        tax_year1, tax_year2 = tax_year
+        assert tax_year1 + 1 == tax_year2
+        start_date = datetime.date(tax_year1, 4, 6)
+        end_date = datetime.date(tax_year2, 4, 5)
+
+        self.disposals = [disposal for disposal in self.disposals if start_date <= disposal.date <= end_date]
+
+        for security, table in list(self.section104_tables.items()):
+            filtered = []
+            for update in table:
+                if update.date <= end_date:
+                    filtered.append(update)
+                if update.date < start_date and not update.pool_shares and not update.pool_cost:
+                    filtered = []
+            if filtered:
+                self.section104_tables[security] = filtered
+            else:
+                del self.section104_tables[security]
 
     def write_table(self, stream, data, indent=''):
         assert data
@@ -614,10 +646,37 @@ def calculate(stream, rounding=True):
     return result
 
 
+def str_to_year(s):
+    assert isinstance(s, str)
+    if not s.isdigit():
+        raise ValueError(s)
+    y = int(s)
+    if len(s) == 2 and s.isdigit():
+        y += 2000
+    if y < datetime.MINYEAR or y > datetime.MAXYEAR:
+        raise ValueError(f'{s} out of range')
+    return y
+
+
+def str_to_tax_year(s):
+    try:
+        s1, s2 = s.split('/', maxsplit=1)
+    except ValueError:
+        y2 = str_to_year(s)
+        y1 = y2 - 1
+    else:
+        y1 = str_to_year(s1)
+        y2 = str_to_year(s2)
+        if y1 + 1 != y2:
+            raise ValueError(f'{s1} and {s2} are not consecutive years')
+    return (y1, y2)
+
+
 def main():
     logging.basicConfig(format='%(levelname)s %(message)s', level=logging.INFO)
 
     argparser = argparse.ArgumentParser()
+    argparser.add_argument('-y', '--tax-year', metavar='TAX_YEAR', default=None, help='tax year in XXXX/YYYY, XX/YY, YYYY, or YY format')
     argparser.add_argument('--rounding', action=argparse.BooleanOptionalAction, default=True, help='(dis)enable rounding to whole pounds')
     argparser.add_argument('filename', metavar='FILENAME', help='file with input trades')
     args = argparser.parse_args()
@@ -627,6 +686,14 @@ def main():
         for warning in result.warnings:
             sys.stderr.write(warning + '\n')
         sys.stderr.write('\n')
+
+    if args.tax_year is not None:
+        try:
+            tax_year = str_to_tax_year(args.tax_year)
+        except ValueError as e:
+            argparser.error(f'invalid tax year {args.tax_year!r}: {e}')
+        result.filter_tax_year(tax_year)
+
     result.write(sys.stdout)
 
 

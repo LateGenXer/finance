@@ -5,6 +5,7 @@
 #
 
 
+import datetime
 import io
 import os.path
 
@@ -40,7 +41,7 @@ st.markdown('''This is a UK Capital Gains Tax calculator.
 Please read more [here](https://github.com/LateGenXer/finance/blob/main/cgtcalc.md).
 ''')
 
-from cgtcalc import calculate
+from cgtcalc import calculate, date_to_tax_year, str_to_tax_year
 
 
 #
@@ -49,6 +50,14 @@ from cgtcalc import calculate
 
 with st.sidebar:
     st.header("Parameters")
+
+    _, current_tax_year_end = date_to_tax_year(datetime.date.today())
+
+    options = ['All']
+    for y in range(current_tax_year_end, 2008, -1):
+        options.append(f'{y - 1}/{y}')
+    tax_year = st.selectbox('Tax year', options)
+
     rounding = st.checkbox("Rounding", value=True, key="rounding", help="Round to whole pounds.")
 
 #
@@ -81,6 +90,9 @@ else:
 result = calculate(stream, rounding=rounding)
 for warning in result.warnings:
     st.warning(warning, icon="⚠️")
+
+if tax_year != 'All':
+    result.filter_tax_year(str_to_tax_year(tax_year))
 
 calculation = io.StringIO()
 calculation.write('```\n')

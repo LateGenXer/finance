@@ -5,6 +5,7 @@
 #
 
 
+import copy
 import datetime
 import io
 import json
@@ -17,11 +18,12 @@ import sys
 
 import pytest
 
-from glob import glob
+from contextlib import nullcontext
 from decimal import Decimal
+from glob import glob
 from pprint import pp
 
-from cgtcalc import calculate
+from cgtcalc import calculate, str_to_tax_year, date_to_tax_year
 
 
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
@@ -51,7 +53,6 @@ def parse_json_results(filename):
         date = datetime.date.fromisoformat(date)
         gain = round(gain, 2)
         results.append((date, security, gain))
-    assert results
     return results
 
 
@@ -123,9 +124,75 @@ def test_calculate(caplog, filename):
         assert round(gain) == pytest.approx(round(expected_gain), abs=2)
 
 
+str_to_tax_year_params = [
+    ("2023/2024", nullcontext((2023, 2024))),
+    ("2023/24",   nullcontext((2023, 2024))),
+    ("23/2024",   nullcontext((2023, 2024))),
+    ("23/24",     nullcontext((2023, 2024))),
+    ("2024",      nullcontext((2023, 2024))),
+    ("24",        nullcontext((2023, 2024))),
+    ("00",        nullcontext((1999, 2000))),
+    ("0",         pytest.raises(ValueError)),
+    ("10000",     pytest.raises(ValueError)),
+    ("XX/YY",     pytest.raises(ValueError)),
+    ("YY",        pytest.raises(ValueError)),
+    ("2023/2025", pytest.raises(ValueError)),
+]
+
+@pytest.mark.parametrize("s,eyc", [pytest.param(s, eyc, id=s) for s, eyc in str_to_tax_year_params])
+def test_str_to_tax_year(s, eyc):
+    with eyc as ey:
+        assert str_to_tax_year(s) == ey
+
+
+@pytest.mark.parametrize("filename", collect_filenames())
+def test_filter_tax_year(filename):
+
+    result = calculate(open(filename, 'rt'))
+
+    total_disposals = 0
+    for tax_year in result.tax_years:
+        filtered_result = copy.copy(result)
+        filtered_result.filter_tax_year(tax_year)
+
+        assert tax_year in filtered_result.tax_years
+        assert len(filtered_result.disposals) == result.tax_years[tax_year].disposals
+        for disposal in filtered_result.disposals:
+            assert date_to_tax_year(disposal.date) == tax_year
+        total_disposals += len(filtered_result.disposals)
+
+        for security, table in filtered_result.section104_tables.items():
+            assert table
+            pool_cost = Decimal(0)
+            pool_shares = Decimal(0)
+            for update in table:
+                assert pool_cost + update.delta_cost == pytest.approx(update.pool_cost, abs=1)
+                if not update.identified.is_nan():
+                    if update.delta_cost >= Decimal(0):
+                        assert pool_shares + update.identified == pytest.approx(update.pool_shares, abs=1)
+                    else:
+                        assert pool_shares - update.identified == pytest.approx(update.pool_shares, abs=1)
+                pool_cost = update.pool_cost
+                pool_shares = update.pool_shares
+
+    assert len(result.disposals) == total_disposals
+
+
+    filtered_result = copy.copy(result)
+    filtered_result.filter_tax_year((9998, 9999))
+    assert not filtered_result.tax_years
+    assert not filtered_result.disposals
+
+
 def test_main():
     filename = os.path.join(data_dir, 'cgtcalc', 'cgtcalculator-example1.tsv')
 
     from cgtcalc import __file__ as cgtcalc_path
 
-    subprocess.check_call([sys.executable, cgtcalc_path, filename], stdout=subprocess.DEVNULL)
+    subprocess.check_call(args=[
+            sys.executable,
+            cgtcalc_path,
+            '--tax-year', '2015/2016',
+            filename
+        ],
+        stdout=subprocess.DEVNULL)
