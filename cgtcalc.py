@@ -137,7 +137,7 @@ def dround(d, places=0, rounding=None):
 @dataclasses.dataclass
 class TaxYearResult:
     tax_year: str
-    disposals: int = 0
+    disposals: list[tuple] = dataclasses.field(default_factory=list)
     proceeds: Decimal = Decimal(0)
     costs: Decimal = Decimal(0)
     gains: Decimal = Decimal(0)
@@ -150,12 +150,10 @@ class TaxYearResult:
 @dataclasses.dataclass
 class Result:
     warnings: list[str] = dataclasses.field(default_factory=list)
-    disposals: list[tuple] = dataclasses.field(default_factory=list)
     section104_tables: dict[str, list] = dataclasses.field(default_factory=dict)
     tax_years: dict[tuple[int, int], TaxYearResult] = dataclasses.field(default_factory=dict)
 
     def add_disposal(self, disposal):
-        self.disposals.append(disposal)
 
         tax_year = date_to_tax_year(disposal.date)
 
@@ -171,7 +169,7 @@ class Result:
             tax_year_result = TaxYearResult(f'{tax_year[0]}/{tax_year[1]}', allowance=allowance)
             self.tax_years[tax_year] = tax_year_result
 
-        tax_year_result.disposals += 1
+        tax_year_result.disposals.append(disposal)
         tax_year_result.proceeds += disposal.proceeds
         tax_year_result.costs += disposal.costs
         gain = disposal.proceeds - disposal.costs
@@ -182,16 +180,14 @@ class Result:
 
         assert tax_year_result.proceeds - tax_year_result.costs == tax_year_result.gains - tax_year_result.losses
 
-    def sorted_tax_years(self):
-        tax_years = list(self.tax_years.keys())
-        tax_years.sort()
-        return tax_years
-
     def finalize(self):
-        self.disposals.sort(key=operator.attrgetter('date'))
 
-        for tax_year in self.sorted_tax_years():
-            tyr = self.tax_years[tax_year]
+        # https://realpython.com/sort-python-dictionary/
+        self.tax_years = dict(sorted(self.tax_years.items(), key=operator.itemgetter(0)))
+        assert sorted(self.tax_years) == list(self.tax_years)
+
+        for tax_year, tyr in self.tax_years.items():
+            tyr.disposals.sort(key=operator.attrgetter('date'))
 
             tyr.taxable_gain = max(tyr.proceeds - tyr.costs - tyr.allowance, 0)
             tyr.carried_losses = max(tyr.costs - tyr.proceeds, 0)
@@ -200,45 +196,40 @@ class Result:
         stream.write('SUMMARY\n\n')
 
         if self.tax_years:
-            data = [self.tax_years[tax_year] for tax_year in self.sorted_tax_years()]
-            self.write_table(stream, data)
+            header = self.dataclass_to_header(TaxYearResult)
+            rows = []
+            for tyr in self.tax_years.values():
+                row = dataclasses.astuple(tyr, tuple_factory=list)
+                row[1] = len(row[1]) # disposals
+                rows.append(row)
+            self._write_table(stream, rows, header=header)
         else:
-            assert not self.disposals
             stream.write('No disposals in range.\n')
 
         stream.write('\n\n')
 
-        if self.disposals:
-            disposals_by_tax_year = {}
-            for disposal in self.disposals:
-                tax_year = date_to_tax_year(disposal.date)
-                disposals_by_tax_year.setdefault(tax_year, []).append(disposal)
+        for tax_year, tyr in self.tax_years.items():
+            assert tyr.disposals
 
-            tax_years = list(disposals_by_tax_year.keys())
-            tax_years.sort()
+            tax_year1, tax_year2 = tax_year
 
-            for tax_year in tax_years:
-                tax_year1, tax_year2 = tax_year
+            stream.write(f'TAX YEAR {tax_year1}/{tax_year2}\n')
+            stream.write('\n')
 
-                stream.write(f'TAX YEAR {tax_year1}/{tax_year2}\n')
+            for no, disposal in enumerate(tyr.disposals, start=1):
+                gain = disposal.proceeds - disposal.costs
+                if gain < Decimal(0):
+                    sign = 'LOSS'
+                    gain = -gain
+                else:
+                    sign = 'GAIN'
+                stream.write(f'{no}. SOLD {disposal.shares} {disposal.security} on {disposal.date} for £{disposal.proceeds} giving {sign} of £{gain}\n\n')
+
+                footer = ('Gain', str(disposal.proceeds - disposal.costs), '')
+                self._write_table(stream, disposal.table, footer=footer, indent='  ')
                 stream.write('\n')
 
-                disposals = disposals_by_tax_year[tax_year]
-
-                for no, disposal in enumerate(disposals, start=1):
-                    gain = disposal.proceeds - disposal.costs
-                    if gain < Decimal(0):
-                        sign = 'LOSS'
-                        gain = -gain
-                    else:
-                        sign = 'GAIN'
-                    stream.write(f'{no}. SOLD {disposal.shares} {disposal.security} on {disposal.date} for £{disposal.proceeds} giving {sign} of £{gain}\n\n')
-
-                    footer = ('Gain', str(disposal.proceeds - disposal.costs), '')
-                    self._write_table(stream, disposal.table, footer=footer, indent='  ')
-                    stream.write('\n')
-
-                stream.write('\n')
+            stream.write('\n')
 
         if self.section104_tables:
             stream.write('SECTION 104 HOLDINGS\n')
@@ -267,8 +258,6 @@ class Result:
         start_date = datetime.date(tax_year1, 4, 6)
         end_date = datetime.date(tax_year2, 4, 5)
 
-        self.disposals = [disposal for disposal in self.disposals if start_date <= disposal.date <= end_date]
-
         for security, table in list(self.section104_tables.items()):
             filtered = []
             for update in table:
@@ -281,11 +270,14 @@ class Result:
             else:
                 del self.section104_tables[security]
 
+    @staticmethod
+    def dataclass_to_header(class_or_instance):
+        header = [field.name.replace('_', ' ').title().replace('Delta ', 'Δ') for field in dataclasses.fields(class_or_instance)]
+        return header
+
     def write_table(self, stream, data, indent=''):
         assert data
-        # TODO: Avoid Pandas
-        obj0 = data[0]
-        header = [field.name.replace('_', ' ').title().replace('Delta ', 'Δ') for field in dataclasses.fields(obj0)]
+        header = self.dataclass_to_header(data[0])
         rows = [dataclasses.astuple(obj) for obj in data]
         self._write_table(stream, rows, header=header, indent=indent)
 

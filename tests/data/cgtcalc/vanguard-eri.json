@@ -1,3 +1,20 @@
 [
-  [ "2017-03-29", "IE00B3X1LS57", 967.68 ]
+  {
+    "tax_year": "2016/2017",
+    "disposals": [
+      {
+        "date": "2017-03-29",
+        "security": "IE00B3X1LS57",
+        "shares": 100,
+        "gain": 966
+      }
+    ],
+    "proceeds": 23891,
+    "costs": 22925,
+    "gains": 966,
+    "losses": 0,
+    "allowance": 11100,
+    "taxable_gain": 0,
+    "carried_losses": 0
+  }
 ]

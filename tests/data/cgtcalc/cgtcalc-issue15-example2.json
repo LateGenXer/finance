@@ -1,4 +1,38 @@
 [
-  [ "2010-02-01", "FOO", 0.0 ],
-  [ "2024-02-01", "FOO", -777.0 ]
+  {
+    "tax_year": "2009/2010",
+    "disposals": [
+      {
+        "date": "2010-02-01",
+        "security": "FOO",
+        "shares": 10,
+        "gain": 0
+      }
+    ],
+    "proceeds": 1000,
+    "costs": 1000,
+    "gains": 0,
+    "losses": 0,
+    "allowance": 10100,
+    "taxable_gain": 0,
+    "carried_losses": 0
+  },
+  {
+    "tax_year": "2023/2024",
+    "disposals": [
+      {
+        "date": "2024-02-01",
+        "security": "FOO",
+        "shares": 10,
+        "gain": -777
+      }
+    ],
+    "proceeds": 1000,
+    "costs": 1777,
+    "gains": 0,
+    "losses": 777,
+    "allowance": 6000,
+    "taxable_gain": 0,
+    "carried_losses": 777
+  }
 ]

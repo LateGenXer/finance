@@ -1,3 +1,20 @@
 [
-  [ "2020-02-03", "ABC", 263.0 ]
+  {
+    "tax_year": "2019/2020",
+    "disposals": [
+      {
+        "date": "2020-02-03",
+        "security": "ABC",
+        "shares": 5000,
+        "gain": 263
+      }
+    ],
+    "proceeds": 9000,
+    "costs": 8737,
+    "gains": 263,
+    "losses": 0,
+    "allowance": 12000,
+    "taxable_gain": 0,
+    "carried_losses": 0
+  }
 ]

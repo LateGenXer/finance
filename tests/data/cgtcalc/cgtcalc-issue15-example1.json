@@ -1,4 +1,38 @@
 [
-  [ "2019-09-01", "GB00B41YBW71", 25.0 ],
-  [ "2020-07-01", "GB00B41YBW71", 64.0 ]
+  {
+    "tax_year": "2019/2020",
+    "disposals": [
+      {
+        "date": "2019-09-01",
+        "security": "GB00B41YBW71",
+        "shares": 5,
+        "gain": 25
+      }
+    ],
+    "proceeds": 525,
+    "costs": 500,
+    "gains": 25,
+    "losses": 0,
+    "allowance": 12000,
+    "taxable_gain": 0,
+    "carried_losses": 0
+  },
+  {
+    "tax_year": "2020/2021",
+    "disposals": [
+      {
+        "date": "2020-07-01",
+        "security": "GB00B41YBW71",
+        "shares": 5,
+        "gain": 64
+      }
+    ],
+    "proceeds": 500,
+    "costs": 436,
+    "gains": 64,
+    "losses": 0,
+    "allowance": 12300,
+    "taxable_gain": 0,
+    "carried_losses": 0
+  }
 ]

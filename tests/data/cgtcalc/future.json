@@ -1,3 +1,20 @@
 [
-  [ "9998-04-05", "FOO", 0.0 ]
+  {
+    "tax_year": "9997/9998",
+    "disposals": [
+      {
+        "date": "9998-04-05",
+        "security": "FOO",
+        "shares": 10,
+        "gain": 0
+      }
+    ],
+    "proceeds": 1000,
+    "costs": 1000,
+    "gains": 0,
+    "losses": 0,
+    "allowance": 0,
+    "taxable_gain": 0,
+    "carried_losses": 0
+  }
 ]

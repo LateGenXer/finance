@@ -7,6 +7,7 @@
 
 import copy
 import datetime
+import dataclasses
 import io
 import json
 import logging
@@ -23,7 +24,7 @@ from decimal import Decimal
 from glob import glob
 from pprint import pp
 
-from cgtcalc import calculate, str_to_tax_year, date_to_tax_year
+from cgtcalc import *
 
 
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
@@ -42,53 +43,102 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(obj, datetime.date):
             return str(obj)
         if isinstance(obj, Decimal):
-            return float(obj)
+            _, _, exponent = obj.as_tuple()
+            if exponent == 'n' or exponent < 0:
+                return float(obj)
+            else:
+                assert Decimal(int(obj)) == obj
+                return int(obj)
+        if isinstance(obj, DisposalResult):
+            return {
+                'date': obj.date,
+                'security': obj.security,
+                'shares': obj.shares,
+                'gain': obj.proceeds - obj.costs
+            }
+        if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
+            return {field.name: getattr(obj, field.name) for field in dataclasses.fields(obj)}
         return super().default(obj)
 
 
-def parse_json_results(filename):
-    results = []
-    for disposal in json.load(open(filename, 'rt'), parse_float=Decimal):
-        date, security, gain = disposal
-        date = datetime.date.fromisoformat(date)
-        gain = round(gain, 2)
-        results.append((date, security, gain))
-    return results
+def encode_json_result(result, filename):
+    obj = list(result.tax_years.values())
+    json.dump(obj, open(filename, 'wt'), indent=2, cls=JSONEncoder)
 
 
-disposal_re = re.compile(r'^\d+\. SELL: \S+ (shares of\s+\S+ )?(?P<security>\S+) on (?P<date>\S+) at £\S+ gives (?P<sign>\w+) of £(?P<gain>\S+)$')
+def object_hook(obj):
+    try:
+        date = obj['date']
+    except KeyError:
+        pass
+    else:
+        obj['date'] = datetime.date.fromisoformat(date)
+    return obj
 
-def parse_cgtcalculator_results(filename):
-    results = []
+
+def parse_json_result(filename):
+    result = {}
+    for tyr in json.load(open(filename, 'rt'), parse_float=Decimal, object_hook=object_hook):
+        tax_year = str_to_tax_year(tyr['tax_year'])
+        result[tax_year] = tyr['disposals']
+    return result
+
+
+tax_year_re = re.compile(r'^TAX_YEAR (\d\d)-(\d\d)$')
+disposal_re = re.compile(r'^\d+\. SELL: (?P<shares>[0-9]+)\S* (shares of\s+\S+ )?(?P<security>\S+) on (?P<date>\S+) at £\S+ gives (?P<sign>\w+) of £(?P<gain>\S+)$')
+
+def parse_cgtcalculator_result(filename):
+    result = {}
+
+    tax_year = None
     for line in open(filename, 'rt'):
         line = line.rstrip('\n')
+
+        mo = tax_year_re.match(line)
+        if mo is not None:
+            tax_year1 = int('20' + mo.group(1))
+            tax_year2 = int('20' + mo.group(2))
+            assert tax_year1 + 1 == tax_year2
+            tax_year = tax_year1, tax_year2
 
         mo = disposal_re.match(line)
         if mo is not None:
             date = datetime.datetime.strptime(mo.group('date'), '%d/%m/%Y').date()
             security = mo.group('security')
+            print(mo.group('shares'))
+            shares = Decimal(mo.group('shares'))
             gain = Decimal(mo.group('gain').replace(',', ''))
             assert mo.group('sign') in ('GAIN', 'LOSS')
             if mo.group('sign') == 'LOSS':
                 gain = -gain
-            results.append((date, security, gain))
 
-    results.sort(key=operator.itemgetter(0, 1))
+            disposal = {
+                'date': date,
+                'security': security,
+                'shares': shares,
+                'gain': gain
+            }
 
-    # Sometimes cgtcalculator splits disposals, especially when all shares are liquidated
-    i = 0
-    while i + 1 < len(results):
-        date0, security0, gain0 = results[i + 0]
-        date1, security1, gain1 = results[i + 1]
-        if date0 == date1 and security0 == security1:
-            gain = gain0 + gain1
-            results[i] = date0, security0, gain
-            results.pop(i + 1)
-        else:
-            i += 1
+            assert tax_year is not None
+            disposals = result.setdefault(tax_year, [])
+            disposals.append(disposal)
 
-    assert results
-    return results
+    for disposals in result.values():
+        disposals.sort(key=operator.itemgetter('date', 'security'))
+
+        # Sometimes cgtcalculator splits disposals, especially when all shares are liquidated
+        i = 0
+        while i + 1 < len(disposals):
+            disposal0 = disposals[i + 0]
+            disposal1 = disposals[i + 1]
+            if disposal0['date'] == disposal1['date'] and disposal0['security'] == disposal1['security']:
+                disposal0['shares'] += disposal1['shares']
+                disposal0['gain'] += disposal1['gain']
+                disposals.pop(i + 1)
+            else:
+                i += 1
+        assert disposals
+    return result
 
 
 @pytest.mark.parametrize("filename", collect_filenames())
@@ -99,29 +149,35 @@ def test_calculate(caplog, filename):
     stream = io.StringIO()
     result.write(stream)
 
-    results = [(disposal.date, disposal.security, disposal.proceeds - disposal.costs) for disposal in result.disposals]
-
     name, _ = os.path.splitext(filename)
     if os.path.isfile(name + '.json'):
-        expected_results = parse_json_results(name + '.json')
+        expected_result = parse_json_result(name + '.json')
     elif os.path.isfile(name + '.txt'):
-        expected_results = parse_cgtcalculator_results(name + '.txt')
+        expected_result = parse_cgtcalculator_result(name + '.txt')
     else:
-        json.dump(results, open(name + '.json', 'wt'), indent=2, cls=JSONEncoder)
+        encode_json_result(result, name + '.json')
         return
 
-    pp(results)
-    pp(expected_results)
+    pp(result)
+    pp(expected_result)
 
-    for disposal, expected_disposal in zip(results, expected_results, strict=True):
-        print(disposal, 'vs', expected_disposal)
-        date, security, gain = disposal
-        expected_date, expected_security, expected_gain = expected_disposal
+    assert sorted(result.tax_years) == list(result.tax_years)
 
-        assert date == expected_date
-        assert security == expected_security
+    assert result.tax_years.keys() == expected_result.keys()
 
-        assert round(gain) == pytest.approx(round(expected_gain), abs=2)
+    for tax_year in expected_result.keys():
+        disposals = result.tax_years[tax_year].disposals
+        expected_disposals = expected_result[tax_year]
+
+        for disposal, expected_disposal in zip(disposals, expected_disposals, strict=True):
+            print(disposal, 'vs', expected_disposal)
+
+            assert disposal.date == expected_disposal['date']
+            assert disposal.security == expected_disposal['security']
+            assert disposal.shares == expected_disposal['shares']
+
+            gain = disposal.proceeds - disposal.costs
+            assert round(gain) == pytest.approx(round(expected_disposal['gain']), abs=2)
 
 
 str_to_tax_year_params = [
@@ -150,16 +206,12 @@ def test_filter_tax_year(filename):
 
     result = calculate(open(filename, 'rt'))
 
-    total_disposals = 0
     for tax_year in result.tax_years:
         filtered_result = copy.copy(result)
         filtered_result.filter_tax_year(tax_year)
 
         assert tax_year in filtered_result.tax_years
-        assert len(filtered_result.disposals) == result.tax_years[tax_year].disposals
-        for disposal in filtered_result.disposals:
-            assert date_to_tax_year(disposal.date) == tax_year
-        total_disposals += len(filtered_result.disposals)
+        assert filtered_result.tax_years[tax_year] == result.tax_years[tax_year]
 
         for security, table in filtered_result.section104_tables.items():
             assert table
@@ -175,13 +227,9 @@ def test_filter_tax_year(filename):
                 pool_cost = update.pool_cost
                 pool_shares = update.pool_shares
 
-    assert len(result.disposals) == total_disposals
-
-
     filtered_result = copy.copy(result)
     filtered_result.filter_tax_year((9998, 9999))
     assert not filtered_result.tax_years
-    assert not filtered_result.disposals
 
 
 def test_main():

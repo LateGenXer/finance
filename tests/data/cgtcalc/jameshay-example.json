@@ -1,5 +1,32 @@
 [
-  [ "2015-07-01", "NADAL",   20200.0 ],
-  [ "2015-08-01", "FEDERER",  1500.0 ],
-  [ "2015-11-01", "MURRAY",  -8250.0 ]
+  {
+    "tax_year": "2015/2016",
+    "disposals": [
+      {
+        "date": "2015-07-01",
+        "security": "NADAL",
+        "shares": 6000,
+        "gain": 20200
+      },
+      {
+        "date": "2015-08-01",
+        "security": "FEDERER",
+        "shares": 5000,
+        "gain": 1500
+      },
+      {
+        "date": "2015-11-01",
+        "security": "MURRAY",
+        "shares": 2000,
+        "gain": -8250
+      }
+    ],
+    "proceeds": 46200,
+    "costs": 32750,
+    "gains": 21700,
+    "losses": 8250,
+    "allowance": 11100,
+    "taxable_gain": 2350,
+    "carried_losses": 0
+  }
 ]
