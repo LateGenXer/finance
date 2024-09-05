@@ -119,7 +119,6 @@ allowances = {
     (2023, 2024):  6000,
     (2024, 2025):  3000,
 }
-allowance_latest = allowances[next(reversed(allowances))]
 
 
 def dround(d, places=0, rounding=None):
@@ -166,8 +165,8 @@ class Result:
             try:
                 allowance = allowances[tax_year]
             except KeyError:
-                allowance = allowance_latest
-                self.warnings.append(f'warning: capital gains allowance for {tax_year[0]}/{tax_year[1]} tax year unknown, presuming £{allowance}')
+                allowance = 0
+                self.warnings.append(f'warning: capital gains allowance for {tax_year[0]}/{tax_year[1]} tax year unknown')
 
             tax_year_result = TaxYearResult(f'{tax_year[0]}/{tax_year[1]}', allowance=allowance)
             self.tax_years[tax_year] = tax_year_result
