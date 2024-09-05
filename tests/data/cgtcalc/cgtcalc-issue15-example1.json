@@ -6,6 +6,7 @@
         "date": "2019-09-01",
         "security": "GB00B41YBW71",
         "shares": 5,
+        "proceeds": 525,
         "gain": 25
       }
     ],
@@ -24,6 +25,7 @@
         "date": "2020-07-01",
         "security": "GB00B41YBW71",
         "shares": 5,
+        "proceeds": 500,
         "gain": 64
       }
     ],

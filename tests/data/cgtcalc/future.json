@@ -6,6 +6,7 @@
         "date": "9998-04-05",
         "security": "FOO",
         "shares": 10,
+        "proceeds": 1000,
         "gain": 0
       }
     ],

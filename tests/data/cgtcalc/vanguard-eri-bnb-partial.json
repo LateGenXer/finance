@@ -6,12 +6,14 @@
         "date": "2016-12-29",
         "security": "IE00B3X1LS57",
         "shares": 100,
+        "proceeds": 23192,
         "gain": 16
       },
       {
         "date": "2017-03-29",
         "security": "IE00B3X1LS57",
         "shares": 200,
+        "proceeds": 47783,
         "gain": 1916
       }
     ],

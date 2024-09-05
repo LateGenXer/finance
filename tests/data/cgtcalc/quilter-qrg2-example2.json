@@ -6,6 +6,7 @@
         "date": "2020-02-03",
         "security": "ABC",
         "shares": 5000,
+        "proceeds": 9000,
         "gain": 263
       }
     ],

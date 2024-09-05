@@ -54,6 +54,7 @@ class JSONEncoder(json.JSONEncoder):
                 'date': obj.date,
                 'security': obj.security,
                 'shares': obj.shares,
+                'proceeds': obj.proceeds,
                 'gain': obj.proceeds - obj.costs
             }
         if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
@@ -85,7 +86,7 @@ def parse_json_result(filename):
 
 
 tax_year_re = re.compile(r'^TAX_YEAR (\d\d)-(\d\d)$')
-disposal_re = re.compile(r'^\d+\. SELL: (?P<shares>[0-9]+)\S* (shares of\s+\S+ )?(?P<security>\S+) on (?P<date>\S+) at £\S+ gives (?P<sign>\w+) of £(?P<gain>\S+)$')
+disposal_re = re.compile(r'^\d+\. SELL: (?P<shares>[0-9]+)\S* (shares of\s+\S+ )?(?P<security>\S+) on (?P<date>\S+) at £(?P<price>\S+) gives (?P<sign>\w+) of £(?P<gain>\S+)$')
 
 def parse_cgtcalculator_result(filename):
     result = {}
@@ -107,6 +108,8 @@ def parse_cgtcalculator_result(filename):
             security = mo.group('security')
             print(mo.group('shares'))
             shares = Decimal(mo.group('shares'))
+            price = Decimal(mo.group('price'))
+            proceeds = shares*price
             gain = Decimal(mo.group('gain').replace(',', ''))
             assert mo.group('sign') in ('GAIN', 'LOSS')
             if mo.group('sign') == 'LOSS':
@@ -116,6 +119,7 @@ def parse_cgtcalculator_result(filename):
                 'date': date,
                 'security': security,
                 'shares': shares,
+                'proceeds': proceeds,
                 'gain': gain
             }
 
@@ -133,6 +137,7 @@ def parse_cgtcalculator_result(filename):
             disposal1 = disposals[i + 1]
             if disposal0['date'] == disposal1['date'] and disposal0['security'] == disposal1['security']:
                 disposal0['shares'] += disposal1['shares']
+                disposal0['proceeds'] += disposal1['proceeds']
                 disposal0['gain'] += disposal1['gain']
                 disposals.pop(i + 1)
             else:
@@ -175,6 +180,7 @@ def test_calculate(caplog, filename):
             assert disposal.date == expected_disposal['date']
             assert disposal.security == expected_disposal['security']
             assert disposal.shares == expected_disposal['shares']
+            assert disposal.proceeds == pytest.approx(expected_disposal['proceeds'], abs=2)
 
             gain = disposal.proceeds - disposal.costs
             assert round(gain) == pytest.approx(round(expected_disposal['gain']), abs=2)

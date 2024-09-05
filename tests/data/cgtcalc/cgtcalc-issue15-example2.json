@@ -6,6 +6,7 @@
         "date": "2010-02-01",
         "security": "FOO",
         "shares": 10,
+        "proceeds": 1000,
         "gain": 0
       }
     ],
@@ -24,6 +25,7 @@
         "date": "2024-02-01",
         "security": "FOO",
         "shares": 10,
+        "proceeds": 1000,
         "gain": -777
       }
     ],

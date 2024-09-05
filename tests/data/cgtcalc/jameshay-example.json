@@ -6,18 +6,21 @@
         "date": "2015-07-01",
         "security": "NADAL",
         "shares": 6000,
+        "proceeds": 32650,
         "gain": 20200
       },
       {
         "date": "2015-08-01",
         "security": "FEDERER",
         "shares": 5000,
+        "proceeds": 11800,
         "gain": 1500
       },
       {
         "date": "2015-11-01",
         "security": "MURRAY",
         "shares": 2000,
+        "proceeds": 1750,
         "gain": -8250
       }
     ],

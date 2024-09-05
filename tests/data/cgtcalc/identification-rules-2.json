@@ -6,6 +6,7 @@
         "date": "2023-04-01",
         "security": "FOO",
         "shares": 10,
+        "proceeds": 4020,
         "gain": -90
       }
     ],
@@ -24,12 +25,14 @@
         "date": "2023-05-01",
         "security": "FOO",
         "shares": 9,
+        "proceeds": 4518,
         "gain": 9
       },
       {
         "date": "2023-06-01",
         "security": "FOO",
         "shares": 10,
+        "proceeds": 6010,
         "gain": 5000
       }
     ],
