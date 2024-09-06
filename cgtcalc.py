@@ -164,7 +164,7 @@ class Result:
                 allowance = allowances[tax_year]
             except KeyError:
                 allowance = 0
-                self.warnings.append(f'warning: capital gains allowance for {tax_year[0]}/{tax_year[1]} tax year unknown')
+                self.warnings.append(f'capital gains allowance for {tax_year[0]}/{tax_year[1]} tax year unknown')
 
             tax_year_result = TaxYearResult(f'{tax_year[0]}/{tax_year[1]}', allowance=allowance)
             self.tax_years[tax_year] = tax_year_result
@@ -607,7 +607,7 @@ def calculate(stream, rounding=True):
             elif tr.kind == Kind.CAPRETURN:
                 reference_holding, equalisation = tr.params
                 if not is_close_decimal(reference_holding, group2_holding):
-                    result.warning(f'CAPRETURN {tr.date:%d/%m/%Y} {security}: expected Group 2 holding of {group2_holding} {security} but {reference_holding} was specified')
+                    result.warnings.append(f'CAPRETURN {tr.date:%d/%m/%Y} {security}: expected Group 2 holding of {group2_holding} {security} but {reference_holding} was specified')
 
                 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57705
                 # Allocate equalisation payments to Group 2 acquisitions in proportion to the remaining holdings
@@ -675,7 +675,7 @@ def main():
     result = calculate(open(args.filename, 'rt'), rounding=args.rounding)
     if result.warnings:
         for warning in result.warnings:
-            sys.stderr.write(warning + '\n')
+            sys.stderr.write(f'warning: {warning}\n')
         sys.stderr.write('\n')
 
     if args.tax_year is not None:
