@@ -16,18 +16,13 @@
 import argparse
 import dataclasses
 import datetime
-import logging
 import math
 import operator
 import sys
-import typing
 
 from collections import namedtuple
 from enum import IntEnum, Enum
 from decimal import Decimal, ROUND_HALF_EVEN, ROUND_CEILING, ROUND_FLOOR
-
-
-logger = logging.getLogger('cgtcalc')
 
 
 Kind = IntEnum('Kind', ['DIVIDEND', 'CAPRETURN', 'BUY', 'SELL'])
@@ -414,8 +409,6 @@ def calculate(stream, rounding=True):
     result.warnings.append('cgtcalc.py is still work in progress!')
 
     for security, trades in securities.items():
-        logger.debug('~~~~~~~~ %s ~~~~~~~~~', security)
-
         # Sort
         trades.sort(key=operator.attrgetter("date", "kind"))
 
@@ -436,10 +429,6 @@ def calculate(stream, rounding=True):
                 trades.pop(i + 1)
             else:
                 i += 1
-
-        if logger.isEnabledFor(logging.DEBUG):
-            for tr in trades:
-                logger.debug('%s %s\t%s', tr.date, tr.kind.name, '\t'.join([str(param) for param in tr.params]))
 
         acquisitions = {}
         disposals = {}
@@ -497,7 +486,7 @@ def calculate(stream, rounding=True):
         pool_updates = []
 
         # Walk trades chronologically:
-        # - pooling unidentified shares into a Secion 104 pool
+        # - pooling unidentified shares into a Section 104 pool
         # - tracking equalisation group 1 and group 2 shares and acquisitions
         pool = Acquisition(0, 0, 0)
         group1_holding = Decimal(0)
@@ -625,7 +614,7 @@ def calculate(stream, rounding=True):
                 group1_holding += group2_holding
                 group2_holding = Decimal(0)
 
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(tr.kind)
 
 
@@ -664,8 +653,6 @@ def str_to_tax_year(s):
 
 
 def main():
-    logging.basicConfig(format='%(levelname)s %(message)s', level=logging.INFO)
-
     argparser = argparse.ArgumentParser()
     argparser.add_argument('-y', '--tax-year', metavar='TAX_YEAR', default=None, help='tax year in XXXX/YYYY, XX/YY, YYYY, or YY format')
     argparser.add_argument('--rounding', action=argparse.BooleanOptionalAction, default=True, help='(dis)enable rounding to whole pounds')

@@ -10,7 +10,6 @@ import datetime
 import dataclasses
 import io
 import json
-import logging
 import operator
 import os.path
 import re
@@ -147,9 +146,7 @@ def parse_cgtcalculator_result(filename):
 
 
 @pytest.mark.parametrize("filename", collect_filenames())
-def test_calculate(caplog, filename):
-    caplog.set_level(logging.DEBUG, logger="cgtcal")
-
+def test_calculate(filename):
     expected_warnings = {
         'cgtcalc.py is still work in progress!',
     }
