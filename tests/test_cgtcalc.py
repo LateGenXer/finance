@@ -150,6 +150,15 @@ def parse_cgtcalculator_result(filename):
 def test_calculate(caplog, filename):
     caplog.set_level(logging.DEBUG, logger="cgtcal")
 
+    expected_warnings = {
+        'cgtcalc.py is still work in progress!',
+    }
+    warning_prefix = '# WARNING: '
+    for line in open(filename, 'rt'):
+        if line.startswith(warning_prefix):
+            warning = line[len(warning_prefix):].rstrip('\n')
+            expected_warnings.add(warning)
+
     result = calculate(open(filename, 'rt'))
     stream = io.StringIO()
     result.write(stream)
@@ -165,6 +174,8 @@ def test_calculate(caplog, filename):
 
     pp(result)
     pp(expected_result)
+
+    assert set(result.warnings) == expected_warnings
 
     assert sorted(result.tax_years) == list(result.tax_years)
 

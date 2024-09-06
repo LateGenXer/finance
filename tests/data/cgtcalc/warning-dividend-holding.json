@@ -1,0 +1,21 @@
+[
+  {
+    "tax_year": "2024/2025",
+    "disposals": [
+      {
+        "date": "2024-06-01",
+        "security": "FOO",
+        "shares": 10,
+        "proceeds": 1050,
+        "gain": 0
+      }
+    ],
+    "proceeds": 1050,
+    "costs": 1050,
+    "gains": 0,
+    "losses": 0,
+    "allowance": 3000,
+    "taxable_gain": 0,
+    "carried_losses": 0
+  }
+]
