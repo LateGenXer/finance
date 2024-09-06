@@ -385,7 +385,7 @@ def calculate(stream, rounding=True):
             kind = Kind.SELL
             # Section 104 rules
             if date < datetime.date(2008, 4, 6):
-                raise NotImplementedError('line {line_no}: disposals before 6/4/2088 unsupported; replace earlier trades with BUY for Section 104 holding.\n')
+                raise NotImplementedError(f'line {line_no}: {trade} {date:%d/%m/%Y} {security}: disposals before 4 April 2008 unsupported; replace earlier trades with BUY for Section 104 holding.\n')
             if len(params) == 4:
                 tax = params.pop(3)
                 assert not tax

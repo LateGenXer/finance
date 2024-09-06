@@ -29,9 +29,13 @@ from cgtcalc import *
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
 
 
-def collect_filenames():
+def collect_filenames(no_raises=False):
     filenames = []
     for filename in glob(os.path.join(data_dir, 'cgtcalc', '*.tsv')):
+        if no_raises:
+            expected_warnings, raises = read_test_annotations(filename)
+            if raises is not None:
+                continue
         name, _ = os.path.splitext(os.path.basename(filename))
         filenames.append(pytest.param(filename, id=name))
     return filenames
@@ -145,20 +149,39 @@ def parse_cgtcalculator_result(filename):
     return result
 
 
-@pytest.mark.parametrize("filename", collect_filenames())
-def test_calculate(filename):
+def read_test_annotations(filename):
+    raises = None
     expected_warnings = {
         'cgtcalc.py is still work in progress!',
     }
     warning_prefix = '# WARNING: '
     for line in open(filename, 'rt'):
+        line = line.rstrip('\n')
         if line.startswith(warning_prefix):
-            warning = line[len(warning_prefix):].rstrip('\n')
+            warning = line[len(warning_prefix):]
             expected_warnings.add(warning)
+        if line == '# NOT_IMPLEMENTED_ERROR':
+            raises = NotImplementedError
+        if line == '# ASSERTION_ERROR':
+            raises = AssertionError
 
-    result = calculate(open(filename, 'rt'))
-    stream = io.StringIO()
-    result.write(stream)
+    return expected_warnings, raises
+
+
+@pytest.mark.parametrize("filename", collect_filenames())
+def test_calculate(filename):
+    expected_warnings, raises = read_test_annotations(filename)
+
+    with open(filename, 'rt') as istream:
+        if raises is None:
+            result = calculate(istream)
+        else:
+            with pytest.raises(raises):
+                result = calculate(istream)
+            return
+
+    with io.StringIO() as ostream:
+        result.write(ostream)
 
     name, _ = os.path.splitext(filename)
     if os.path.isfile(name + '.json'):
@@ -215,9 +238,8 @@ def test_str_to_tax_year(s, eyc):
         assert str_to_tax_year(s) == ey
 
 
-@pytest.mark.parametrize("filename", collect_filenames())
+@pytest.mark.parametrize("filename", collect_filenames(no_raises=True))
 def test_filter_tax_year(filename):
-
     result = calculate(open(filename, 'rt'))
 
     for tax_year in result.tax_years:
