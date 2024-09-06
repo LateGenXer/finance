@@ -13,7 +13,6 @@
 #
 
 
-import datetime
 import math
 import sys
 
@@ -34,13 +33,13 @@ def translate(istream, ostream):
         rest = fields[3:]
 
         if event in ('B', 'BUY'):
-            shares, price, charges, tax = fields[3:]
+            shares, price, charges, tax = rest
             float_tax = Decimal(tax)
             if float_tax:
                 charges = str(Decimal(charges) + float_tax)
             row = ['BUY', date, company, shares, price, charges]
         elif event in ('S', 'SELL'):
-            shares, price, charges, tax = fields[3:]
+            shares, price, charges, tax = rest
             float_tax = Decimal(tax)
             assert not float_tax
             row = ['SELL', date, company, shares, price, charges]
