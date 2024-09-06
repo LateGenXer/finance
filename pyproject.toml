@@ -12,3 +12,7 @@ disable_test_id_escaping_and_forfeit_all_rights_to_community_support = true
 omit = [
     "tests/*",
 ]
+
+[tool.coverage.report]
+# Ignore "No source for code: '.../site-packages/streamlit/static/index_html.generated.py'"
+ignore_errors = true
