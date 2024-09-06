@@ -11,12 +11,11 @@
 
 
 import sys
-import random
 import multiprocessing.dummy
 
 import numpy as np
 
-from math import *
+from math import exp, factorial, lgamma, log
 
 
 # https://www.nsandi.com/products/premium-bonds

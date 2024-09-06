@@ -28,7 +28,7 @@ __all__ = [
 logger = logging.getLogger('download')
 
 
-def download(url, filename=None, ttl=0, content_type=None, verbose=False):
+def download(url:str, filename:str|None=None, ttl:int=0, content_type:str|None=None, verbose:bool=False):
     if filename is None:
         filename = posixpath.basename(url)
 
@@ -65,7 +65,10 @@ def download(url, filename=None, ttl=0, content_type=None, verbose=False):
         msg = src.headers
         assert isinstance(msg, email.message.Message)
         params = msg.get_params()
-        src_content_type = params[0][0]
+        if params is None:
+            src_content_type = None
+        else:
+            src_content_type = params[0][0]
         if src_content_type != content_type:
             logger.warning(f'{url}: unexpected content-type {src_content_type}')
             raise ValueError(f'Expected {content_type}, got {src_content_type}')
@@ -103,8 +106,7 @@ def download(url, filename=None, ttl=0, content_type=None, verbose=False):
 
 if __name__ == '__main__':
     _, url, filename = sys.argv[:3]
-    try:
+    content_type = None
+    if len(sys.argv) > 3:
         content_type = sys.argv[3]
-    except IndexError:
-        content_type = None
     download(url, filename, content_type=content_type, verbose=True)
