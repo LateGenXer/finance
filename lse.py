@@ -12,7 +12,6 @@ import csv
 import datetime
 import email.utils
 import logging
-import os.path
 import re
 import requests
 import sys
@@ -95,21 +94,21 @@ def get_latest_gilt_prices():
     r = _session.post(url, headers=headers, json=payload, stream=False)
     assert r.ok
     # This can create troubles with timezones
-    date = email.utils.parsedate_to_datetime(r.headers['Date'])
+    dt = email.utils.parsedate_to_datetime(r.headers['Date'])
     obj = r.json()
     for item in obj[0]['content']:
         if item['name'] == 'priceexplorersearch':
             value = item['value']
             assert value['first'] is True
             assert value['last'] is True
-            return date, value['content']
+            return dt, value['content']
     raise ValueError  # pragma: no cover
 
 
 def main():
     logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s %(message)s', level=logging.INFO)
 
-    datetime, content = get_latest_gilt_prices()
+    dt, content = get_latest_gilt_prices()
 
     w = csv.writer(sys.stdout)
 
@@ -134,7 +133,7 @@ def main():
                 continue
 
             lastclosedate = data['lastclosedate']
-            lastclosedate = datetime.fromisoformat(lastclosedate)
+            lastclosedate = datetime.datetime.fromisoformat(lastclosedate)
             lastclosedate = lastclosedate.date()
             lastclosedate = lastclosedate.isoformat()
 
