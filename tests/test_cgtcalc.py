@@ -260,4 +260,15 @@ def test_main():
             '--tax-year', '2015/2016',
             filename
         ],
-        stdout=subprocess.DEVNULL)
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL)
+
+    with pytest.raises(subprocess.CalledProcessError):
+        subprocess.check_call(args=[
+                sys.executable,
+                cgtcalc_path,
+                '--tax-year', '2015/2017',
+                filename
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL)
