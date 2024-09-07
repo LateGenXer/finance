@@ -79,7 +79,6 @@ class DisposalResult:
     security: str
     shares: Decimal
     proceeds: Decimal
-    charges: Decimal
     costs: Decimal
     table: list
 
@@ -570,7 +569,6 @@ def calculate(stream, rounding=True):
                     security=security,
                     shares=disposal.shares,
                     proceeds=disposal.proceeds,
-                    charges=disposal.cost,
                     costs=allowable_costs,
                     table=table
                 ))
