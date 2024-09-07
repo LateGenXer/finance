@@ -84,12 +84,14 @@ def parse_json_result(filename):
     result = {}
     for tyr in json.load(open(filename, 'rt'), parse_float=Decimal, object_hook=object_hook):
         tax_year = str_to_tax_year(tyr['tax_year'])
-        result[tax_year] = tyr['disposals']
+        result[tax_year] = tyr
     return result
 
 
-tax_year_re = re.compile(r'^TAX_YEAR (\d\d)-(\d\d)$')
+tax_year_section_re = re.compile(r'^TAX_YEAR (\d\d)-(\d\d)$')
 disposal_re = re.compile(r'^\d+\. SELL: (?P<shares>[0-9]+)\S* (shares of\s+\S+ )?(?P<security>\S+) on (?P<date>\S+) at £(?P<price>\S+) gives (?P<sign>\w+) of £(?P<gain>\S+)$')
+tax_return_1_re = re.compile(r'^(?P<year1>\d\d)-(?P<year2>\d\d): Disposal Proceeds = £(?P<proceeds>\S+) , Allowable Costs = £(?P<costs>\S+) , Disposals = (\d+)$')
+tax_return_2_re = re.compile(r'^(?P<year1>\d\d)-(?P<year2>\d\d): Year Gains = £(?P<gains>\S+) ,? Year Losses = £(?P<losses>\S+)$')
 
 def parse_cgtcalculator_result(filename):
     result = {}
@@ -98,7 +100,7 @@ def parse_cgtcalculator_result(filename):
     for line in open(filename, 'rt'):
         line = line.rstrip('\n')
 
-        mo = tax_year_re.match(line)
+        mo = tax_year_section_re.match(line)
         if mo is not None:
             tax_year1 = int('20' + mo.group(1))
             tax_year2 = int('20' + mo.group(2))
@@ -109,7 +111,6 @@ def parse_cgtcalculator_result(filename):
         if mo is not None:
             date = datetime.datetime.strptime(mo.group('date'), '%d/%m/%Y').date()
             security = mo.group('security')
-            print(mo.group('shares'))
             shares = Decimal(mo.group('shares'))
             price = Decimal(mo.group('price'))
             proceeds = shares*price
@@ -127,10 +128,41 @@ def parse_cgtcalculator_result(filename):
             }
 
             assert tax_year is not None
-            disposals = result.setdefault(tax_year, [])
-            disposals.append(disposal)
 
-    for disposals in result.values():
+            try:
+                tyr = result[tax_year]
+            except KeyError:
+                tyr = {
+                    'tax_year': f'{tax_year1}/{tax_year2}',
+                    'disposals': [],
+                    'proceeds': None,
+                    'costs': None,
+                    'gains': Decimal(0),
+                    'losses': Decimal(0),
+                }
+                result[tax_year] = tyr
+            tyr['disposals'].append(disposal)
+
+        mo = tax_return_1_re.match(line)
+        if mo is not None:
+            tax_year1 = int('20' + mo.group('year1'))
+            tax_year2 = int('20' + mo.group('year2'))
+            tax_year = tax_year1, tax_year2
+            tyr = result[tax_year]
+            tyr["proceeds"] = Decimal(mo.group('proceeds').replace(',', ''))
+            tyr["costs"] = Decimal(mo.group('costs').replace(',', ''))
+        mo = tax_return_2_re.match(line)
+        if mo is not None:
+            tax_year1 = int('20' + mo.group('year1'))
+            tax_year2 = int('20' + mo.group('year2'))
+            tax_year = tax_year1, tax_year2
+            tyr = result[tax_year]
+            tyr["gains"] = Decimal(mo.group('gains').replace(',', ''))
+            tyr["losses"] = Decimal(mo.group('losses').replace(',', ''))
+
+    for tyr in result.values():
+        disposals = tyr['disposals']
+
         disposals.sort(key=operator.itemgetter('date', 'security'))
 
         # Sometimes cgtcalculator splits disposals, especially when all shares are liquidated
@@ -146,6 +178,18 @@ def parse_cgtcalculator_result(filename):
             else:
                 i += 1
         assert disposals
+
+        # XXX: Even when disposals are not split, CGTCalculator internally
+        # accumulates the gains and losses on a matching basis
+        tyr["gains"] = Decimal(0)
+        tyr["losses"] = Decimal(0)
+        for disposal in disposals:
+            gain = disposal['gain']
+            if gain >= Decimal(0):
+                tyr["gains"] += gain
+            else:
+                tyr["losses"] -= gain
+
     return result
 
 
@@ -192,9 +236,6 @@ def test_calculate(filename):
         encode_json_result(result, name + '.json')
         return
 
-    pp(result)
-    pp(expected_result)
-
     assert set(result.warnings) == expected_warnings
 
     assert sorted(result.tax_years) == list(result.tax_years)
@@ -202,19 +243,29 @@ def test_calculate(filename):
     assert result.tax_years.keys() == expected_result.keys()
 
     for tax_year in expected_result.keys():
-        disposals = result.tax_years[tax_year].disposals
-        expected_disposals = expected_result[tax_year]
+        tyr = result.tax_years[tax_year]
+        expected_tyr = expected_result[tax_year]
+        disposals = tyr.disposals
+        expected_disposals = expected_tyr["disposals"]
 
         for disposal, expected_disposal in zip(disposals, expected_disposals, strict=True):
-            print(disposal, 'vs', expected_disposal)
+            try:
+                assert disposal.date == expected_disposal['date']
+                assert disposal.security == expected_disposal['security']
+                assert disposal.shares == expected_disposal['shares']
+                assert disposal.proceeds == pytest.approx(expected_disposal['proceeds'], abs=2)
 
-            assert disposal.date == expected_disposal['date']
-            assert disposal.security == expected_disposal['security']
-            assert disposal.shares == expected_disposal['shares']
-            assert disposal.proceeds == pytest.approx(expected_disposal['proceeds'], abs=2)
+                gain = disposal.proceeds - disposal.costs
+                assert round(gain) == pytest.approx(round(expected_disposal['gain']), abs=2)
+            except:
+                pp(dataclasses.asdict(disposal))
+                pp(expected_disposal)
+                raise
 
-            gain = disposal.proceeds - disposal.costs
-            assert round(gain) == pytest.approx(round(expected_disposal['gain']), abs=2)
+        assert round(tyr.proceeds) == pytest.approx(round(expected_tyr['proceeds']), abs=2)
+        assert round(tyr.costs) == pytest.approx(round(expected_tyr['costs']), abs=2)
+        assert round(tyr.gains) == pytest.approx(round(expected_tyr['gains']), abs=2)
+        assert round(tyr.losses) == pytest.approx(round(expected_tyr['losses']), abs=2)
 
 
 str_to_tax_year_params = [
