@@ -167,10 +167,10 @@ class Result:
         tax_year_result.proceeds += disposal.proceeds
         tax_year_result.costs += disposal.costs
         gain = disposal.proceeds - disposal.costs
-        if gain < Decimal(0):
-            tax_year_result.losses += -gain
-        else:
+        if gain >= Decimal(0):
             tax_year_result.gains += gain
+        else:
+            tax_year_result.losses -= gain
 
         assert tax_year_result.proceeds - tax_year_result.costs == tax_year_result.gains - tax_year_result.losses
 
