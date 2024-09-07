@@ -28,18 +28,25 @@ from decimal import Decimal, ROUND_HALF_EVEN, ROUND_CEILING, ROUND_FLOOR
 Kind = IntEnum('Kind', ['DIVIDEND', 'CAPRETURN', 'BUY', 'SELL'])
 
 
+# Holding and matching relies upon this ordering
+assert Kind.DIVIDEND < Kind.BUY
 assert Kind.CAPRETURN < Kind.BUY
+assert Kind.BUY < Kind.SELL
+
 
 Trade = namedtuple('Trade', ['date', 'kind', 'params'])
 
+
 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg51560
 Identification = Enum('Identification', ['SAME_DAY', 'BED_AND_BREAKFAST', 'POOL'])
+
 
 @dataclasses.dataclass
 class Acquisition:
     cost: Decimal
     shares: Decimal
 
+    # How many shares are yet to to be identified
     unidentified: Decimal
 
 
@@ -53,11 +60,11 @@ class Disposal:
 
 
 def identify(disposal, acquisition, kind, acquisition_date):
-    assert disposal.unidentified > 0.0
-    assert acquisition.unidentified > 0.0
+    assert disposal.unidentified > Decimal(0)
+    assert acquisition.unidentified > Decimal(0)
     identified = min(disposal.unidentified, acquisition.unidentified)
     acquisition.unidentified -= identified
-    assert acquisition.unidentified >= 0.0
+    assert acquisition.unidentified >= Decimal(0)
     identification = (identified, kind, acquisition_date)
     disposal.identifications.append(identification)
     disposal.unidentified -= identified
@@ -90,8 +97,6 @@ def date_to_tax_year(date: datetime.date):
         return date.year, date.year + 1
 
 
-
-
 # https://www.gov.uk/guidance/capital-gains-tax-rates-and-allowances
 # https://www.rossmartin.co.uk/capital-gains-tax/110-capital-gains-tax-rates-a-allowances
 allowances = {
@@ -115,6 +120,7 @@ allowances = {
 }
 
 
+# Round if necessary, but don't quantitize if not
 def dround(d, places=0, rounding=None):
     assert isinstance(d, Decimal)
     _, _, exponent = d.as_tuple()
@@ -131,7 +137,7 @@ def dround(d, places=0, rounding=None):
 @dataclasses.dataclass
 class TaxYearResult:
     tax_year: str
-    disposals: list[tuple] = dataclasses.field(default_factory=list)
+    disposals: list[DisposalResult] = dataclasses.field(default_factory=list)
     proceeds: Decimal = Decimal(0)
     costs: Decimal = Decimal(0)
     gains: Decimal = Decimal(0)
@@ -614,7 +620,6 @@ def calculate(stream, rounding=True):
 
             else:  # pragma: no cover
                 raise NotImplementedError(tr.kind)
-
 
         if pool_updates:
             result.section104_tables[security] = pool_updates
