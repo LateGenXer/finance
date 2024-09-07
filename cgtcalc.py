@@ -16,7 +16,10 @@
 import argparse
 import dataclasses
 import datetime
+import html
+import inspect
 import math
+import numbers
 import operator
 import sys
 
@@ -134,6 +137,196 @@ def dround(d, places=0, rounding=None):
         return d.quantize(q, rounding=rounding)
 
 
+class Report:
+
+    def start(self):
+        pass
+
+    def write_heading(self, heading, level=1):  # pragma: no cover
+        raise NotImplementedError
+
+    def write_paragraph(self, paragraph):  # pragma: no cover
+        raise NotImplementedError
+
+    def write_table(self, rows, header=None, footer=None, just=None, indent=''):  # pragma: no cover
+        raise NotImplementedError
+
+    @staticmethod
+    def format(field):
+        if field is None or field != field:
+            return ''
+        else:
+            return str(field)
+
+    def end(self):
+        pass
+
+
+class TextReport(Report):
+
+    def __init__(self, stream):
+        self.stream = stream
+        self.heading_sep = ''
+
+    def write_heading(self, heading, level=1):
+        if level <= 1:
+            heading = heading.upper()
+        self.stream.write(self.heading_sep + heading + '\n\n')
+        self.heading_sep = ''
+
+    def write_paragraph(self, paragraph):
+        self.stream.write(paragraph + '\n\n')
+        self.heading_sep = '\n'
+
+    def write_table(self, rows, header=None, footer=None, just=None, indent=''):
+        stream = self.stream
+
+        columns = [list(col) for col in zip(*rows)]
+        if header is not None:
+            header = list(header)
+            assert len(header) == len(columns)
+        if footer is not None:
+            footer = list(footer)
+            assert len(footer) == len(columns)
+        if just is None:
+            just = [str.center]*len(columns)
+        else:
+            assert len(just) == len(columns)
+            m = {
+                'c': str.center,
+                'l': str.ljust,
+                'r': str.rjust,
+            }
+            just = [m[j] for j in just]
+
+
+        widths = []
+        for c in range(len(columns)):
+            width = 0
+            if header is not None:
+                header[c] = self.format(header[c])
+                width = max(width, len(header[c]))
+            if footer is not None:
+                footer[c] = self.format(footer[c])
+                width = max(width, len(footer[c]))
+            column = columns[c]
+            for r in range(len(column)):
+                cell = column[r]
+                cell = self.format(cell)
+                column[r] = cell
+                width = max(width, len(cell))
+            if header is not None:
+                header[c] = just[c](header[c], width)
+            for r in range(len(column)):
+                column[r] = just[c](column[r], width)
+            if footer is not None:
+                footer[c] = just[c](footer[c], width)
+            widths.append(width)
+
+        sep = '  '
+
+        line_width = len(sep.join([' '*width for width in widths]))
+        rule = '─' * line_width
+
+        if header is not None:
+            stream.write(indent + sep.join(header).rstrip() + '\n')
+            stream.write(indent + rule + '\n')
+        for row in zip(*columns):
+            stream.write(indent + sep.join(row).rstrip() + '\n')
+        if footer is not None:
+            stream.write(indent + rule + '\n')
+            stream.write(indent + sep.join(footer).rstrip() + '\n')
+
+        stream.write('\n')
+
+        self.heading_sep = '\n'
+
+
+class HtmlReport(Report):
+
+    def __init__(self, stream):
+        self.stream = stream
+
+    def start(self):
+        # https://getbootstrap.com/docs/3.4/getting-started/#template
+        # https://stackoverflow.com/a/15150779
+        self.stream.write('''<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capital Gains Calculation</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+<style>
+@media print {
+  @page { margin: 0; }
+  body { margin: 1.6cm; }
+}
+</style>
+</head>
+<body>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+<div class="pull-right hidden-print">
+<button class="btn btn-primary" onclick="window.print()">Print</button>
+</div>
+<div class="container-fluid">
+<h1>Capital Gains Calculation</h1>
+''')
+
+    def write_heading(self, heading, level=1):
+        level += 1
+        heading = html.escape(heading)
+        self.stream.write(f'\n<h{level}>{heading}</h{level}>\n\n')
+
+    def write_paragraph(self, paragraph):
+        paragraph = html.escape(paragraph)
+        self.stream.write(f'<p>{paragraph}</p>\n\n')
+
+    @staticmethod
+    def format_and_escape(field):
+        field = Report.format(field)
+        field = html.escape(field)
+        return field
+
+    def write_table(self, rows, header=None, footer=None, just=None, indent=''):
+        fmt = self.format_and_escape
+
+        if just is None:
+            just = ['text-center'] * 99
+        else:
+            m = {
+                'c': 'text-center',
+                'l': 'text-left',
+                'r': 'text-right',
+            }
+            just = [m[j] for j in just]
+
+        self.stream.write('<div class="table-responsive">\n')
+        # https://stackoverflow.com/questions/19857469/center-align-content-using-bootstrap#comment29535494_19858083
+        self.stream.write('<table class="table table-condensed center-block" style="width: initial; display: table;">\n')
+
+        if header:
+            self.stream.write('<thead><tr>' + ''.join([f'<th class="{j}">{fmt(field)}</th>' for field, j in zip(header, just)]) + '</tr></thead>\n')
+        self.stream.write('<tbody>\n')
+        for row in rows:
+            self.stream.write('<tr>' + ''.join([f'<td class="{j}">{fmt(field)}</td>' for field, j in zip(row, just)]) + '</tr>\n')
+        self.stream.write('</tbody>\n')
+
+        if footer:
+            self.stream.write('<tfoot><tr>' + ''.join([f'<th class="{j}">{fmt(field)}</th>' for field, j in zip(footer, just)]) + '</tr></tfoot>\n')
+
+        self.stream.write('</table>\n')
+        self.stream.write('</div>\n')
+
+    def end(self):
+        self.stream.write('\n')
+        self.stream.write('</div>\n')
+        self.stream.write('</body>\n')
+        self.stream.write('</html>\n')
+
+
 @dataclasses.dataclass
 class TaxYearResult:
     tax_year: str
@@ -192,29 +385,30 @@ class Result:
             tyr.taxable_gain = max(tyr.proceeds - tyr.costs - tyr.allowance, 0)
             tyr.carried_losses = max(tyr.costs - tyr.proceeds, 0)
 
-    def write(self, stream):
-        stream.write('SUMMARY\n\n')
+    def write(self, report):
+        report.start()
+
+        report.write_heading('Summary')
 
         if self.tax_years:
             header = self.dataclass_to_header(TaxYearResult)
+            just = self.dataclass_to_just(TaxYearResult)
+            just[1] = 'r' # disposals
             rows = []
             for tyr in self.tax_years.values():
                 row = dataclasses.astuple(tyr, tuple_factory=list)
                 row[1] = len(row[1]) # disposals
                 rows.append(row)
-            self._write_table(stream, rows, header=header)
+            report.write_table(rows, header=header, just=just)
         else:
-            stream.write('No disposals in range.\n')
-
-        stream.write('\n\n')
+            report.write_paragraph('No disposals in range.')
 
         for tax_year, tyr in self.tax_years.items():
             assert tyr.disposals
 
             tax_year1, tax_year2 = tax_year
 
-            stream.write(f'TAX YEAR {tax_year1}/{tax_year2}\n')
-            stream.write('\n')
+            report.write_heading(f'Tax year {tax_year1}/{tax_year2}')
 
             for no, disposal in enumerate(tyr.disposals, start=1):
                 gain = disposal.proceeds - disposal.costs
@@ -223,16 +417,14 @@ class Result:
                     gain = -gain
                 else:
                     sign = 'GAIN'
-                stream.write(f'{no}. SOLD {disposal.shares} {disposal.security} on {disposal.date} for £{disposal.proceeds} giving {sign} of £{gain}\n\n')
+
+                report.write_heading(f'{no}. SOLD {disposal.shares} {disposal.security} on {disposal.date} for £{disposal.proceeds} giving {sign} of £{gain}', level=3)
 
                 footer = ('Gain', str(disposal.proceeds - disposal.costs), '')
-                self._write_table(stream, disposal.table, footer=footer, indent='  ')
-                stream.write('\n')
-
-            stream.write('\n')
+                report.write_table(disposal.table, footer=footer, just='lrl', indent='  ')
 
         if self.section104_tables:
-            stream.write('SECTION 104 HOLDINGS\n')
+            report.write_heading('Section 104 Holdings')
 
             securities = list(self.section104_tables.keys())
             securities.sort()
@@ -240,10 +432,11 @@ class Result:
             for security in securities:
                 data = self.section104_tables[security]
 
-                stream.write('\n')
-                stream.write(f'{security}\n\n')
+                report.write_heading(security, level=2)
 
-                self.write_table(stream, data, indent='  ')
+                self.write_table(report, data, indent='  ')
+
+        report.end()
 
     def filter_tax_year(self, tax_year):
         try:
@@ -275,64 +468,27 @@ class Result:
         header = [field.name.replace('_', ' ').title().replace('Delta ', 'Δ') for field in dataclasses.fields(class_or_instance)]
         return header
 
-    def write_table(self, stream, data, indent=''):
+    @staticmethod
+    def dataclass_to_just(class_or_instance):
+        just = []
+        for field in dataclasses.fields(class_or_instance):
+            j = 'l'
+            t = field.type
+            if inspect.isclass(t):
+                if issubclass(t, (numbers.Number,Decimal)):
+                    j = 'r'
+                if issubclass(t, (datetime.date, datetime.datetime)):
+                    j = 'c'
+            just.append(j)
+        return just
+
+    def write_table(self, report, data, indent=''):
         assert data
-        header = self.dataclass_to_header(data[0])
+        obj0 = data[0]
+        header = self.dataclass_to_header(obj0)
+        just = self.dataclass_to_just(obj0)
         rows = [dataclasses.astuple(obj) for obj in data]
-        self._write_table(stream, rows, header=header, indent=indent)
-
-    def _write_table(self, stream, rows, header=None, footer=None, indent=''):
-        columns = [list(col) for col in zip(*rows)]
-        if header is not None:
-            header = list(header)
-            assert len(header) == len(columns)
-        if footer is not None:
-            footer = list(footer)
-            assert len(footer) == len(columns)
-
-        widths = []
-        for c in range(len(columns)):
-            width = 0
-            if header is not None:
-                width = max(width, len(header[c]))
-            if footer is not None:
-                width = max(width, len(footer[c]))
-            column = columns[c]
-            header_just = str.center
-            cell_just = str.rjust
-            for r in range(len(column)):
-                cell = column[r]
-                if isinstance(cell, str):
-                    header_just = str.ljust
-                    cell_just = str.ljust
-                else:
-                    if cell != cell:
-                        # NaN
-                        cell = ''
-                    cell = str(cell)
-                    column[r] = cell
-                width = max(width, len(cell))
-            if header is not None:
-                header[c] = header_just(header[c], width)
-            for r in range(len(column)):
-                column[r] = cell_just(column[r], width)
-            if footer is not None:
-                footer[c] = cell_just(str(footer[c]), width)
-            widths.append(width)
-
-        sep = '  '
-
-        line_width = len(sep.join([' '*width for width in widths]))
-        rule = '─' * line_width
-
-        if header is not None:
-            stream.write(indent + sep.join(header).rstrip() + '\n')
-            stream.write(indent + rule + '\n')
-        for row in zip(*columns):
-            stream.write(indent + sep.join(row).rstrip() + '\n')
-        if footer is not None:
-            stream.write(indent + rule + '\n')
-            stream.write(indent + sep.join(footer).rstrip() + '\n')
+        report.write_table(rows, header=header, indent=indent, just=just)
 
 
 def is_close_decimal(a, b, abs_tol=Decimal('.01')):
@@ -659,6 +815,7 @@ def main():
     argparser = argparse.ArgumentParser()
     argparser.add_argument('-y', '--tax-year', metavar='TAX_YEAR', default=None, help='tax year in XXXX/YYYY, XX/YY, YYYY, or YY format')
     argparser.add_argument('--rounding', action=argparse.BooleanOptionalAction, default=True, help='(dis)enable rounding to whole pounds')
+    argparser.add_argument('--format', choices=['text', 'html'], default='text')
     argparser.add_argument('filename', metavar='FILENAME', help='file with input trades')
     args = argparser.parse_args()
 
@@ -675,7 +832,13 @@ def main():
             argparser.error(f'invalid tax year {args.tax_year!r}: {e}')
         result.filter_tax_year(tax_year)
 
-    result.write(sys.stdout)
+    stream = sys.stdout
+    if args.format == 'text':
+        report = TextReport(stream)
+    else:
+        assert args.format == 'html'
+        report = HtmlReport(stream)
+    result.write(report)
 
 
 if __name__ == '__main__':

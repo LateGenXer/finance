@@ -230,8 +230,8 @@ def test_calculate(filename):
                 result = calculate(istream, rounding=rounding)
             return
 
-    with io.StringIO() as ostream:
-        result.write(ostream)
+    result.write(TextReport(io.StringIO()))
+
 
     name, _ = os.path.splitext(filename)
     if os.path.isfile(name + '.json'):
@@ -329,6 +329,30 @@ def test_filter_tax_year(filename):
     assert not filtered_result.tax_years
 
 
+@pytest.mark.parametrize("filename", collect_filenames(no_raises=True))
+def test_report_html(filename):
+    _, _, rounding = read_test_annotations(filename)
+
+    result = calculate(open(filename, 'rt'), rounding=rounding)
+
+    html = io.StringIO()
+    result.write(HtmlReport(html))
+
+    # Validate HTML with Tidy if present
+    try:
+        subprocess.check_call(['tidy', '-v'])
+    except (FileNotFoundError, subprocess.CalledProcessError):
+         pytest.skip('no tidy')
+    else:
+        p = subprocess.Popen(['tidy', '-q', '-e'], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        p.stdin.write(html.getvalue().encode('utf-8'))
+        p.stdin.close()
+        p.wait()
+        errors = io.TextIOWrapper(p.stderr).readlines()
+        assert not errors
+        assert p.returncode == 0
+
+
 def test_main():
     filename = os.path.join(data_dir, 'cgtcalc', 'cgtcalculator-example1.tsv')
 
@@ -352,3 +376,12 @@ def test_main():
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL)
+
+    subprocess.check_call(args=[
+            sys.executable,
+            cgtcalc_path,
+            '--format', 'html',
+            filename
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL)

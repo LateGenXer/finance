@@ -71,9 +71,6 @@ instance/
 # Sphinx documentation
 docs/_build/
 
-# PyBuilder
-target/
-
 # Jupyter Notebook
 .ipynb_checkpoints
 
@@ -117,9 +114,6 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
-# mkdocs documentation
-/site
-
 # mypy
 .mypy_cache/
 .dmypy.json
@@ -128,6 +122,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+*.html
 
 *.json
 

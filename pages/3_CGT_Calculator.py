@@ -41,7 +41,7 @@ st.markdown('''This is a UK Capital Gains Tax calculator.
 Please read more [here](https://github.com/LateGenXer/finance/blob/main/cgtcalc.md).
 ''')
 
-from cgtcalc import calculate, date_to_tax_year, str_to_tax_year
+from cgtcalc import calculate, date_to_tax_year, str_to_tax_year, HtmlReport, TextReport
 
 
 #
@@ -56,9 +56,11 @@ with st.sidebar:
     options = ['All']
     for y in range(current_tax_year_end, 2008, -1):
         options.append(f'{y - 1}/{y}')
-    tax_year = st.selectbox('Tax year', options)
+    tax_year = st.selectbox('Tax year', options, key="tax_year")
 
     rounding = st.checkbox("Rounding", value=True, key="rounding", help="Round to whole pounds.")
+
+    format_ = st.selectbox('Format', ['HTML', 'Text'], key='format')
 
 #
 # Input
@@ -94,12 +96,16 @@ for warning in result.warnings:
 if tax_year != 'All':
     result.filter_tax_year(str_to_tax_year(tax_year))
 
-calculation = io.StringIO()
-calculation.write('```\n')
-result.write(calculation)
-calculation.write('```\n')
-
-st.markdown(calculation.getvalue())
+if format == 'HTML':
+    html = io.StringIO()
+    report = HtmlReport(html)
+    result.write(report)
+    st.components.v1.html(html.getvalue(), height=768, scrolling=True)
+else:
+    text = io.StringIO()
+    report = TextReport(text)
+    result.write(report)
+    st.markdown('```\n' + text.getvalue() + '```\n')
 
 
 #

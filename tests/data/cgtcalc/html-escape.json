@@ -1,0 +1,49 @@
+[
+  {
+    "tax_year": "2023/2024",
+    "disposals": [
+      {
+        "date": "2024-01-01",
+        "security": ">",
+        "shares": 10,
+        "proceeds": 1000,
+        "gain": 0
+      },
+      {
+        "date": "2024-01-02",
+        "security": "<",
+        "shares": 10,
+        "proceeds": 1000,
+        "gain": 0
+      },
+      {
+        "date": "2024-01-03",
+        "security": "&",
+        "shares": 10,
+        "proceeds": 1000,
+        "gain": 0
+      },
+      {
+        "date": "2024-01-04",
+        "security": "\"",
+        "shares": 10,
+        "proceeds": 1000,
+        "gain": 0
+      },
+      {
+        "date": "2024-01-04",
+        "security": "'",
+        "shares": 10,
+        "proceeds": 1000,
+        "gain": 0
+      }
+    ],
+    "proceeds": 5000,
+    "costs": 5000,
+    "gains": 0,
+    "losses": 0,
+    "allowance": 6000,
+    "taxable_gain": 0,
+    "carried_losses": 0
+  }
+]
