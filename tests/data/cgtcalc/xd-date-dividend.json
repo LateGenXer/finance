@@ -1,0 +1,40 @@
+[
+  {
+    "tax_year": "2022/2023",
+    "disposals": [
+      {
+        "date": "2023-03-01",
+        "security": "FOO",
+        "shares": 5,
+        "proceeds": 525,
+        "gain": 0
+      }
+    ],
+    "proceeds": 525,
+    "costs": 525,
+    "gains": 0,
+    "losses": 0,
+    "allowance": 12300,
+    "taxable_gain": 0,
+    "carried_losses": 0
+  },
+  {
+    "tax_year": "2024/2025",
+    "disposals": [
+      {
+        "date": "2024-06-01",
+        "security": "FOO",
+        "shares": 15,
+        "proceeds": 1650,
+        "gain": 75
+      }
+    ],
+    "proceeds": 1650,
+    "costs": 1575,
+    "gains": 75,
+    "losses": 0,
+    "allowance": 3000,
+    "taxable_gain": 0,
+    "carried_losses": 0
+  }
+]

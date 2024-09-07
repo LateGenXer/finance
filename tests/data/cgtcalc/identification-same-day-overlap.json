@@ -1,0 +1,68 @@
+[
+  {
+    "tax_year": "2022/2023",
+    "disposals": [
+      {
+        "date": "2023-03-01",
+        "security": "A",
+        "shares": 5,
+        "proceeds": 1505,
+        "gain": -3
+      },
+      {
+        "date": "2023-03-01",
+        "security": "B",
+        "shares": 5,
+        "proceeds": 1505,
+        "gain": -3
+      },
+      {
+        "date": "2023-03-01",
+        "security": "C",
+        "shares": 5,
+        "proceeds": 1505,
+        "gain": -3
+      }
+    ],
+    "proceeds": 4515,
+    "costs": 4524,
+    "gains": 0,
+    "losses": 9,
+    "allowance": 12300,
+    "taxable_gain": 0,
+    "carried_losses": 9
+  },
+  {
+    "tax_year": "2023/2024",
+    "disposals": [
+      {
+        "date": "2023-06-01",
+        "security": "A",
+        "shares": 10,
+        "proceeds": 6010,
+        "gain": 5000
+      },
+      {
+        "date": "2023-06-01",
+        "security": "B",
+        "shares": 10,
+        "proceeds": 6010,
+        "gain": 5000
+      },
+      {
+        "date": "2023-06-01",
+        "security": "C",
+        "shares": 10,
+        "proceeds": 6010,
+        "gain": 5000
+      }
+    ],
+    "proceeds": 18030,
+    "costs": 3030,
+    "gains": 15000,
+    "losses": 0,
+    "allowance": 6000,
+    "taxable_gain": 9000,
+    "carried_losses": 0
+  }
+]
