@@ -15,9 +15,9 @@ TAX_YEAR 16-17
 1. SELL: 110000(2) CAR on 01/12/2016 at £2.73545 gives GAIN of £15,631.00
 SAME DAY TRADE matches with:
 BUY: 110000 shares of 150000(4) at price £2.58
-RESULTANT TRADE: B CAR  01/12/2016   40000  2.58  526.66667  0.00
+RESULTANT TRADE: B CAR  01/12/2016   40000  2.58  10.66667  516.00
 CALCULATION: GAIN = £15,631.00 = ( 110000 * 2.73545 - 20.00)
-- ( 150000 * 2.58 + 1975.00 + 0.00) * ( 110000 / 150000 )
+- ( 150000 * 2.58 + 40.00 + 1935.00) * ( 110000 / 150000 )
 
 2. SELL: 20000 CAR on 08/12/2016 at £3.12 gives GAIN of £10,526.00
 Matches with:
@@ -34,8 +34,8 @@ CAR  20000
 
 STATISTICS
 
-Total amount paid in stamp duty    = £0.00
-Total amount paid in broker's fees = £2,005.00
+Total amount paid in stamp duty    = £1,935.00
+Total amount paid in broker's fees = £70.00
 
 Total number of trades =  7
 Total number of buys   =  4

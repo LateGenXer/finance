@@ -58,8 +58,8 @@ BP.  2000
 
 STATISTICS
 
-Total amount paid in stamp duty    = £0.00
-Total amount paid in broker's fees = £926.97
+Total amount paid in stamp duty    = £791.97
+Total amount paid in broker's fees = £135.00
 
 Total number of trades =  12
 Total number of buys   =  7
