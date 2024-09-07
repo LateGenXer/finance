@@ -3,16 +3,16 @@
     "tax_year": "2019/2020",
     "disposals": [
       {
-        "date": "2020-02-03",
+        "date": "2020-02-25",
         "security": "ABC",
-        "shares": 5000,
-        "proceeds": 9000,
-        "gain": 263
+        "shares": 4000,
+        "proceeds": 10480.0,
+        "gain": 1514.79
       }
     ],
-    "proceeds": 9000,
-    "costs": 8737,
-    "gains": 263,
+    "proceeds": 10480.0,
+    "costs": 8965.21,
+    "gains": 1514.79,
     "losses": 0,
     "allowance": 12000,
     "taxable_gain": 0,

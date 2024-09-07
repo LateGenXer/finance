@@ -6,20 +6,20 @@
         "date": "2016-12-29",
         "security": "IE00B3X1LS57",
         "shares": 100,
-        "proceeds": 23192,
-        "gain": 16
+        "proceeds": 23192.36,
+        "gain": 16.7
       },
       {
         "date": "2017-03-29",
         "security": "IE00B3X1LS57",
         "shares": 100,
-        "proceeds": 23891,
-        "gain": 950
+        "proceeds": 23891.56,
+        "gain": 950.97
       }
     ],
-    "proceeds": 47083,
-    "costs": 46117,
-    "gains": 966,
+    "proceeds": 47083.92,
+    "costs": 46116.25,
+    "gains": 967.67,
     "losses": 0,
     "allowance": 11100,
     "taxable_gain": 0,

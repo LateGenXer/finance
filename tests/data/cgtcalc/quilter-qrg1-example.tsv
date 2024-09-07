@@ -1,5 +1,7 @@
 # https://www.quilter.com/siteassets/documents/platform/guides-and-brochures/20719-cgt-quick-reference-guide-1-section-104-holdings.pdf
 
+# NO_ROUNDING
+
 BUY	07/06/2016	ABC	2000	2.00	0
 BUY	04/11/2016	ABC	2500	2.10	0
 BUY	26/08/2017	ABC	2500	1.97	0
@@ -7,3 +9,6 @@ BUY	07/07/2018	ABC	3000	2.30	0
 BUY	14/05/2019	ABC	2000	2.50	0
 
 SELL	01/03/2022	ABC	3750	2.72	0
+
+# Artificial sell to match the pool (minus rounding)
+SELL    06/04/2022	ABC	8250	2.172916363636364	0

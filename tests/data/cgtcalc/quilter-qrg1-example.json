@@ -1,0 +1,40 @@
+[
+  {
+    "tax_year": "2021/2022",
+    "disposals": [
+      {
+        "date": "2022-03-01",
+        "security": "ABC",
+        "shares": 3750,
+        "proceeds": 10200.0,
+        "gain": 2051.56
+      }
+    ],
+    "proceeds": 10200.0,
+    "costs": 8148.44,
+    "gains": 2051.56,
+    "losses": 0,
+    "allowance": 12300,
+    "taxable_gain": 0,
+    "carried_losses": 0
+  },
+  {
+    "tax_year": "2022/2023",
+    "disposals": [
+      {
+        "date": "2022-04-06",
+        "security": "ABC",
+        "shares": 8250,
+        "proceeds": 17926.56,
+        "gain": 0.0
+      }
+    ],
+    "proceeds": 17926.56,
+    "costs": 17926.56,
+    "gains": 0.0,
+    "losses": 0,
+    "allowance": 12300,
+    "taxable_gain": 0,
+    "carried_losses": 0.0
+  }
+]

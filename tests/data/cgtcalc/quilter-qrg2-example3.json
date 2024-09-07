@@ -1,0 +1,21 @@
+[
+  {
+    "tax_year": "2019/2020",
+    "disposals": [
+      {
+        "date": "2020-03-01",
+        "security": "A",
+        "shares": 50500,
+        "proceeds": 40490.9,
+        "gain": 2915.9
+      }
+    ],
+    "proceeds": 40490.9,
+    "costs": 37575.0,
+    "gains": 2915.9,
+    "losses": 0,
+    "allowance": 12000,
+    "taxable_gain": 0,
+    "carried_losses": 0
+  }
+]

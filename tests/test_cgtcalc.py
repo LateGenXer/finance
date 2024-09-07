@@ -33,7 +33,7 @@ def collect_filenames(no_raises=False):
     filenames = []
     for filename in glob(os.path.join(data_dir, 'cgtcalc', '*.tsv')):
         if no_raises:
-            expected_warnings, raises = read_test_annotations(filename)
+            _, raises, _  = read_test_annotations(filename)
             if raises is not None:
                 continue
         name, _ = os.path.splitext(os.path.basename(filename))
@@ -67,7 +67,9 @@ class JSONEncoder(json.JSONEncoder):
 
 def encode_json_result(result, filename):
     obj = list(result.tax_years.values())
-    json.dump(obj, open(filename, 'wt'), indent=2, cls=JSONEncoder)
+    stream = open(filename, 'wt')
+    json.dump(obj, stream, indent=2, cls=JSONEncoder)
+    stream.write('\n')
 
 
 def object_hook(obj):
@@ -198,6 +200,8 @@ def read_test_annotations(filename):
     expected_warnings = {
         'cgtcalc.py is still work in progress!',
     }
+    rounding = True
+
     warning_prefix = '# WARNING: '
     for line in open(filename, 'rt'):
         line = line.rstrip('\n')
@@ -208,20 +212,22 @@ def read_test_annotations(filename):
             raises = NotImplementedError
         if line == '# ASSERTION_ERROR':
             raises = AssertionError
+        if line == '# NO_ROUNDING':
+            rounding = False
 
-    return expected_warnings, raises
+    return expected_warnings, raises, rounding
 
 
 @pytest.mark.parametrize("filename", collect_filenames())
 def test_calculate(filename):
-    expected_warnings, raises = read_test_annotations(filename)
+    expected_warnings, raises, rounding = read_test_annotations(filename)
 
     with open(filename, 'rt') as istream:
         if raises is None:
-            result = calculate(istream)
+            result = calculate(istream, rounding=rounding)
         else:
             with pytest.raises(raises):
-                result = calculate(istream)
+                result = calculate(istream, rounding=rounding)
             return
 
     with io.StringIO() as ostream:
@@ -242,6 +248,8 @@ def test_calculate(filename):
 
     assert result.tax_years.keys() == expected_result.keys()
 
+    abs_tol = 2.0 if rounding else 0.02
+
     for tax_year in expected_result.keys():
         tyr = result.tax_years[tax_year]
         expected_tyr = expected_result[tax_year]
@@ -253,19 +261,19 @@ def test_calculate(filename):
                 assert disposal.date == expected_disposal['date']
                 assert disposal.security == expected_disposal['security']
                 assert disposal.shares == expected_disposal['shares']
-                assert disposal.proceeds == pytest.approx(expected_disposal['proceeds'], abs=2)
+                assert disposal.proceeds == pytest.approx(expected_disposal['proceeds'], abs=abs_tol)
 
                 gain = disposal.proceeds - disposal.costs
-                assert round(gain) == pytest.approx(round(expected_disposal['gain']), abs=2)
+                assert round(gain) == pytest.approx(round(expected_disposal['gain']), abs=abs_tol)
             except:
                 pp(dataclasses.asdict(disposal))
                 pp(expected_disposal)
                 raise
 
-        assert round(tyr.proceeds) == pytest.approx(round(expected_tyr['proceeds']), abs=2)
-        assert round(tyr.costs) == pytest.approx(round(expected_tyr['costs']), abs=2)
-        assert round(tyr.gains) == pytest.approx(round(expected_tyr['gains']), abs=2)
-        assert round(tyr.losses) == pytest.approx(round(expected_tyr['losses']), abs=2)
+        assert round(tyr.proceeds) == pytest.approx(round(expected_tyr['proceeds']), abs=abs_tol)
+        assert round(tyr.costs) == pytest.approx(round(expected_tyr['costs']), abs=abs_tol)
+        assert round(tyr.gains) == pytest.approx(round(expected_tyr['gains']), abs=abs_tol)
+        assert round(tyr.losses) == pytest.approx(round(expected_tyr['losses']), abs=abs_tol)
 
 
 str_to_tax_year_params = [
@@ -291,7 +299,9 @@ def test_str_to_tax_year(s, eyc):
 
 @pytest.mark.parametrize("filename", collect_filenames(no_raises=True))
 def test_filter_tax_year(filename):
-    result = calculate(open(filename, 'rt'))
+    _, _, rounding = read_test_annotations(filename)
+
+    result = calculate(open(filename, 'rt'), rounding=rounding)
 
     for tax_year in result.tax_years:
         filtered_result = copy.copy(result)

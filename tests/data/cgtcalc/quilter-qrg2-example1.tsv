@@ -1,5 +1,7 @@
 # https://www.quilter.com/siteassets/documents/platform/guides-and-brochures/20720-cgt-quick-reference-guide-2-share-identification-rules.pdf
 
+# NO_ROUNDING
+
 BUY	01/01/2020	ABC	11500	2.17	33.55
 SELL	25/02/2020	ABC	4000	2.62	0
 BUY	11/03/2020	ABC	500	2.72	0

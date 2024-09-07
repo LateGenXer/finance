@@ -1,6 +1,8 @@
 # https://www.quilter.com/siteassets/documents/platform/guides-and-brochures/20720-cgt-quick-reference-guide-2-share-identification-rules.pdf
 
+# NO_ROUNDING
+
 BUY	01/01/2020	A	50500	0.5000	0
 
 SELL	01/03/2020	A	50500	0.8018	0
-BUY	31/03/2020	A	25250	0.7900	0
+BUY	31/03/2020	A	42500	0.7900	0
