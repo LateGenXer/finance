@@ -4,7 +4,7 @@ SUMMARY INFORMATION
 
 Year    CapitalGain      Exemption    UsePrevLosses   TaperRelief   ChargeableGain      Tax*
 -------------------------------------------------------------------------------------------
-16-17 26157    11100  0  0  15057  1505
+16-17	26157		  11100		0		0		15057		1505
 
 *Please note that tax values are based on capital gains only and assume zero income.
 
@@ -29,7 +29,7 @@ CALCULATION: Gain = £10,526.00 = ( 20000 * 3.12 - 10.00 )
 
 CURRENT PORTFOLIO
 
-CAR  20000
+CAR	 20000
 
 
 STATISTICS
@@ -45,3 +45,4 @@ INFO FOR TAX RETURN
 
 16-17: Disposal Proceeds = £363,300.00 , Allowable Costs = £337,143.00 , Disposals = 2
 16-17: Year Gains = £26,157.00  Year Losses = £0.00
+

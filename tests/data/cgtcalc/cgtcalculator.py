@@ -79,8 +79,8 @@ def main():
 
         results = driver.find_element(By.ID, 'Textarea2')
 
-        output = results.text
-        output = output.rstrip('\n') + '\n'
+        # https://stackoverflow.com/a/72787948
+        output = results.get_property('textContent')
 
         sys.stdout.write(output)
 

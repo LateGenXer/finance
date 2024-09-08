@@ -4,7 +4,7 @@ SUMMARY INFORMATION
 
 Year    CapitalGain      Exemption    UsePrevLosses   TaperRelief   ChargeableGain      Tax*
 -------------------------------------------------------------------------------------------
-23-24 629    6000  0  0  0  0
+23-24	629		  6000		0		0		0		0
 
 *Please note that tax values are based on capital gains only and assume zero income.
 
@@ -28,7 +28,7 @@ CALCULATION: Gain = £300.00 = ( 400 * 5.20 - 105.00 )
 
 CURRENT PORTFOLIO
 
-LOBSTER  400
+LOBSTER	 400
 
 
 STATISTICS
@@ -44,3 +44,4 @@ INFO FOR TAX RETURN
 
 23-24: Disposal Proceeds = £5,440.00 , Allowable Costs = £4,811.00 , Disposals = 2
 23-24: Year Gains = £629.00  Year Losses = £0.00
+

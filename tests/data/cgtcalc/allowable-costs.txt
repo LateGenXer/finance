@@ -4,7 +4,7 @@ SUMMARY INFORMATION
 
 Year    CapitalGain      Exemption    UsePrevLosses   TaperRelief   ChargeableGain      Tax*
 -------------------------------------------------------------------------------------------
-19-20 889    12000  0  0  0  0
+19-20	889		  12000		0		0		0		0
 
 *Please note that tax values are based on capital gains only and assume zero income.
 
@@ -37,3 +37,4 @@ INFO FOR TAX RETURN
 
 19-20: Disposal Proceeds = £1,000.00 , Allowable Costs = £111.00 , Disposals = 1
 19-20: Year Gains = £889.00  Year Losses = £0.00
+
