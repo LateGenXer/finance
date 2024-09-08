@@ -17,7 +17,6 @@ import argparse
 import dataclasses
 import datetime
 import html
-import inspect
 import math
 import numbers
 import operator
@@ -249,7 +248,6 @@ class HtmlReport(Report):
 
     def start(self):
         # https://getbootstrap.com/docs/3.4/getting-started/#template
-        # https://stackoverflow.com/a/15150779
         self.stream.write('''<!doctype html>
 <html lang="en">
 <head>
@@ -259,10 +257,6 @@ class HtmlReport(Report):
 <title>Capital Gains Calculation</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
 <style>
-@media print {
-  @page { margin: 0; }
-  body { margin: 1.6cm; }
-}
 .fixed-right {
   position: fixed;
   top: 0;
