@@ -342,7 +342,10 @@ def test_report_html(filename):
     try:
         subprocess.check_call(['tidy', '-v'])
     except (FileNotFoundError, subprocess.CalledProcessError):
-         pytest.skip('no tidy')
+        if 'CI' in os.environ:
+            raise
+        else:
+            pytest.skip('no tidy')
     else:
         p = subprocess.Popen(['tidy', '-q', '-e'], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         p.stdin.write(html.getvalue().encode('utf-8'))
