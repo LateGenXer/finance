@@ -12,14 +12,20 @@ env:
 
 jobs:
 
-  ubuntu:
-    runs-on: ubuntu-22.04
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.12']
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 1
     - run: sudo apt-get update -qq
     - run: sudo apt-get install -qq -y --no-install-recommends coinor-cbc tidy
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
     - run: pip install --upgrade pipenv wheel
     - run: pipenv install --dev
     - run: pipenv run pip list
