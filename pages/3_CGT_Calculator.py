@@ -96,12 +96,13 @@ for warning in result.warnings:
 if tax_year != 'All':
     result.filter_tax_year(str_to_tax_year(tax_year))
 
-if format == 'HTML':
+if format_ == 'HTML':
     html = io.StringIO()
     report = HtmlReport(html)
     result.write(report)
     st.components.v1.html(html.getvalue(), height=768, scrolling=True)
 else:
+    assert format_ == 'Text'
     text = io.StringIO()
     report = TextReport(text)
     result.write(report)
