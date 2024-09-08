@@ -474,11 +474,10 @@ class Result:
         for field in dataclasses.fields(class_or_instance):
             j = 'l'
             t = field.type
-            if inspect.isclass(t):
-                if issubclass(t, (numbers.Number,Decimal)):
-                    j = 'r'
-                if issubclass(t, (datetime.date, datetime.datetime)):
-                    j = 'c'
+            if t in (int, float, Decimal):
+                j = 'r'
+            if t in (datetime.date, datetime.datetime):
+                j = 'c'
             just.append(j)
         return just
 
