@@ -71,6 +71,7 @@ st.header('Input')
 placeholder_filename = os.path.join(os.path.dirname(__file__), '..', 'tests', 'data', 'cgtcalc', 'hmrc-hs284-example3.tsv')
 transactions = st.text_area(
     label="Transactions",
+    key='transactions',
     height = 480,
     placeholder=open(placeholder_filename, 'rt').read(),
     help='[Format specification](https://github.com/LateGenXer/finance/blob/main/cgtcalc.md#format)'
