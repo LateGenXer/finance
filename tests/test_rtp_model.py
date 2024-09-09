@@ -54,10 +54,10 @@ def test_model(joint, sipp_extra_contrib, retirement_country, retirement_income_
     model.run(params)
 
 
-@pytest.mark.parametrize("income,income_tax,cg,cgt,ma", test_tax_uk.combined_test_cases)
+@pytest.mark.parametrize("income,income_tax,cg,cgt,ma", [
+    test_case for test_case in test_tax_uk.combined_test_cases if test_case[0] <= uk.income_tax_threshold_45
+])
 def test_uk_tax_lp(income, cg, income_tax, cgt, ma):
-    if income > uk.income_tax_threshold_45:
-        pytest.skip()
     prob = lp.LpProblem("test_uk_tax_lp")
     income_tax_, cgt_ = model.uk_tax_lp(prob, income, cg, marriage_allowance=ma)
     prob.setObjective(income_tax_ + cgt_)
