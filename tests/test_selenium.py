@@ -60,13 +60,10 @@ def server(production, worker_id):
         app.wait()
 
 
-headless = True
-
-
 @pytest.fixture(scope="session")
-def driver():
+def driver(show_browser):
     options = Options()
-    if headless:
+    if not show_browser:
         options.add_argument('--headless=new')  #https://www.selenium.dev/blog/2023/headless-is-going-away/
         options.add_argument('--window-size=1080,1920')
         # https://stackoverflow.com/questions/45631715/downloading-with-chrome-headless-and-selenium/73840130#73840130
