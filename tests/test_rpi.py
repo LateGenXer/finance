@@ -45,12 +45,6 @@ def _test(rpi):
 
 
 def test_rpi():
-    if os.path.exists(RPI._filename):
-        os.unlink(RPI._filename)
-
-    rpi = RPI()
-    _test(rpi)
-
     rpi = RPI()
     _test(rpi)
 
