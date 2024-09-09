@@ -5,6 +5,7 @@
 #
 
 
+import copy
 import datetime
 import operator
 
@@ -77,6 +78,11 @@ def tradeweb_issued(scope='module'):
     return entries
 
 
+@pytest.fixture
+def tradeweb_rpi(scope='module'):
+    return RPI()
+
+
 # https://reports.tradeweb.com/closing-prices/gilts/ > Type: Gilts Only > Export
 tradeweb_csvs = [
     'Tradeweb_FTSE_ClosePrices_20231201.csv',
@@ -97,7 +103,7 @@ def tradeweb_parse():
 @pytest.mark.parametrize("row", [
     pytest.param(row, id=f"{row['Gilt Name']}@{row['Close of Business Date']}") for row in tradeweb_parse()
 ])
-def test_tradeweb(caplog, tradeweb_issued, row):
+def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, row):
     caplog.set_level(logging.DEBUG, logger="gilts")
 
     for name, value in row.items():
@@ -141,7 +147,7 @@ def test_tradeweb(caplog, tradeweb_issued, row):
         gilt = Gilt(**kwargs)
     else:
         # Truncate RPI series to match close TradeWeb close date
-        rpi_series = RPI()
+        rpi_series = copy.deepcopy(tradeweb_rpi)
         index = rpi_series.lookup_index(close_date)
         rpi_series.series = rpi_series.series[:index]
 
