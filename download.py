@@ -97,11 +97,7 @@ def download(url:str, filename:str|None=None, ttl:int=0, content_type:str|None=N
     dst.close()
     os.utime(tmp_filename, (src_mtime, src_mtime))
     src.close()
-    try:
-        os.rename(tmp_filename, filename)
-    except FileExistsError:  # pragma: no cover
-        assert sys.platform != 'linux'
-        shutil.move(tmp_filename, filename)
+    os.replace(tmp_filename, filename)
 
 
 if __name__ == '__main__':
