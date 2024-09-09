@@ -271,7 +271,7 @@ class HtmlReport(Report):
 <button class="btn btn-primary" onclick="window.print()">Print</button>
 </div>
 <div class="container-fluid">
-<h1>Capital Gains Calculation</h1>
+<h1 class="visible-print-block">Capital Gains Calculation</h1>
 ''')
 
     def write_heading(self, heading, level=1):

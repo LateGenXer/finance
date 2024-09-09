@@ -23,7 +23,7 @@ st.set_page_config(
     menu_items={
         "Get help": "https://github.com/LateGenXer/finance/discussions",
         "Report a Bug": "https://github.com/LateGenXer/finance/issues",
-        "About": """Capital Gain Tax Calculator
+        "About": """Capital Gains Tax Calculator
 
 https://github.com/LateGenXer/finance/blob/main/cgtcalc.md
 
@@ -34,7 +34,7 @@ Copyright (c) 2024 LateGenXer.
 )
 
 
-st.title('Capital Gain Tax Calculator')
+st.title('Capital Gains Tax Calculator')
 
 
 st.markdown('''This is a UK Capital Gains Tax calculator.
@@ -63,16 +63,16 @@ with st.sidebar:
     format_ = st.selectbox('Format', ['HTML', 'Text'], key='format')
 
 #
-# Input
+# Inputs
 #
 
-st.header('Input')
+st.html("<style>textarea { font-family: monospace !important; font-size: 14px !important; }</style>")
 
 placeholder_filename = os.path.join(os.path.dirname(__file__), '..', 'tests', 'data', 'cgtcalc', 'hmrc-hs284-example3.tsv')
 transactions = st.text_area(
     label="Transactions",
     key='transactions',
-    height = 480,
+    height = 14*20,
     placeholder=open(placeholder_filename, 'rt').read(),
     help='[Format specification](https://github.com/LateGenXer/finance/blob/main/cgtcalc.md#format)'
 )
@@ -81,9 +81,6 @@ transactions = st.text_area(
 #
 # Calculation
 #
-
-st.header('Output')
-
 
 if transactions:
     stream = io.StringIO(transactions)
@@ -97,17 +94,18 @@ for warning in result.warnings:
 if tax_year != 'All':
     result.filter_tax_year(str_to_tax_year(tax_year))
 
-if format_ == 'HTML':
-    html = io.StringIO()
-    report = HtmlReport(html)
-    result.write(report)
-    st.components.v1.html(html.getvalue(), height=768, scrolling=True)
-else:
-    assert format_ == 'Text'
-    text = io.StringIO()
-    report = TextReport(text)
-    result.write(report)
-    st.markdown('```\n' + text.getvalue() + '```\n')
+with st.container(border=True):
+    if format_ == 'HTML':
+        html = io.StringIO()
+        report = HtmlReport(html)
+        result.write(report)
+        st.components.v1.html(html.getvalue(), height=768, scrolling=True)
+    else:
+        assert format_ == 'Text'
+        text = io.StringIO()
+        report = TextReport(text)
+        result.write(report)
+        st.markdown('```\n' + text.getvalue() + '```\n')
 
 
 #
