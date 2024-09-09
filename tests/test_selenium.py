@@ -1,12 +1,12 @@
 #
-# Copyright (c) 2023 LateGenXer
+# Copyright (c) 2023-2024 LateGenXer
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 
 
+import io
 import os.path
-import pickle
 import socket
 import subprocess
 import time
@@ -18,6 +18,10 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+
+data_dir = os.path.join(os.path.dirname(__file__), 'data')
 
 
 @pytest.fixture(scope="session")
@@ -89,61 +93,119 @@ def driver(show_browser):
         driver.quit()
 
 
+# Use the same analytics anonymous ID.
+analytics_cookie = {
+    'name': 'ajs_anonymous_id',
+    'value': 'ac78b155-525b-4578-97f6-58aa2f2bf366'
+}
+
+
+#
+# Gilt Ladder Builder
+#
+
 @pytest.fixture(scope="function")
-def page(server, driver):
+def gilt_ladder_page(server, driver):
     driver.get(server + '/Gilt_Ladder')
 
-    # Use the same analytics anonymous ID.
-    driver.add_cookie({
-        'name': 'ajs_anonymous_id',
-        'value': 'ac78b155-525b-4578-97f6-58aa2f2bf366'
-    })
+    driver.add_cookie(analytics_cookie)
 
     driver.implicitly_wait(15)
-    driver.find_element(By.ID, 'disclaimer');
+    driver.find_element(By.ID, 'disclaimer')
 
     return driver
 
 
-def test_default(page):
-    driver = page
+def test_gilt_ladder_default(gilt_ladder_page):
+    driver = gilt_ladder_page
 
     driver.implicitly_wait(0)
     with pytest.raises(NoSuchElementException):
-        exception = driver.find_element(By.XPATH, "//div[@class='stException']");
+        driver.find_element(By.XPATH, "//div[@class='stException']")
 
 
-def test_index_linked(page):
-    driver = page
+def test_gilt_ladder_index_linked(gilt_ladder_page):
+    driver = gilt_ladder_page
 
-    index_linked = driver.find_element(By.XPATH, "//p[text()='Index-linked']");
+    index_linked = driver.find_element(By.XPATH, "//p[text()='Index-linked']")
     index_linked.click()
 
     time.sleep(3)
 
     driver.implicitly_wait(15)
-    driver.find_element(By.ID, 'disclaimer');
+    driver.find_element(By.ID, 'disclaimer')
 
     driver.implicitly_wait(0)
     with pytest.raises(NoSuchElementException):
-        exception = driver.find_element(By.XPATH, "//div[@class='stException']");
+        driver.find_element(By.XPATH, "//div[@class='stException']")
         driver.save_screenshot('selenium.png')
 
 
-def test_file_upload(page):
-    driver = page
+def test_gilt_ladder_file_upload(gilt_ladder_page):
+    driver = gilt_ladder_page
 
     driver.implicitly_wait(15)
 
     # https://www.selenium.dev/documentation/webdriver/elements/file_upload/
     s = driver.find_element(By.XPATH, "//input[@type='file']")
-    s.send_keys(os.path.join(os.path.dirname(__file__), 'data', 'test_schedule.csv'))
+    s.send_keys(os.path.join(data_dir, 'test_schedule.csv'))
 
     time.sleep(3)
 
-    driver.find_element(By.ID, 'disclaimer');
+    driver.find_element(By.ID, 'disclaimer')
     driver.implicitly_wait(0)
 
     with pytest.raises(NoSuchElementException):
-        exception = driver.find_element(By.XPATH, "//div[@class='stException']");
+        driver.find_element(By.XPATH, "//div[@class='stException']")
         driver.save_screenshot('selenium.png')
+
+
+#
+# Capital Gains Calculator
+#
+
+@pytest.fixture(scope="function")
+def cgtcalc_page(server, driver):
+    driver.get(server + '/CGT_Calculator')
+
+    driver.add_cookie(analytics_cookie)
+
+    driver.implicitly_wait(15)
+    driver.find_element(By.ID, 'disclaimer')
+
+    return driver
+
+
+def test_cgtcalc_default(cgtcalc_page):
+    driver = cgtcalc_page
+
+    driver.implicitly_wait(0)
+    with pytest.raises(NoSuchElementException):
+        driver.find_element(By.XPATH, "//div[@class='stException']")
+
+    filename = os.path.join(data_dir, 'cgtcalc', 'jameshay-example.tsv')
+    transactions = open(filename, 'rt').read()
+    textarea = driver.find_element(By.XPATH, "//textarea")
+    textarea.send_keys(transactions.replace('\t', ' '))
+    from selenium.webdriver.common.action_chains import ActionChains
+
+    actions = ActionChains(driver)
+    actions.move_to_element(textarea)
+    actions.key_down(Keys.CONTROL)
+    actions.send_keys(Keys.ENTER)
+    actions.key_up(Keys.CONTROL)
+    actions.perform()
+
+    time.sleep(3)
+
+    iframe = driver.find_element(By.XPATH, "//iframe")
+    srcdoc = iframe.get_attribute('srcdoc')
+
+    from cgtcalc import calculate, HtmlReport
+
+    result = calculate(open(filename, 'rt'))
+    expected_html = io.StringIO()
+    report = HtmlReport(expected_html)
+    result.write(report)
+
+    assert srcdoc == expected_html.getvalue()
