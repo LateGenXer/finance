@@ -17,6 +17,7 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
@@ -183,11 +184,12 @@ def test_cgtcalc_default(cgtcalc_page):
     with pytest.raises(NoSuchElementException):
         driver.find_element(By.XPATH, "//div[@class='stException']")
 
+    driver.implicitly_wait(15)
+
     filename = os.path.join(data_dir, 'cgtcalc', 'jameshay-example.tsv')
     transactions = open(filename, 'rt').read()
     textarea = driver.find_element(By.XPATH, "//textarea")
     textarea.send_keys(transactions.replace('\t', ' '))
-    from selenium.webdriver.common.action_chains import ActionChains
 
     actions = ActionChains(driver)
     actions.move_to_element(textarea)
