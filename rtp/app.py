@@ -63,7 +63,7 @@ default_state = {
     "sipp_contrib_2": uiaa,
     "sipp_extra_contrib": False,
     "lsa_ratio_1": 100.0,
-    "sipp_extra_contrib": False,
+    "lsa_ratio_2": 100.0,
     "isa": 250000,
     "gia": 0,
     "misc_contrib": 0,
