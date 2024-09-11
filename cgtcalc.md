@@ -9,7 +9,8 @@ A web instance is available [here](https://lategenxer.streamlit.app/CGT_Calculat
 
 ## Disclaimer
 
-**WARNING: `cgtcalc.py` is still work in progress!**
+> [!WARNING]
+> `cgtcalc.py` is still work in progress!
 
 I wrote `cgtcalc.py` primarily for helping filing my own Self Assessment.
 It's accurate to the best of my abilities, but I am not an accountant or financial adviser.
@@ -127,13 +128,14 @@ LOBSTER
 
 This is the [Excess Reportable Income example calculation from Vanguard UK Reporting Fund FAQ guide](https://fund-docs.vanguard.com/uk-reporting-fund-faq.pdf#page=8).
 
-| Kind      |    Date    | Company      |        |          |         |
-| --------- | :--------: | ------------ | ------ | :------: | ------: |
+| Kind      |    Date    | Company      | Shares |          |         |
+| --------- | :--------: | ------------ | -----: | :------: | ------: |
 | BUY       | 21/11/2016 | IE00B3X1LS57 |    100 | 229.2590 |       0 |
-| DIVIDEND  | 30/12/2016 | IE00B3X1LS57 |    100 |  14.69   |         |
-| CAPRETURN | 30/12/2016 | IE00B3X1LS57 |    100 |  16.71   |         |
-| SELL      | 29/03/2017 | IE00B3X1LS57 |    100 | 238.9156 |       0 |
+| DIVIDEND  | 30/12/2016 | IE00B3X1LS57 |    100 |  14.69   |         |
+| CAPRETURN | 30/12/2016 | IE00B3X1LS57 |    100 |  16.71   |         |
+| SELL¹     | 29/03/2017 | IE00B3X1LS57 |    100 | 238.9156 |       0 |
 
+1. This sale is not in the example but was added to illustrate how a future disposal would be handlded.
 
 ```
 SUMMARY
