@@ -9,9 +9,9 @@ import datetime
 import io
 import os.path
 
-
 import streamlit as st
-import pandas as pd
+
+from cgtcalc import calculate, date_to_tax_year, str_to_tax_year, HtmlReport, TextReport
 
 
 # https://docs.streamlit.io/library/api-reference/utilities/st.set_page_config
@@ -40,8 +40,6 @@ st.title('Capital Gains Tax Calculator')
 st.markdown('''This is a UK Capital Gains Tax calculator.
 Please read more [here](https://github.com/LateGenXer/finance/blob/main/cgtcalc.md).
 ''')
-
-from cgtcalc import calculate, date_to_tax_year, str_to_tax_year, HtmlReport, TextReport
 
 
 #

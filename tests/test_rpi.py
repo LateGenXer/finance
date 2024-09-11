@@ -5,7 +5,6 @@
 #
 
 
-import math
 import os.path
 
 from datetime import date

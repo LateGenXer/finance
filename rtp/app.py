@@ -283,7 +283,9 @@ st.header('Results')
 
 params = {key: value for key, value in st.session_state.items() if key in default_state}
 
-perc_xform = lambda x: x*.01
+def perc_xform(x):
+    return x*.01
+
 state_xforms =  {
     'inflation_rate': perc_xform,
     'sipp_growth_rate_1': perc_xform,

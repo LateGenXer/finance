@@ -6,9 +6,7 @@
 
 
 import csv
-import datetime
 import io
-import os.path
 import subprocess
 import sys
 import types

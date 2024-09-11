@@ -7,16 +7,19 @@
 
 import datetime
 import io
-import json
 import math
 import os
-import operator
-import sys
 
 from zoneinfo import ZoneInfo
 
 import streamlit as st
 import pandas as pd
+
+
+from rpi import RPI
+
+from gilts.gilts import Issued, GiltPrices, BondLadder, schedule, yield_curve, IndexLinkedGilt
+from ukcalendar import next_business_day, shift_year, shift_month
 
 
 experimental = 'experimental' in st.query_params
@@ -40,12 +43,6 @@ Copyright (c) 2023 LateGenXer.
 """,
     }
 )
-
-
-import rpi
-
-from gilts.gilts import Issued, GiltPrices, BondLadder, schedule, yield_curve, IndexLinkedGilt
-from ukcalendar import next_business_day, shift_year, shift_month
 
 
 st.title('Gilt Ladder Builder')
@@ -147,7 +144,7 @@ else:
 
 
 with st.spinner('Downloading data...'):
-    rpi_series = rpi.RPI()
+    rpi_series = RPI()
     issued = Issued(rpi_series=rpi_series)
     prices = GiltPrices()
 bl = BondLadder(issued, prices, s)

@@ -7,7 +7,6 @@
 
 
 import os
-import math
 import sys
 
 from dataclasses import dataclass, field
@@ -839,7 +838,7 @@ def run(params):
     print(f"Total tax:             {result.total_tax:10,.0f}")
 
     if result.ls_sipp_1 + result.ls_sipp_2 + result.ls_isa + result.ls_gia:
-        print(f"Lump sump allocation:")
+        print("Lump sump allocation:")
         print(f"  SIPP1: {result.ls_sipp_1:8.0f}")
         print(f"  SIPP2: {result.ls_sipp_2:8.0f}")
         print(f"  ISA:   {result.ls_isa:8.0f}")

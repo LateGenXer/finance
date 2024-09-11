@@ -9,7 +9,6 @@ import csv
 import datetime
 import dataclasses
 import enum
-import json
 import logging
 import math
 import numbers
@@ -21,14 +20,10 @@ import sys
 
 import xml.etree.ElementTree
 
-from pprint import pp
-
 from download import download
 
 import scipy.optimize as optimize
 
-import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 
 import caching
@@ -91,7 +86,6 @@ class Gilt:
             if prev_coupon_date < settlement_date:
                 break
             prev_coupon_date = shift_month(self.maturity, -6*periods)
-        previous_coupon_date = prev_coupon_date
         next_coupon_dates.reverse()
         return prev_coupon_date, next_coupon_dates
 
@@ -694,8 +688,6 @@ class BondLadder:
         # Add bond coupon/redemption events
         holdings = []
         for g in self.issued.filter(self.index_linked, settlement_date):
-            coupon = g.coupon
-            issue_date = g.issue_date
             maturity = g.maturity
             assert maturity > settlement_date
             # XXX handle this better

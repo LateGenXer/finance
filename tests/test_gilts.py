@@ -13,6 +13,8 @@ import pytest
 
 from pytest import approx
 
+import matplotlib.pyplot as plt
+
 from rpi import RPI
 from gilts.gilts import *
 
@@ -468,8 +470,6 @@ def test_il_estimated_redemption(issued, entry):
     name, redemption_0, redemption_3 = entry
     for gilt in issued.filter(index_linked=True, settlement_date=settlement_date):
         if gilt.name == name:
-            years = (gilt.maturity - settlement_date).days / 365.25
-
             for inflation_rate, redemption_exp in [
                 (0.00, redemption_0),
                 (None, redemption_3),

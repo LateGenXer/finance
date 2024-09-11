@@ -2,11 +2,9 @@
 
 
 import csv
-import operator
 import os.path
 import sys
 
-from pprint import pp
 
 sys.path.insert(0, os.getcwd())
 

@@ -1,9 +1,6 @@
 """UK tax constants and functions."""
 
 
-import math
-
-
 # https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past
 income_tax_threshold_20 =  12570
 income_tax_threshold_40 =  50270
@@ -96,9 +93,9 @@ def tax(income, capital_gains = 0, marriage_allowance = 0):
 
     if False:
         print("PA", personal_allowance)
-        print(20, basic_rate_income * 0.20)
-        print(40, taxable_income_40 * 0.40)
-        print(45, taxable_income_45 * 0.45)
+        print("20", basic_rate_income      * 0.20)
+        print("40", higher_rate_income     * 0.40)
+        print("45", additional_rate_income * 0.45)
 
     _, capital_gains, _                                    = _split(cgt_allowance,                             capital_gains)
     _, higher_rate_capital_gains, basic_rate_capital_gains = _split(personal_allowance + basic_rate_allowance, capital_gains)

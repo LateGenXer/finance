@@ -18,7 +18,6 @@ import dataclasses
 import datetime
 import html
 import math
-import numbers
 import operator
 import sys
 
@@ -123,10 +122,11 @@ allowances = {
 
 
 # Round if necessary, but don't quantitize if not
-def dround(d, places=0, rounding=None):
+def dround(d:Decimal, places:int=0, rounding=None):
     assert isinstance(d, Decimal)
     _, _, exponent = d.as_tuple()
-    if exponent == 'n':
+    assert isinstance(exponent, (int, str))
+    if isinstance(exponent, str):
         return d
     elif exponent >= -places:
         assert exponent <= 0
@@ -381,8 +381,8 @@ class Result:
         for tax_year, tyr in self.tax_years.items():
             tyr.disposals.sort(key=operator.attrgetter('date'))
 
-            tyr.taxable_gain = max(tyr.proceeds - tyr.costs - tyr.allowance, 0)
-            tyr.carried_losses = max(tyr.costs - tyr.proceeds, 0)
+            tyr.taxable_gain = max(tyr.proceeds - tyr.costs - tyr.allowance, Decimal(0))
+            tyr.carried_losses = max(tyr.costs - tyr.proceeds, Decimal(0))
 
     def write(self, report):
         report.start()
@@ -516,7 +516,7 @@ def calculate(stream, rounding=True):
     places = 0 if rounding else 2
 
     # Parse
-    securities = {}
+    securities: dict[str, list[Trade]] = {}
 
     line_no = 0
     for line in stream:
@@ -583,8 +583,8 @@ def calculate(stream, rounding=True):
                 shares = shares0 + shares1
                 price = (shares0*price0 + shares1*price1) / shares
                 charges = charges0 + charges1
-                params = (shares, price, charges)
-                trades[i] = Trade(tr0.date, tr0.kind, params)
+                params0 = (shares, price, charges)
+                trades[i] = Trade(tr0.date, tr0.kind, params0)
                 trades.pop(i + 1)
             else:
                 i += 1
@@ -642,12 +642,12 @@ def calculate(stream, rounding=True):
                     continue
                 identify(disposal, acquisition, Identification.BED_AND_BREAKFAST, tr2.date)
 
-        pool_updates = []
+        pool_updates: list[PoolUpdate] = []
 
         # Walk trades chronologically:
         # - pooling unidentified shares into a Section 104 pool
         # - tracking equalisation group 1 and group 2 shares and acquisitions
-        pool = Acquisition(0, 0, 0)
+        pool = Acquisition(Decimal(0), Decimal(0), Decimal(0))
         group1_holding = Decimal(0)
         group2_holding = Decimal(0)
         for tr in trades:
@@ -831,6 +831,7 @@ def main():
         result.filter_tax_year(tax_year)
 
     stream = sys.stdout
+    report: Report
     if args.format == 'text':
         report = TextReport(stream)
     else:

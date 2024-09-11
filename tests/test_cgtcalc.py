@@ -47,7 +47,7 @@ class JSONEncoder(json.JSONEncoder):
             return str(obj)
         if isinstance(obj, Decimal):
             _, _, exponent = obj.as_tuple()
-            if exponent == 'n' or exponent < 0:
+            if isinstance(exponent, str) or exponent < 0:
                 return float(obj)
             else:
                 assert Decimal(int(obj)) == obj
@@ -96,7 +96,7 @@ tax_return_1_re = re.compile(r'^(?P<year1>\d\d)-(?P<year2>\d\d): Disposal Procee
 tax_return_2_re = re.compile(r'^(?P<year1>\d\d)-(?P<year2>\d\d): Year Gains = £(?P<gains>\S+) ,? Year Losses = £(?P<losses>\S+)$')
 
 def parse_cgtcalculator_result(filename):
-    result = {}
+    result:dict[tuple,dict] = {}
 
     tax_year = None
     for line in open(filename, 'rt'):
@@ -196,7 +196,7 @@ def parse_cgtcalculator_result(filename):
 
 
 def read_test_annotations(filename):
-    raises = None
+    raises:type[BaseException]|None = None
     expected_warnings = {
         'cgtcalc.py is still work in progress!',
     }
@@ -348,9 +348,11 @@ def test_report_html(filename):
             pytest.skip('no tidy')
     else:
         p = subprocess.Popen(['tidy', '-q', '-e'], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        assert p.stdin is not None
         p.stdin.write(html.getvalue().encode('utf-8'))
         p.stdin.close()
         p.wait()
+        assert p.stderr is not None
         errors = io.TextIOWrapper(p.stderr).readlines()
         assert not errors
         assert p.returncode == 0

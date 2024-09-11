@@ -6,7 +6,6 @@
 
 
 import os.path
-import posixpath
 import pytest
 import subprocess
 import sys

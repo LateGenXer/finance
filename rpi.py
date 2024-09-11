@@ -7,20 +7,15 @@
 
 import csv
 import datetime
-import io
 import os.path
 import logging
 import re
-import sys
-import urllib.request
 
-import requests
 
 from download import download
 
 import caching
 
-from pprint import pp
 
 
 logger = logging.getLogger('rpi')

@@ -14,7 +14,6 @@
 import csv
 import datetime
 import operator
-import os.path
 import re
 import sys
 

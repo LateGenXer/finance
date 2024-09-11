@@ -5,10 +5,8 @@
 #
 
 
-import datetime
 import io
 import os.path
-import sys
 
 import pytest
 
