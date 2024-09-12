@@ -41,4 +41,4 @@ Copyright (c) 2023 LateGenXer.
 
 st.markdown('Welcome!  Choose a tool on the left sidebar.')
 
-st.html(analytics.html)
+analytics.html()

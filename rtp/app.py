@@ -501,4 +501,4 @@ with st.expander("Abbreviations..."):
 # https://github.com/streamlit/streamlit/issues/4830#issuecomment-1147878371
 st.markdown(s.to_html(table_uuid="table_1"), unsafe_allow_html=True)
 
-st.html(analytics.html)
+analytics.html()
