@@ -9,13 +9,19 @@
 # Stub for old https://lategenxer-rtp.streamlit.app/
 #
 
+import sys
+import os
+
 import streamlit as st
+
+sys.path.insert(0, os.getcwd())
+import analytics
 
 
 st.set_page_config(
     page_title="Retirement Tax Planner",
     page_icon=":pound banknote:",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="collapsed",
     menu_items={
         "Get help": "https://github.com/LateGenXer/finance/discussions",
@@ -30,16 +36,14 @@ Copyright (c) 2023 LateGenXer.
     }
 )
 
+st.title('Retirement Tax Planner has moved!')
+
 url = 'https://lategenxer.streamlit.app/Retirement_Tax_Planner'
-timer = 5
 
-st.write(f'''
-The Retirement Tax Planner tool moved to [{url}]({url})
+st.warning(f'''
+The _Retirement Tax Planner_ tool is now hosted on [{url}]({url}) together with other finance calculators.
 
-Please update your bookmark.
+Please update your bookmarks.
+''', icon='⚠️')
 
-You'll be automatically redirected in {timer} seconds.
-''')
-
-# https://discuss.streamlit.io/t/programmatically-send-user-to-a-web-page-with-no-click/21904/10
-st.write(f'''<meta http-equiv="refresh" content="{timer}; URL='{url}'" />''', unsafe_allow_html=True)
+analytics.html()
