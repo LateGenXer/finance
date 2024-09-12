@@ -88,6 +88,14 @@ def driver(show_browser):
 
     driver = webdriver.Chrome(service=service, options=options)
 
+    # https://statcounter.com/support/ignore-your-own-visits/
+    # https://www.selenium.dev/documentation/webdriver/interactions/cookies/
+    driver.get('https://www.statcounter.com/images/404.png')
+    driver.add_cookie({
+        'name': 'blocking',
+        'value': '13036387'
+    })
+
     try:
         yield driver
     finally:
