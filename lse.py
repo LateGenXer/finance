@@ -2,7 +2,7 @@
 
 
 #
-# Copyright (c) 2023 LateGenXer
+# Copyright (c) 2023-2024 LateGenXer
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
@@ -14,6 +14,7 @@ import email.utils
 import logging
 import re
 import requests
+import string
 import sys
 
 from pprint import pp
@@ -29,6 +30,68 @@ __all__ = [
 logger = logging.getLogger('lse')
 
 
+def is_tidm(tidm):
+    if len(tidm) not in (3, 4):
+        return False
+
+    for c in tidm:
+        if c not in string.ascii_uppercase + string.digits + string.punctuation:
+            return False
+
+    return True
+
+
+# Luhn algorithm
+def luhn(n: str) -> str:
+    assert isinstance(n, str)
+    assert n.isnumeric()
+
+    ln = len(n)
+    s = 0
+    for i in range(ln):
+        d = n[ln - i - 1]
+        if i & 1 == 0:
+            d = str(int(d) * 2)
+        for c in d:
+            s += int(c)
+    ck = 10 - (s % 10)
+
+    ck = ck % 10
+
+    return str(ck)
+
+
+# https://en.wikipedia.org/wiki/International_Securities_Identification_Number
+def is_isin(ticker: str) -> bool:
+    assert isinstance(ticker, str)
+
+    if len(ticker) != 12:
+        return False
+
+    if not ticker[:2].isalpha():
+        return False
+
+    if not ticker[2:11].isalnum():
+        return False
+
+    if not ticker[11].isnumeric():
+        return False
+
+    n = ''
+    for c in ticker[:11]:
+        if c.isalpha():
+            n += str(ord(c.upper()) - 55)
+        else:
+            assert c.isnumeric()
+            n += c
+    ck = luhn(n)
+
+    print(ticker[11],ck)
+    assert ticker[11] == ck
+
+    return True
+
+
 _headers = {
     'authority': 'api.londonstockexchange.com',
     'accept': 'application/json',
@@ -39,7 +102,7 @@ _headers = {
 
 
 # Tradable Instrument Display Mnemonics (TIDM)
-_tidm_re = re.compile(r'^https://www\.londonstockexchange\.com/stock/(?P<tidm>\w+)/.*$')
+_tidm_re = re.compile(r'^https://www\.londonstockexchange\.com/[^/]+/(?P<tidm>[^/]+)/.*$')
 
 
 # https://requests.readthedocs.io/en/latest/user/advanced/#keep-alive
@@ -55,6 +118,8 @@ def lookup_tidm(isin):
 
     obj = r.json()
 
+    pp(obj)
+    pp(obj['instruments'][0]['url'])
     mo = _tidm_re.match(obj['instruments'][0]['url'])
     assert mo
     tidm = mo.group('tidm')
