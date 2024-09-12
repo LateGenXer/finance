@@ -7,7 +7,7 @@
 
 import os
 
-import streamlit as st
+import streamlit.components.v1 as components
 
 
 # Use https://statcounter.com/ to understand which of the calculators are being
@@ -33,4 +33,4 @@ def html():
         '</div>'
     )
 
-    st.markdown(html, unsafe_allow_html=True)
+    components.html(html)
