@@ -162,23 +162,30 @@ class Gilt:
         return dirty_price - self.accrued_interest(settlement_date=settlement_date)
 
     def cash_flows(self, settlement_date):
+        if settlement_date > self.ex_dividend_date(self.maturity):
+            return []
+
         prev_coupon_date, next_coupon_dates = self.coupon_dates(settlement_date=settlement_date)
 
         transactions = []
 
-        period = self._period(prev_coupon_date)
-        if period == STANDARD:
-            pass
+        xd_date = self.ex_dividend_date(next_coupon_dates[0])
+        if settlement_date > xd_date:
+            prev_coupon_date = next_coupon_dates.pop(0)
         else:
-            next_coupon_date = next_coupon_dates.pop(0)
-            if period == SHORT:
-                r = (next_coupon_date - self.issue_date).days / (next_coupon_date - prev_coupon_date).days
+            period = self._period(prev_coupon_date)
+            if period == STANDARD:
+                pass
             else:
-                assert period == LONG
-                prev_prev_coupon_date = shift_month(prev_coupon_date, -6)
-                r = (prev_coupon_date - self.issue_date).days / (prev_coupon_date - prev_prev_coupon_date).days + 1
+                next_coupon_date = next_coupon_dates.pop(0)
+                if period == SHORT:
+                    r = (next_coupon_date - self.issue_date).days / (next_coupon_date - prev_coupon_date).days
+                else:
+                    assert period == LONG
+                    prev_prev_coupon_date = shift_month(prev_coupon_date, -6)
+                    r = (prev_coupon_date - self.issue_date).days / (prev_coupon_date - prev_prev_coupon_date).days + 1
 
-            transactions.append((next_coupon_date, r*self.coupon/2))
+                transactions.append((next_coupon_date, r*self.coupon/2))
 
         for next_coupon_date in next_coupon_dates:
             transactions.append((next_coupon_date, self.coupon/2))
@@ -202,25 +209,29 @@ class Gilt:
         d1 = c/f
         d2 = c/f
 
-        period = self._period(prev_coupon_date)
-        if period == STANDARD:
-            pass
-        elif period == SHORT:
-            assert prev_coupon_date <= self.issue_date
-            assert self.issue_date <= next_coupon_date
-            d1 *= (next_coupon_date - self.issue_date).days/(next_coupon_date - prev_coupon_date).days
+        xd_date = self.ex_dividend_date(next_coupon_date)
+        if settlement_date > xd_date:
+            d1 = 0
         else:
-            assert period == LONG
-            prev_prev_coupon_date = shift_month(prev_coupon_date, -6)
-            d1 *= 1 + (prev_coupon_date - self.issue_date).days/(prev_coupon_date - prev_prev_coupon_date).days
-            if settlement_date <= prev_coupon_date:
-                next_coupon_date = prev_coupon_date
-                prev_coupon_date = prev_prev_coupon_date
+            period = self._period(prev_coupon_date)
+            if period == STANDARD:
+                pass
+            elif period == SHORT:
                 assert prev_coupon_date <= self.issue_date
                 assert self.issue_date <= next_coupon_date
-                n += 1
-                d2 = d1
-                d1 = 0
+                d1 *= (next_coupon_date - self.issue_date).days/(next_coupon_date - prev_coupon_date).days
+            else:
+                assert period == LONG
+                prev_prev_coupon_date = shift_month(prev_coupon_date, -6)
+                d1 *= 1 + (prev_coupon_date - self.issue_date).days/(prev_coupon_date - prev_prev_coupon_date).days
+                if settlement_date <= prev_coupon_date:
+                    next_coupon_date = prev_coupon_date
+                    prev_coupon_date = prev_prev_coupon_date
+                    assert prev_coupon_date <= self.issue_date
+                    assert self.issue_date <= next_coupon_date
+                    n += 1
+                    d2 = d1
+                    d1 = 0
 
         assert prev_coupon_date < settlement_date
         assert settlement_date <= next_coupon_date
@@ -229,10 +240,6 @@ class Gilt:
         assert r >= 0
         s = (next_coupon_date - prev_coupon_date).days
         assert s >= 181 and s <= 184
-
-        xd_date = self.ex_dividend_date(next_coupon_date)
-        if settlement_date > xd_date:
-            d1 = 0
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('settlement_date = %s', settlement_date)

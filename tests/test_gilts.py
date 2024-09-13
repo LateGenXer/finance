@@ -185,11 +185,9 @@ def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
 
         settlement_date = next_business_day(close_date)
 
-        # Tradweb publishes close prices when trading before issued
-        if settlement_date < gilt.issue_date:
-            settlement_date = gilt.issue_date
-
-        if settlement_date > gilt.maturity:
+        # Tradweb publishes close prices when trading before issued and after the final ex-dividend date
+        if settlement_date < gilt.issue_date or \
+           settlement_date > gilt.ex_dividend_date(maturity):
             continue
 
         clean_price = float(row['Clean Price'])
@@ -225,10 +223,6 @@ def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
         gilt_ytm *= 100.0
 
         logger.debug(f'YTM: {gilt_ytm:8.6f} vs {ytm:8.6f} (abs={gilt_ytm - ytm:+9.6f} rel={gilt_ytm/ytm -1:+.1e})')
-
-        # Ignore yields after last ex-dividend date
-        if settlement_date > gilt.ex_dividend_date(maturity):
-            continue
 
         if conventional:
             if settlement_date >= shift_month(maturity, -6):
