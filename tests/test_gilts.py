@@ -189,13 +189,8 @@ def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
         if settlement_date < gilt.issue_date:
             settlement_date = gilt.issue_date
 
-        prev_coupon_date, next_coupon_dates = gilt.coupon_dates(settlement_date=settlement_date)
-        if False:
-            logger.debug(f'Prev: {prev_coupon_date}')
-            for d in next_coupon_dates:
-                logger.debug(f'Next: {d}')
-            for d, v in gilt.cash_flows(settlement_date):
-                logger.debug(f'Dividend: {d}, {v}')
+        if settlement_date > gilt.maturity:
+            continue
 
         clean_price = float(row['Clean Price'])
         accrued_interest = row['Accrued Interest']
@@ -224,28 +219,36 @@ def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
             continue
 
         ytm = float(row['Yield'])
-        ytm_ = gilt.ytm(dirty_price, settlement_date)
+        gilt_ytm = gilt.ytm(dirty_price, settlement_date)
         if not conventional:
-            ytm_ = (1.0 + ytm_)/(1.0 + IndexLinkedGilt.inflation_rate) - 1.0
-        ytm_ *= 100.0
+            gilt_ytm = (1.0 + gilt_ytm)/(1.0 + IndexLinkedGilt.inflation_rate) - 1.0
+        gilt_ytm *= 100.0
 
-        logger.debug(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:+.1e})')
+        logger.debug(f'YTM: {gilt_ytm:8.6f} vs {ytm:8.6f} (abs={gilt_ytm - ytm:+9.6f} rel={gilt_ytm/ytm -1:+.1e})')
 
         # Ignore yields after last ex-dividend date
         if settlement_date > gilt.ex_dividend_date(maturity):
             continue
 
         if conventional:
-            if len(next_coupon_dates) == 2:
+            if settlement_date >= shift_month(maturity, -6):
+                # Tradeweb uses simple interest, and a slightly different day count convention
+
+                redemption = maturity if is_business_day(maturity) else next_business_day(maturity)
+                days = (redemption - settlement_date).days
+                expected_ytm = ((coupon/2 + 100)/dirty_price - 1) / (days / 365) * 100
+                assert expected_ytm == approx(ytm, rel=1e-5)
+
+                r = (maturity - settlement_date).days
+                s = (maturity - shift_month(maturity, -6)).days
+                expected_gilt_ytm = 2 * (((coupon/2 + 100) / dirty_price) ** (s/r) - 1) * 100
+                assert gilt_ytm == approx(expected_gilt_ytm, rel=1e-5)
+            elif settlement_date >= shift_year(maturity, -1):
                 # XXX: Tradeweb seems to be using simple interest
                 # (non-compounding) for all bonds maturing less than one year
-                assert ytm_ == approx(ytm, rel=5e-2)
-            elif len(next_coupon_dates) == 1:
-                # XXX: Tradeweb seems to be inconsistent day count conventions
-                # (360, 365, ACT)
-                assert ytm_ == approx(ytm, rel=5e-2)
+                assert gilt_ytm == approx(ytm, rel=5e-2)
             else:
-                assert ytm_ == approx(ytm, abs=5e-6)
+                assert gilt_ytm == approx(ytm, abs=5e-6)
 
 
 # Index-linked Gilt Cash Flows, taken from
