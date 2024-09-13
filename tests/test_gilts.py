@@ -13,6 +13,7 @@ import pytest
 
 from pytest import approx
 
+from glob import glob
 import matplotlib.pyplot as plt
 
 from rpi import RPI
@@ -92,6 +93,15 @@ tradeweb_csvs = [
     'Tradeweb_FTSE_ClosePrices_T24.csv',
     'Tradeweb_FTSE_ClosePrices_T2IL.csv', # long first dividend
 ]
+
+
+# Allow to use external data
+try:
+    tradeweb_data_dir = os.environ['TRADEWEB_DATA']
+except KeyError:
+    pass
+else:
+    tradeweb_csvs = [os.path.relpath(f, data_dir) for f in glob(os.path.join(tradeweb_data_dir, 'Tradeweb_FTSE_ClosePrices_????????.csv'))]
 
 
 def tradeweb_parse():
