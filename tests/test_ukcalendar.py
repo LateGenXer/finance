@@ -5,12 +5,16 @@
 #
 
 
+import json
+import os
+
 import pytest
 
-from datetime import date
+from datetime import date, MINYEAR, MAXYEAR
+
+from download import download
 
 from ukcalendar import *
-
 
 
 @pytest.mark.parametrize("year,month,day,result", [
@@ -18,36 +22,51 @@ from ukcalendar import *
     (2110, 12, 26, True),
     (2023, 11, 17, False),
 ])
-def test(year,month,day,result):
+def test_isukbankholiday(year,month,day,result):
     assert isukbankholiday(date(year, month, day)) == result
 
 
+@pytest.mark.skipif(os.environ.get('CI') == 'true', reason='CI')
+def test_isukbankholiday_gov_api():
+    download('https://www.gov.uk/bank-holidays.json', content_type='application/json')
+    obj = json.load(open('bank-holidays.json', 'rt'))
+    bank_holidays = set()
+    min_year = MAXYEAR
+    max_year = MINYEAR
+    for event in obj['england-and-wales']['events']:
+        d = date.fromisoformat(event['date'])
+        bank_holidays.add(d)
+        min_year = min(min_year, d.year)
+        max_year = max(max_year, d.year)
+    for o in range(date(min_year, 1, 1).toordinal(), date(max_year + 1, 1, 1).toordinal()):
+        d = date.fromordinal(o)
+        assert isukbankholiday(d) is (d in bank_holidays)
+
+
 # https://docs.londonstockexchange.com/sites/default/files/documents/dmo-private-investor-guide-to-gilts.pdf
-d = [
-    (2004,  8, 26),
-    (2004,  8, 27),
-    (2004,  8, 31),
-    (2004,  9,  1),
-    (2004,  9,  2),
-    (2004,  9,  3),
-    (2004,  9,  6),
-    (2004,  9,  7),
+dates = [
+    ((2004,  8, 25), (2004,  8, 26), (2004,  8, 27), True),
+    ((2004,  8, 26), (2004,  8, 27), (2004,  8, 31), True),
+    ((2004,  8, 27), (2004,  8, 28), (2004,  8, 31), False),
+    ((2004,  8, 27), (2004,  8, 29), (2004,  8, 31), False),
+    ((2004,  8, 27), (2004,  8, 30), (2004,  8, 31), False),
+    ((2004,  8, 27), (2004,  8, 31), (2004,  9,  1), True),
+    ((2004,  8, 31), (2004,  9,  1), (2004,  9,  2), True),
+    ((2004,  9,  1), (2004,  9,  2), (2004,  9,  3), True),
+    ((2004,  9,  2), (2004,  9,  3), (2004,  9,  6), True),
+    ((2004,  9,  3), (2004,  9,  4), (2004,  9,  6), False),
+    ((2004,  9,  3), (2004,  9,  5), (2004,  9,  6), False),
+    ((2004,  9,  3), (2004,  9,  6), (2004,  9,  7), True),
+    ((2004,  9,  6), (2004,  9,  7), (2004,  9,  8), True),
 ]
-d = [(d[i], d[i + 1]) for i in range(len(d) - 1)]
+dates = [pytest.param(date(*dp), date(*d0), date(*dn), b, id=str(date(*d0))) for dp, d0, dn, b in dates]
 
 
-@pytest.mark.parametrize("d0,d1", d, ids=lambda val: str(date(*val)))
-def test_prev_business_day(d0, d1):
-    d0 = date(*d0)
-    d1 = date(*d1)
-    assert prev_business_day(d1) == d0
-
-
-@pytest.mark.parametrize("d0,d1", d, ids=repr)
-def test_next_business_day(d0, d1):
-    d0 = date(*d0)
-    d1 = date(*d1)
-    assert next_business_day(d0) == d1
+@pytest.mark.parametrize("dp,d0,dn,b", dates)
+def test_business_days(dp, d0, dn, b):
+    assert prev_business_day(d0) == dp
+    assert next_business_day(d0) == dn
+    assert is_business_day(d0) is b
 
 
 @pytest.mark.parametrize("d0,n,d1", [

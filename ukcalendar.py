@@ -10,6 +10,7 @@ import datetime
 
 
 __all__ = [
+    'is_business_day',
     'next_business_day',
     'prev_business_day',
     'days_in_month',
@@ -18,6 +19,10 @@ __all__ = [
     'shift_year',
     'shift_month',
 ]
+
+
+def is_business_day(date):
+    return date.weekday() < 5 and not isukbankholiday(date)
 
 
 def next_business_day(date):
@@ -91,12 +96,12 @@ ukbankholidays = _read()
 def main():
     """Generate ukbankholidays.csv."""
 
-    import os
     import xlrd
     from download import download
 
     # https://www.dmo.gov.uk/publications/gilt-market/formulae-and-examples/
-    # XXX Check https://www.api.gov.uk/gds/bank-holidays/ too
+    # XXX Merge https://www.api.gov.uk/gds/bank-holidays/ too
+    #     `curl -s https://www.gov.uk/bank-holidays.json | jq -r '.["england-and-wales"].events[].date'`
     url = 'https://www.dmo.gov.uk/media/3lgd2zqc/ukbankholidays-nov23a.xls'
     filename = os.path.basename(url)
     download(url, filename, ttl=24*3600, content_type='application/vnd.ms-excel')
