@@ -95,33 +95,32 @@ tradeweb_csvs = [
 
 
 def tradeweb_parse():
+    params = []
+    isins = {}
     for tradeweb_csv in tradeweb_csvs:
         filename = os.path.join(data_dir, tradeweb_csv)
         for row in csv.DictReader(open(filename, 'rt', encoding='utf-8-sig')):
             if row['Type'] in ('Conventional', 'Index-linked'):
-                yield row
+                params.append(pytest.param([row], id=f"{row['Gilt Name'].replace(' ', '_')}@{row['Close of Business Date']}"))
+                isins.setdefault(row['ISIN'], []).append(row)
+
+    # Group params by gilt
+    if not int(os.environ.get('TRADEWEB_SPLIT', '0')):
+        return [ pytest.param(entries, id=entries[0]['Gilt Name'].replace(' ', '_')) for entries in isins.values() ]
+
+    return params
 
 
-@pytest.mark.parametrize("row", [
-    pytest.param(row, id=f"{row['Gilt Name']}@{row['Close of Business Date']}") for row in tradeweb_parse()
-])
-def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, row):
+@pytest.mark.parametrize("entries", tradeweb_parse())
+def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
     caplog.set_level(logging.DEBUG, logger="gilts")
 
-    for name, value in row.items():
-        logger.debug('%s = %s', name, value)
-    logger.debug('')
+    row = entries[0]
 
     type_ = row["Type"]
     assert type_ in ["Conventional", "Index-linked"]
 
-    if row['Clean Price'] == 'N/A':
-        pytest.skip()
-
-    close_date = datetime.datetime.strptime(row['Close of Business Date'], '%d/%m/%Y').date()
-
     isin = row['ISIN']
-
     try:
         entry = tradeweb_issued[isin]
     except KeyError:
@@ -145,85 +144,98 @@ def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, row):
         'maturity': Issued._parse_date(entry['REDEMPTION_DATE']),
         'issue_date': Issued._parse_date(entry['FIRST_ISSUE_DATE']),
     }
-    if type_ == 'Conventional':
-        gilt = Gilt(**kwargs)
-    else:
-        # Truncate RPI series to match close TradeWeb close date
-        rpi_series = copy.deepcopy(tradeweb_rpi)
-        index = rpi_series.lookup_index(close_date)
-        rpi_series.series = rpi_series.series[:index]
-
-        kwargs['base_rpi'] = float(entry['BASE_RPI_87'])
-        kwargs['rpi_series'] = rpi_series
-        gilt = IndexLinkedGilt(**kwargs)
-
-    assert gilt.maturity == maturity
-    assert gilt.type_ == type_
-    assert gilt.coupon == coupon
-
-    settlement_date = next_business_day(close_date)
-
-    # Tradweb publishes close prices when trading before issued
-    if settlement_date < gilt.issue_date:
-        settlement_date = gilt.issue_date
-
-    prev_coupon_date, next_coupon_dates = gilt.coupon_dates(settlement_date=settlement_date)
-    if False:
-        logger.debug(f'Prev: {prev_coupon_date}')
-        for d in next_coupon_dates:
-            logger.debug(f'Next: {d}')
-        for d, v in gilt.cash_flows(settlement_date):
-            logger.debug(f'Dividend: {d}, {v}')
-
-    clean_price = float(row['Clean Price'])
-    accrued_interest = row['Accrued Interest']
-    accrued_interest = 0 if accrued_interest == 'N/A' else float(accrued_interest)
-    dirty_price = float(row['Dirty Price'])
-
-    # Ensure Tradeweb's clean and dirty prices are consistent
-    if conventional or gilt.lag == 8:
-        assert clean_price + accrued_interest == approx(dirty_price, abs=1e-6)
-    else:
-        index_ratio = gilt.index_ratio(settlement_date)
-        assert clean_price * index_ratio + accrued_interest == approx(dirty_price, abs=1e-6)
-
-    accrued_interest_ = gilt.accrued_interest(settlement_date)
-    dirty_price_ = gilt.dirty_price(clean_price, settlement_date)
-
-    # Tradeweb accrued interest looks off when maturity happens after a weekend
-    if settlement_date >= gilt.maturity:
-        return
-
-    abs_tol = 1e-6 if conventional or gilt.lag == 3 else 1e-4
-    assert accrued_interest_ == approx(accrued_interest, abs=abs_tol)
-    assert dirty_price_ == approx(dirty_price, abs=abs_tol)
-
-    if row['Yield'] == 'N/A':
-        return
-
-    ytm = float(row['Yield'])
-    ytm_ = gilt.ytm(dirty_price, settlement_date)
-    if not conventional:
-        ytm_ = (1.0 + ytm_)/(1.0 + IndexLinkedGilt.inflation_rate) - 1.0
-    ytm_ *= 100.0
-
-    logger.debug(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:+.1e})')
-
-    # Ignore yields after last ex-dividend date
-    if settlement_date > gilt.ex_dividend_date(maturity):
-        return
-
     if conventional:
-        if len(next_coupon_dates) == 2:
-            # XXX: Tradeweb seems to be using simple interest
-            # (non-compounding) for all bonds maturing less than one year
-            assert ytm_ == approx(ytm, rel=5e-2)
-        elif len(next_coupon_dates) == 1:
-            # XXX: Tradeweb seems to be inconsistent day count conventions
-            # (360, 365, ACT)
-            assert ytm_ == approx(ytm, rel=5e-2)
+        gilt = Gilt(**kwargs)
+
+    for row in entries:
+        for name, value in row.items():
+            logger.debug('%s = %s', name, value)
+        logger.debug('')
+
+        assert row['ISIN'] == isin
+
+        if row['Clean Price'] == 'N/A':
+            continue
+
+        close_date = datetime.datetime.strptime(row['Close of Business Date'], '%d/%m/%Y').date()
+
+        if not conventional:
+            # Truncate RPI series to match close TradeWeb close date
+            rpi_series = copy.deepcopy(tradeweb_rpi)
+            index = rpi_series.lookup_index(close_date)
+            rpi_series.series = rpi_series.series[:index]
+
+            kwargs['base_rpi'] = float(entry['BASE_RPI_87'])
+            kwargs['rpi_series'] = rpi_series
+            gilt = IndexLinkedGilt(**kwargs)
+
+        assert gilt.maturity == maturity
+        assert gilt.type_ == type_
+        assert gilt.coupon == coupon
+
+        settlement_date = next_business_day(close_date)
+
+        # Tradweb publishes close prices when trading before issued
+        if settlement_date < gilt.issue_date:
+            settlement_date = gilt.issue_date
+
+        prev_coupon_date, next_coupon_dates = gilt.coupon_dates(settlement_date=settlement_date)
+        if False:
+            logger.debug(f'Prev: {prev_coupon_date}')
+            for d in next_coupon_dates:
+                logger.debug(f'Next: {d}')
+            for d, v in gilt.cash_flows(settlement_date):
+                logger.debug(f'Dividend: {d}, {v}')
+
+        clean_price = float(row['Clean Price'])
+        accrued_interest = row['Accrued Interest']
+        accrued_interest = 0 if accrued_interest == 'N/A' else float(accrued_interest)
+        dirty_price = float(row['Dirty Price'])
+
+        # Ensure Tradeweb's clean and dirty prices are consistent
+        if conventional or gilt.lag == 8:
+            assert clean_price + accrued_interest == approx(dirty_price, abs=1e-6)
         else:
-            assert ytm_ == approx(ytm, abs=5e-6)
+            index_ratio = gilt.index_ratio(settlement_date)
+            assert clean_price * index_ratio + accrued_interest == approx(dirty_price, abs=1e-6)
+
+        accrued_interest_ = gilt.accrued_interest(settlement_date)
+        dirty_price_ = gilt.dirty_price(clean_price, settlement_date)
+
+        # Tradeweb accrued interest looks off when maturity happens after a weekend
+        if settlement_date >= gilt.maturity:
+            continue
+
+        abs_tol = 1e-6 if conventional or gilt.lag == 3 else 1e-4
+        assert accrued_interest_ == approx(accrued_interest, abs=abs_tol)
+        assert dirty_price_ == approx(dirty_price, abs=abs_tol)
+
+        if row['Yield'] == 'N/A':
+            continue
+
+        ytm = float(row['Yield'])
+        ytm_ = gilt.ytm(dirty_price, settlement_date)
+        if not conventional:
+            ytm_ = (1.0 + ytm_)/(1.0 + IndexLinkedGilt.inflation_rate) - 1.0
+        ytm_ *= 100.0
+
+        logger.debug(f'YTM: {ytm_:8.6f} vs {ytm:8.6f} (abs={ytm_ - ytm:+9.6f} rel={ytm_/ytm -1:+.1e})')
+
+        # Ignore yields after last ex-dividend date
+        if settlement_date > gilt.ex_dividend_date(maturity):
+            continue
+
+        if conventional:
+            if len(next_coupon_dates) == 2:
+                # XXX: Tradeweb seems to be using simple interest
+                # (non-compounding) for all bonds maturing less than one year
+                assert ytm_ == approx(ytm, rel=5e-2)
+            elif len(next_coupon_dates) == 1:
+                # XXX: Tradeweb seems to be inconsistent day count conventions
+                # (360, 365, ACT)
+                assert ytm_ == approx(ytm, rel=5e-2)
+            else:
+                assert ytm_ == approx(ytm, abs=5e-6)
 
 
 # Index-linked Gilt Cash Flows, taken from
