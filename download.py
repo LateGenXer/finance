@@ -101,8 +101,7 @@ def download(url:str, filename:str|None=None, ttl:int=0, content_type:str|None=N
 
 
 if __name__ == '__main__':
-    _, url, filename = sys.argv[:3]
-    content_type = None
-    if len(sys.argv) > 3:
-        content_type = sys.argv[3]
+    url = sys.argv[1]
+    filename = sys.argv[2] if len(sys.argv) > 2 else None
+    content_type = sys.argv[3] if len(sys.argv) > 3 else None
     download(url, filename, content_type=content_type, verbose=True)
