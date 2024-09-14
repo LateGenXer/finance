@@ -19,7 +19,7 @@ on:
       - .github/workflows/gh-pages.yml
       - .github/scripts/gh-pages.sh
       - download.py
-      - lse.py
+      - data/lse.py
 
   # Manually
   workflow_dispatch:

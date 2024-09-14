@@ -13,7 +13,7 @@ import types
 
 import pytest
 
-import lse
+from data import lse
 
 
 isin_tidm = {
