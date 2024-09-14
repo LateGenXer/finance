@@ -20,7 +20,8 @@ default_timeout = 10
 
 @pytest.fixture(scope="function")
 def at():
-    at = AppTest.from_file("gilts/app.py", default_timeout=default_timeout)
+    at = AppTest.from_file("Home.py", default_timeout=default_timeout)
+    at.switch_page('pages/1_Gilt_Ladder.py')
     at.run()
     assert not at.exception
     return at
@@ -59,7 +60,8 @@ def test_index_linked(at):
 
 
 def test_experimental_window():
-    at = AppTest.from_file("gilts/app.py", default_timeout=default_timeout)
+    at = AppTest.from_file("Home.py", default_timeout=default_timeout)
+    at.switch_page('pages/1_Gilt_Ladder.py')
     at.query_params['experimental'] = ''
     at.run()
     assert not at.exception

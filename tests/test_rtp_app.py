@@ -8,7 +8,8 @@ except ImportError:
 
 @pytest.fixture(scope="function")
 def at():
-    at = AppTest.from_file("rtp/app.py", default_timeout=10)
+    at = AppTest.from_file("Home.py", default_timeout=10)
+    at.switch_page('pages/2_Retirement_Tax_Planner.py')
     at.run()
     return at
 
