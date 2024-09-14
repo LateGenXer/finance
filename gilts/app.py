@@ -17,7 +17,7 @@ import pandas as pd
 
 import analytics
 
-from rpi import RPI
+from data.rpi import RPI
 
 from gilts.gilts import Issued, GiltPrices, BondLadder, schedule, yield_curve, IndexLinkedGilt
 from ukcalendar import next_business_day, shift_year, shift_month

@@ -13,7 +13,7 @@ import pytest
 
 from pytest import approx
 
-from rpi import RPI, OutOfDateError
+from data.rpi import RPI, OutOfDateError
 from download import download
 
 

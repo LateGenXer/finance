@@ -16,7 +16,7 @@ from pytest import approx
 from glob import glob
 import matplotlib.pyplot as plt
 
-from rpi import RPI
+from data.rpi import RPI
 from gilts.gilts import *
 
 

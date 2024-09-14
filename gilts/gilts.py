@@ -42,7 +42,7 @@ else:
 
 from xirr import *
 from ukcalendar import *
-from rpi import RPI
+from data.rpi import RPI
 
 logger = logging.getLogger('gilts')
 
