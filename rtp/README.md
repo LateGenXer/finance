@@ -19,6 +19,7 @@ I am not a financial or tax adviser.
 
 ## Recent changes
 
+* Allow to change the 100 years old age limit.
 * Drop LTA modelling.
 * Allow post-retirement modelling.
 * Model Japan taxation.

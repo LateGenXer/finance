@@ -81,6 +81,7 @@ default_state = {
     "aa_1": aa,
     "aa_2": uiaa,
     "marriage_allowance": False,
+    "end_age": 100,
 }
 
 
@@ -219,6 +220,7 @@ If pension funds have been accessed as tax-free-allowance or moved into flexi-ac
                 help="Country to be tax resident from _retirement year_. " +
                 "Values still always in pounds.  Differences in cost of life not considered."
             )
+            st.number_input('End age:', min_value=70, max_value=130, step=1, key='end_age')
 
     # Post-retirement
     with tab3:

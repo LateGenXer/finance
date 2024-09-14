@@ -371,9 +371,9 @@ def model(
         aa_1,
         aa_2,
         marriage_allowance,
+        end_age,
     ):
 
-    end_age = 100
     if joint:
         N = 2
         end_year = max(dob_1, dob_2) + end_age
@@ -386,7 +386,6 @@ def model(
         marginal_income_tax_2 = 0
         state_pension_years_2 = 0
         end_year = dob_1 + end_age
-    #end_year = retirement_year + 3
 
     assert N in (1, 2)
     income_ratio_1 = float(1    ) / float(N)

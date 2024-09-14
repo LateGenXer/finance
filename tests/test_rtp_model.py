@@ -49,6 +49,7 @@ def test_model(joint, sipp_extra_contrib, retirement_country, retirement_income_
         "aa_1": uk.aa,
         "aa_2": uk.uiaa,
         "marriage_allowance": marriage_allowance,
+        "end_age": 100,
     }
 
     model.run(params)
