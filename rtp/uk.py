@@ -29,7 +29,7 @@ marriage_allowance = 1260
 
 # https://www.gov.uk/new-state-pension/what-youll-get
 weeks_per_year = 365.25/7
-state_pension_full = 221.20 * weeks_per_year
+state_pension_full = 230.05 * weeks_per_year
 
 
 # https://www.gov.uk/government/publications/increasing-normal-minimum-pension-age/increasing-normal-minimum-pension-age
