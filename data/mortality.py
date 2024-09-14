@@ -9,6 +9,7 @@ import os.path
 import posixpath
 import sys
 import typing
+import threading
 
 import openpyxl
 
@@ -37,9 +38,16 @@ tables: dict[str,dict[str,Table]] = {
 
 
 def row_values(row:tuple[openpyxl.cell.cell.Cell, ...]) -> list:
-    print(type(row))
-    print(type(row[0]))
     return [field.value for field in row]
+
+
+# Save a NPY atomically
+def save_npy(dst:str, array:np.ndarray) -> None:
+    dirname, basename = os.path.split(dst)
+    tid = threading.get_native_id()
+    tmp = os.path.join(dirname, f'.{basename}.{tid}')
+    np.save(open(tmp, 'wb'), array)
+    os.replace(tmp, dst)
 
 
 # https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/bulletins/pastandprojecteddatafromtheperiodandcohortlifetables/2020baseduk1981to2070
@@ -59,11 +67,11 @@ def _load_ons_tables() -> None:
     wb = None
     for basis in ('period', 'cohort'):
         for gender in ('male', 'female'):
-            npy = f'mortality_{basis}_{gender}.npy'
+            npy = os.path.join(data_dir, f'mortality_{basis}_{gender}.npy')
             try:
                 if "PYTEST_CURRENT_TEST" in os.environ:
                     raise FileNotFoundError
-                stream = open(os.path.join(data_dir, npy), 'rb')
+                stream = open(npy, 'rb')
             except FileNotFoundError:
                 if wb is None:
                     download(url, filename, ttl=sys.maxsize, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -88,8 +96,7 @@ def _load_ons_tables() -> None:
                 array = np.array(data, dtype=np.float32)
                 array /= 100000.0
 
-                np.save(open(os.path.join(data_dir, '.' + npy), 'wb'), array)
-                os.replace(os.path.join(data_dir, '.' + npy), os.path.join(data_dir, npy))
+                save_npy(npy, array)
             else:
                 array = np.load(stream)
 
@@ -116,11 +123,11 @@ def _load_cmi_table() -> None:
     max_age = 120
     num_age = max_age - min_age + 1
 
-    npy = f'mortality_{basis}_{gender}.npy'
+    npy = os.path.join(data_dir, f'mortality_{basis}_{gender}.npy')
     try:
         if "PYTEST_CURRENT_TEST" in os.environ:
             raise FileNotFoundError
-        stream = open(os.path.join(data_dir, npy), 'rb')
+        stream = open(npy, 'rb')
     except FileNotFoundError:
         download(url, filename, ttl=sys.maxsize, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
@@ -142,8 +149,7 @@ def _load_cmi_table() -> None:
         assert len(data) == num_age
 
         array = np.array(data, dtype=np.float32)
-        np.save(open(os.path.join(data_dir, '.' + npy), 'wb'), array)
-        os.replace(os.path.join(data_dir, '.' + npy), os.path.join(data_dir, npy))
+        save_npy(npy, array)
     else:
         array = np.load(stream)
 
