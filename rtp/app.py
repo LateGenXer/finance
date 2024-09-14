@@ -18,6 +18,7 @@ import uk
 from uk import aa, uiaa
 from model import model, column_headers, dataframe
 
+sys.path.insert(0, os.getcwd())
 import analytics
 
 
