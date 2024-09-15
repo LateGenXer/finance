@@ -11,7 +11,7 @@ import os.path
 
 import streamlit as st
 
-import analytics
+import common
 
 from cgtcalc import calculate, date_to_tax_year, str_to_tax_year, HtmlReport, TextReport
 
@@ -125,4 +125,4 @@ The Site may contain (or you may be sent through the Site) links to other websit
 The Site cannot and does not contain financial advice. The financial information is provided for general informational and educational purposes only and is not a substitute for professional advice. Accordingly, before taking any actions based upon such information, we encourage you to consult with the appropriate professionals. We do not provide any kind of financial advice. THE USE OR RELIANCE OF ANY INFORMATION CONTAINED ON THE SITE IS SOLELY AT YOUR OWN RISK.
 ''')
 
-analytics.html()
+common.analytics_html()

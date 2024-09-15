@@ -9,7 +9,7 @@ import logging
 
 import streamlit as st
 
-import analytics
+import common
 
 
 logging.basicConfig(
@@ -41,4 +41,4 @@ Copyright (c) 2023 LateGenXer.
 
 st.markdown('Welcome!  Choose a tool on the left sidebar.')
 
-analytics.html()
+common.analytics_html()

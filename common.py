@@ -12,7 +12,7 @@ import streamlit.components.v1 as components
 
 # Use https://statcounter.com/ to understand which of the calculators are being
 # used, and therefore worthy of further attention.
-def html():
+def analytics_html():
 
     html = (
         '<script type="text/javascript">'

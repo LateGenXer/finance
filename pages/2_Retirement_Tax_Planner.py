@@ -18,7 +18,7 @@ from rtp import uk
 from rtp.uk import aa, uiaa
 from rtp.model import model, column_headers, dataframe
 
-import analytics
+import common
 
 
 # https://docs.streamlit.io/library/api-reference/utilities/st.set_page_config
@@ -503,4 +503,4 @@ with st.expander("Abbreviations..."):
 # https://github.com/streamlit/streamlit/issues/4830#issuecomment-1147878371
 st.markdown(s.to_html(table_uuid="table_1"), unsafe_allow_html=True)
 
-analytics.html()
+common.analytics_html()

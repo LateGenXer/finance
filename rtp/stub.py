@@ -15,7 +15,7 @@ import os
 import streamlit as st
 
 sys.path.insert(0, os.getcwd())
-import analytics
+import common
 
 
 st.set_page_config(
@@ -46,4 +46,4 @@ The _Retirement Tax Planner_ tool is now hosted on [{url}]({url}) together with 
 Please update your bookmarks.
 ''', icon='⚠️')
 
-analytics.html()
+common.analytics_html()
