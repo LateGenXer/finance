@@ -68,4 +68,4 @@ SettlementDate,Security,Units,AccruedInterest
   - [Accrued Income Scheme (Self Assessment helpsheet HS343](https://www.gov.uk/government/publications/accrued-income-scheme-hs343-self-assessment-helpsheet)
   - [Savings and Investment Manual - Accrued Income Scheme](https://www.gov.uk/hmrc-internal-manuals/savings-and-investment-manual/saim4000)
 - DMO:
-  [Summary of the main features of the taxation rules for gilts](https://www.dmo.gov.uk/responsibilities/gilt-market/buying-selling/taxation)
+  - [Summary of the main features of the taxation rules for gilts](https://www.dmo.gov.uk/responsibilities/gilt-market/buying-selling/taxation)
