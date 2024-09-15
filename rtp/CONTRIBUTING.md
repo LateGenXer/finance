@@ -1,11 +1,7 @@
 # Branches
 
-https://lategenxer-rtp.streamlit.app/ serves the tool from the `stable`
+https://lategenxer.streamlit.app/ serves the tool from the `main`
 branch.
-
-https://lategenxer-rtp-devel.streamlit.app/ serves the tool from the `main`
-branch.  It often gets broken because Streamlit doesn't always handle code
-updates gracefully.
 
 # Get started
 
@@ -16,7 +12,7 @@ guide](https://docs.streamlit.io/library/get-started/installation), using
 Serve the calculator locally by running
 
 ```shell
-pipenv run streamlit run rtp/app.py
+pipenv run streamlit run Home.py
 ```
 
 This should start serving the tool locally.
@@ -41,5 +37,5 @@ state = {
 
 ```
 
-See the `default_state` dictionary in `rtp/app.py` for the definitive reference of what state
-parameters are there.
+See the `default_state` dictionary in `pages/2_Retirement_Tax_Planner.py` for
+the definitive reference of what state parameters are there.

@@ -2,12 +2,12 @@ import datetime
 
 import pytest
 
-import uk
-import model
+from rtp import uk
+from rtp import model
 
 import test_tax_uk
 
-from model import lp
+from rtp.model import lp
 
 
 @pytest.mark.parametrize('lump_sum', [0, 1000])

@@ -15,15 +15,15 @@ from typing import Any
 if int(os.environ.get('PULP', '0')) != 0:
     import pulp as lp
 else:
-    import lp
+    from rtp import lp
 
-import hmrc
+from rtp import hmrc
 
-import uk as UK
-import pt as PT
-import jp as JP
+import rtp.uk as UK
+import rtp.pt as PT
+import rtp.jp as JP
 
-from uk import *
+from rtp.uk import *
 
 
 verbosity = 0
