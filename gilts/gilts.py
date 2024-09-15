@@ -387,8 +387,11 @@ class IndexLinkedGilt(Gilt):
 class Issued:
     # https://www.dmo.gov.uk/data/
 
-    def __init__(self, filename=None, rpi_series=None):
-        if filename is None:
+    def __init__(self, filename=None, rpi_series=None, csv_filename=None):
+        if csv_filename is not None:
+            assert filename is None
+            entries = self._parse_csv(csv_filename)
+        elif filename is None:
             entries = self._download()
         else:
             entries = self._parse_xml(filename)
@@ -419,13 +422,20 @@ class Issued:
                 kwargs['rpi_series'] = rpi_series
                 gilt = IndexLinkedGilt(**kwargs)
 
-            self.close_date = self._parse_date(entry['CLOSE_OF_BUSINESS_DATE'])
+            try:
+                self.close_date = self._parse_date(entry['CLOSE_OF_BUSINESS_DATE'])
+            except KeyError:
+                self.close_date = None
 
             # Check ex-dividend dates match when testing
             if "PYTEST_CURRENT_TEST" in os.environ:
-                current_xd_date = self._parse_date(entry['CURRENT_EX_DIV_DATE'])
-                _, next_coupon_date = gilt.prev_next_coupon_date(self.close_date)
-                assert gilt.ex_dividend_date(next_coupon_date) == current_xd_date
+                try:
+                    current_xd_date = self._parse_date(entry['CURRENT_EX_DIV_DATE'])
+                except KeyError:
+                    pass
+                else:
+                    _, next_coupon_date = gilt.prev_next_coupon_date(self.close_date)
+                    assert gilt.ex_dividend_date(next_coupon_date) == current_xd_date
 
             self.all.append(gilt)
 
@@ -450,6 +460,18 @@ class Issued:
         root = tree.getroot()
         for node in root:
             yield node.attrib
+
+    @staticmethod
+    def _parse_csv(filename):
+        entries = list(csv.DictReader(open(filename, 'rt')))
+        for entry in entries:
+            if entry['BASE_RPI_87']:
+                issue_date = Issued._parse_date(entry['FIRST_ISSUE_DATE'])
+                lag = 3 if issue_date >= datetime.date(2005, 9, 22) else 8
+                entry['INSTRUMENT_TYPE'] = f'Index-linked {lag} months'
+            else:
+                entry['INSTRUMENT_TYPE'] = 'Conventional'
+        return entries
 
     @staticmethod
     def _parse_date(string):
