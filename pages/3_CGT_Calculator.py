@@ -19,7 +19,6 @@ from cgtcalc import calculate, date_to_tax_year, str_to_tax_year, HtmlReport, Te
 common.set_page_config(
     page_title="CGT Calculator",
     layout="wide",
-    initial_sidebar_state="collapsed",
 )
 
 
