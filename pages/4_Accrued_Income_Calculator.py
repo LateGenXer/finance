@@ -13,15 +13,13 @@ import streamlit as st
 
 import common
 
-from accrued_income import Calculator
-from cgtcalc import TextReport
-
-
 common.set_page_config(
     page_title="Accrued Income Calculator",
     layout="wide",
 )
 
+from accrued_income import Calculator
+from cgtcalc import TextReport
 
 st.title('Accrued Income Calculator')
 
