@@ -185,7 +185,7 @@ def cgtcalc_page(server, driver):
     return driver
 
 
-def test_cgtcalc_default(cgtcalc_page):
+def test_cgtcalc_default(production, cgtcalc_page):
     driver = cgtcalc_page
 
     driver.implicitly_wait(0)
@@ -211,11 +211,12 @@ def test_cgtcalc_default(cgtcalc_page):
     iframe = driver.find_element(By.XPATH, "//iframe")
     srcdoc = iframe.get_attribute('srcdoc')
 
-    from cgtcalc import calculate, HtmlReport
+    if not production:
+        from cgtcalc import calculate, HtmlReport
 
-    result = calculate(open(filename, 'rt'))
-    expected_html = io.StringIO()
-    report = HtmlReport(expected_html)
-    result.write(report)
+        result = calculate(open(filename, 'rt'))
+        expected_html = io.StringIO()
+        report = HtmlReport(expected_html)
+        result.write(report)
 
-    assert srcdoc == expected_html.getvalue()
+        assert srcdoc == expected_html.getvalue()
