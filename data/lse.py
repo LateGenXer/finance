@@ -86,7 +86,6 @@ def is_isin(ticker: str) -> bool:
             n += c
     ck = luhn(n)
 
-    print(ticker[11],ck)
     assert ticker[11] == ck
 
     return True
@@ -118,8 +117,6 @@ def lookup_tidm(isin):
 
     obj = r.json()
 
-    pp(obj)
-    pp(obj['instruments'][0]['url'])
     mo = _tidm_re.match(obj['instruments'][0]['url'])
     assert mo
     tidm = mo.group('tidm')
