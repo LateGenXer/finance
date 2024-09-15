@@ -25,8 +25,7 @@ common.set_page_config(
 
 st.title('Accrued Income Calculator')
 
-st.markdown('''This is an accrued income calculator for gilts.
-
+st.markdown('''This is an _Accrued Income_ calculator for gilts.
 Please read more [here](https://github.com/LateGenXer/finance/blob/main/accrued_income.md).
 ''')
 

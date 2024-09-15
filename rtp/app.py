@@ -18,22 +18,10 @@ sys.path.insert(0, os.getcwd())
 import common
 
 
-st.set_page_config(
+common.set_page_config(
     page_title="Retirement Tax Planner",
-    page_icon=":pound banknote:",
     layout="centered",
     initial_sidebar_state="collapsed",
-    menu_items={
-        "Get help": "https://github.com/LateGenXer/finance/discussions",
-        "Report a Bug": "https://github.com/LateGenXer/finance/issues",
-        "About": """Retirement Tax Planner
-
-https://github.com/LateGenXer/finance/tree/main/rtp
-
-Copyright (c) 2023 LateGenXer.
-
-""",
-    }
 )
 
 st.title('Retirement Tax Planner has moved!')
@@ -41,7 +29,7 @@ st.title('Retirement Tax Planner has moved!')
 url = 'https://lategenxer.streamlit.app/Retirement_Tax_Planner'
 
 st.warning(f'''
-The _Retirement Tax Planner_ tool is now hosted on [{url}]({url}) together with other finance calculators.
+_Retirement Tax Planner_ is now hosted on [{url}]({url}) together with other finance calculators.
 
 Please update your bookmarks.
 ''', icon='⚠️')
