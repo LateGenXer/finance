@@ -10,8 +10,6 @@ import datetime
 from data import mortality
 from data import boe
 
-from rtp.uk import state_pension_full
-
 
 cur_year = datetime.datetime.now(datetime.timezone.utc).year
 
@@ -27,8 +25,8 @@ def present_value(cur_age, kind, gender='unisex'):
 
     ages = list(range(cur_age, 121))
 
-    p = 1
-    pv = 0
+    p = 1.0
+    pv = 0.0
     s = yc[f'{kind}_Spot']
     for age in ages:
         years = age - cur_age
@@ -37,10 +35,10 @@ def present_value(cur_age, kind, gender='unisex'):
         index = min(index, 40.0)
         rate = s[index]
         if False:
-            print(f'{years:2d}  {r:6.2%}  {p:7.2%}')
-        pv += p * (1 + rate)**-years
+            print(f'{years:2d}  {rate:6.2%}  {p:7.2%}')
+        pv += p * (1.0 + rate)**-years
         qx = mortality.mortality(yob + age, age, gender=gender, basis=basis)
-        p *= 1 - qx
+        p *= 1.0 - qx
 
     return pv
 
