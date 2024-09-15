@@ -20,24 +20,13 @@ logging.basicConfig(
 )
 
 
-# https://docs.streamlit.io/library/api-reference/utilities/st.set_page_config
-st.set_page_config(
+common.set_page_config(
     page_title="LateGenXer's financial tools.",
-    page_icon=":pound banknote:",
     layout="centered",
-    initial_sidebar_state="expanded",
-    menu_items={
-        "Get help": "https://github.com/LateGenXer/finance/discussions",
-        "Report a Bug": "https://github.com/LateGenXer/finance/issues",
-        "About": """LateGenXer's finance tools.
-
-https://github.com/LateGenXer/finance
-
-Copyright (c) 2023 LateGenXer.
-
-""",
-    }
+    initial_sidebar_state="expanded"
 )
+
+st.title("LateGenXer's financial tools.")
 
 st.markdown('Welcome!  Choose a tool on the left sidebar.')
 

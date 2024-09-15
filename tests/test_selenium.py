@@ -120,7 +120,7 @@ def gilt_ladder_page(server, driver):
     driver.add_cookie(analytics_cookie)
 
     driver.implicitly_wait(15)
-    driver.find_element(By.ID, 'disclaimer')
+    driver.find_element(By.ID, 'test-marker')
 
     return driver
 
@@ -142,7 +142,7 @@ def test_gilt_ladder_index_linked(gilt_ladder_page):
     time.sleep(3)
 
     driver.implicitly_wait(15)
-    driver.find_element(By.ID, 'disclaimer')
+    driver.find_element(By.ID, 'test-marker')
 
     driver.implicitly_wait(0)
     with pytest.raises(NoSuchElementException):
@@ -161,7 +161,7 @@ def test_gilt_ladder_file_upload(gilt_ladder_page):
 
     time.sleep(3)
 
-    driver.find_element(By.ID, 'disclaimer')
+    driver.find_element(By.ID, 'test-marker')
     driver.implicitly_wait(0)
 
     with pytest.raises(NoSuchElementException):
@@ -180,7 +180,7 @@ def cgtcalc_page(server, driver):
     driver.add_cookie(analytics_cookie)
 
     driver.implicitly_wait(15)
-    driver.find_element(By.ID, 'disclaimer')
+    driver.find_element(By.ID, 'test-marker')
 
     return driver
 

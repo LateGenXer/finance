@@ -21,23 +21,10 @@ from rtp.model import model, column_headers, dataframe
 import common
 
 
-# https://docs.streamlit.io/library/api-reference/utilities/st.set_page_config
-st.set_page_config(
+common.set_page_config(
     page_title="Retirement Tax Planner",
-    page_icon=":pound banknote:",
     layout="wide",
     initial_sidebar_state="collapsed",
-    menu_items={
-        "Get help": "https://github.com/LateGenXer/finance/discussions",
-        "Report a Bug": "https://github.com/LateGenXer/finance/issues",
-        "About": """Retirement Tax Planner
-
-https://github.com/LateGenXer/finance/tree/main/rtp
-
-Copyright (c) 2023 LateGenXer.
-
-""",
-    }
 )
 
 st.title('Retirement Tax Planner')
