@@ -352,7 +352,7 @@ with tab3:
 
 @st.cache_data(ttl=24*3600)
 def about():
-    return open(os.path.join(os.path.dirname(__file__), '..', 'rtp', 'README.md'), 'rt').read()
+    return open(os.path.join(os.path.dirname(__file__), '..', 'gilts', 'README.md'), 'rt').read()
 
 
 with tab4:
