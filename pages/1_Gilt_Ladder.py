@@ -185,7 +185,7 @@ def date_format(d):
 
 with tab1:
 
-    st.warning("A bond ladder is not necessarily the best strategy. Read [here](https://www.fidelity.com/learning-center/investment-products/fixed-income-bonds/bond-investment-strategies) to know more.", icon="⚠️")
+    st.warning("A bond ladder is not necessarily the best strategy. Read more [here](https://github.com/LateGenXer/finance/tree/main/gilts#on-gilt-ladders).", icon="⚠️")
 
     if not advanced and start_date is not None:
         msg = f'Coupons received before {date_format(start_date)} will be accumulated as a cash balance and not reinvested.'
