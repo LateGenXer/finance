@@ -54,7 +54,7 @@ def analytics_html():
         '</a>'
         '</div>'
         '</noscript>'
-        if "PYTEST_CURRENT_TEST" not in os.environ else
+        if int(os.environ.get('PRODUCTION', '0')) else
         '<div class="statcounter">'
         '</div>'
     )
