@@ -4,14 +4,35 @@
 
 
 import subprocess
+import sys
 
 import pytest
 
 
-from nsandi_premium_bonds import *
+from nsandi_premium_bonds import binomial, Calculator
 
 
-amounts = [50, 500, 5000, 50000]
+# https://www.nsandi.com/products/premium-bonds
+odds = 1/21000
+
+# https://www.nsandi.com/get-to-know-us/monthly-prize-allocation
+# Data from October 2023 draw
+prizes = [
+    ( 1000000, 	       2 ),
+    (  100000, 	      90 ),
+    (   50000, 	     181 ),
+    (   25000, 	     360 ),
+    (   10000, 	     902 ),
+    (    5000, 	    1803 ),
+    (    1000, 	   18834 ),
+    (     500, 	   56502 ),
+    (     100, 	 2339946 ),
+    (      50, 	 2339946 ),
+    (      25, 	 1027651 ),
+]
+
+
+amounts = [25, 50, 500, 5000, 50000]
 
 
 def test_binomial():
@@ -21,7 +42,8 @@ def test_binomial():
 @pytest.mark.parametrize('n', amounts)
 def test_median(n):
     N = 512*1024
-    assert median(n) == pytest.approx(median_mc(n, N), abs=1e-4)
+    c = Calculator(odds, prizes)
+    assert c.median(n) == pytest.approx(c.median_mc(n, N), abs=1e-4)
 
 
 @pytest.mark.parametrize('n', amounts)

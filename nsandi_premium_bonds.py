@@ -11,44 +11,12 @@
 
 
 import sys
+import operator
 import multiprocessing.dummy
 
 import numpy as np
 
 from math import exp, factorial, lgamma, log
-
-
-# https://www.nsandi.com/products/premium-bonds
-odds = 1/21000
-
-# https://www.nsandi.com/get-to-know-us/monthly-prize-allocation
-# Data from October 2023 draw
-prizes = [
-    ( 1000000, 	       2 ),
-    (  100000, 	      90 ),
-    (   50000, 	     181 ),
-    (   25000, 	     360 ),
-    (   10000, 	     902 ),
-    (    5000, 	    1803 ),
-    (    1000, 	   18834 ),
-    (     500, 	   56502 ),
-    (     100, 	 2339946 ),
-    (      50, 	 2339946 ),
-    (      25, 	 1027651 ),
-]
-prizes.reverse()
-
-total_volume = 0
-for value, volume in prizes:
-    total_volume += volume
-
-
-def mean():
-    mean = 0
-    for value, volume in prizes:
-        p = volume / total_volume * odds * 12
-        mean += value * p
-    return mean
 
 
 # Binomial PDF
@@ -61,10 +29,6 @@ def binomial(k, n, p):
         return float(factorial(n)) / float(factorial(k) * factorial(n - k)) * p**k * (1 - p)**(n - k)
 
 
-odds_per_bond = 25 * odds
-total_bonds = total_volume / odds_per_bond
-
-
 def combine(dist0, dist1):
     # This is a form of convolution, but it's not easy to coerce numpy.convolve
     # to do exactly what we want.
@@ -75,88 +39,151 @@ def combine(dist0, dist1):
     return dist2
 
 
-def median(n):
-    assert n > 0
-    assert n <= 50000
-    assert n % 25 == 0
+class Calculator:
 
-    our_bonds = n // 25
+    def __init__(self, odds:int, prizes:list[tuple[int, int]]):
+        self.odds = odds
+        self.prizes = prizes.copy()
+        self.prizes.sort(key=operator.itemgetter(0))
 
-    # Probability of winning exactly one prize
-    p = our_bonds / total_bonds
+        self.total_volume = 0
+        for value, volume in prizes:
+            self.total_volume += volume
 
-    # Truncated length of the Probability Mass Functions (PMF).
-    # We ignore the right tail (ie, very large prizes) since it won't affect the median.
-    N = 50000 // 25
+        odds_per_bond = 25 * odds
+        self.total_bonds = self.total_volume / odds_per_bond
 
-    # Start with a PMF zero, that is, 100% chance of receiving £0
-    pmf0 = np.zeros(N)
-    pmf0[0] = 1.0
-
-    for value, volume in prizes:
-        assert value % 25 == 0
-
-        # The PMF of all prizes of equal value is given by the Bernoulli distribuion
-        pmf1 = np.zeros(N)
-        for k in range(0, min(N // value, 12*volume) + 1):
-            pmf1[k * value // 25] = binomial(k, 12*volume, p)
-
-        # Ensure the truncated PMF captures the bulk of the probability mass
-        assert pmf1.sum() >= .99
-
-        # The PMF of the sum of the prize PMF can
-        # https://en.wikipedia.org/wiki/Convolution_of_probability_distributions
-        pmf0 = combine(pmf0, pmf1)
-
-    # Obtain the median through the Cumulative Mass Function (CMF)
-    cmf = np.cumsum(pmf0)
-    median = np.searchsorted(cmf, 0.5, side='right')
-    median *= 25
-    return median
+    @classmethod
+    def from_latest(cls):
+        import requests
+        from bs4 import BeautifulSoup
 
 
-# Divide samples in this number of chunks for efficiency.
-chunk = 1024
+        r = requests.get('https://www.nsandi.com/get-to-know-us/monthly-prize-allocation')
+        assert r.ok
 
+        soup = BeautifulSoup(r.text, features='html.parser')
 
-def sample(p):
-    prize = np.zeros([chunk], dtype=np.int64)
-    for value, volume in prizes:
-        k = np.random.binomial(12*volume, p, size=[chunk])
-        prize += k*value
-    return prize
+        table = soup.find('table')
+        table_head = table.find('thead')
+        table_row = table.find('tr')
+        cells = table_row.find_all('th')
+        head = [cell.text for cell in cells]
+        _, _, _, header = head
+        sys.stderr.write(f'info: using prizes for {header}\n')
+        table_body = table.find('tbody')
 
+        prizes = []
+        for table_row in table_body.find_all('tr'):
+            cells = table_row.find_all('td')
+            fields = [cell.text for cell in cells]
 
-# Obtain the median through Monte Carlo simulation using multiple threads.
-# Essentially used to verify the correctness of the median() function above.
-def median_mc(n, N):
-    assert n > 0
-    assert n <= 50000
-    assert n % 25 == 0
+            band, value, _, draw = fields
 
-    our_bonds = n // 25
+            if value.startswith('£'):
+                value = value.replace('£', '')
+                value = value.replace(' million', '000000')
+                value = value.replace(',', '')
+                draw = draw.replace(',', '')
 
-    assert our_bonds < total_bonds
-    p = our_bonds / total_bonds
+                prizes.append((int(value), int(draw)))
 
-    pool = multiprocessing.dummy.Pool((multiprocessing.cpu_count() + 1) // 2)
+        assert(len(prizes) == 11)
 
-    nchunks = (N + 1) // chunk
+        # XXX: Scrape too?
+        # https://www.nsandi.com/products/premium-bonds
+        odds = 1/21000
 
-    samples = pool.map(sample, [p]*nchunks )
+        return cls(odds, prizes)
 
-    median = np.median(samples)
-    return median
+    def mean(self):
+        mean = 0
+        for value, volume in self.prizes:
+            p = volume / self.total_volume * self.odds * 12
+            mean += value * p
+        return mean
+
+    def median(self, n):
+        assert n > 0
+        assert n <= 50000
+        assert n % 25 == 0
+
+        our_bonds = n // 25
+
+        # Probability of winning exactly one prize
+        assert our_bonds < self.total_bonds
+        p = our_bonds / self.total_bonds
+
+        # Truncated length of the Probability Mass Functions (PMF).
+        # We ignore the right tail (ie, very large prizes) since it won't affect the median.
+        N = 50000 // 25
+
+        # Start with a PMF zero, that is, 100% chance of receiving £0
+        pmf0 = np.zeros(N)
+        pmf0[0] = 1.0
+
+        for value, volume in self.prizes:
+            assert value % 25 == 0
+
+            # The PMF of all prizes of equal value is given by the Bernoulli distribuion
+            pmf1 = np.zeros(N)
+            for k in range(0, min(N // value, 12*volume) + 1):
+                pmf1[k * value // 25] = binomial(k, 12*volume, p)
+
+            # Ensure the truncated PMF captures the bulk of the probability mass
+            assert pmf1.sum() >= .99
+
+            # The PMF of the sum of the prize PMF can
+            # https://en.wikipedia.org/wiki/Convolution_of_probability_distributions
+            pmf0 = combine(pmf0, pmf1)
+
+        # Obtain the median through the Cumulative Mass Function (CMF)
+        cmf = np.cumsum(pmf0)
+        median = np.searchsorted(cmf, 0.5, side='right')
+        median *= 25
+        return median
+
+    # Divide samples in this number of chunks for efficiency.
+    chunk = 1024
+
+    def sample(self, p):
+        prize = np.zeros([self.chunk], dtype=np.int64)
+        for value, volume in self.prizes:
+            k = np.random.binomial(12*volume, p, size=[self.chunk])
+            prize += k*value
+        return prize
+
+    # Obtain the median through Monte Carlo simulation using multiple threads.
+    # Essentially used to verify the correctness of the median() function above.
+    def median_mc(self, n, N):
+        assert n > 0
+        assert n <= 50000
+        assert n % 25 == 0
+
+        our_bonds = n // 25
+
+        assert our_bonds < self.total_bonds
+        p = our_bonds / self.total_bonds
+
+        pool = multiprocessing.dummy.Pool((multiprocessing.cpu_count() + 1) // 2)
+
+        nchunks = (N + 1) // self.chunk
+
+        samples = pool.map(self.sample, [p]*nchunks )
+
+        median = np.median(samples)
+        return median
 
 
 def main(args):
-    print(f'Mean:   {mean():.2%}')
+    c = Calculator.from_latest()
+    print(f'Mean:   {c.mean():.2%}')
     for arg in args:
         n = int(arg)
         print(f'{n}:')
-        m = median(n)
+        m = c.median(n)
         print(f'  Median (accurate):  {m:4.0f} {m/n:.2%}')
-        m = median_mc(n, 512*1024)
+        m = c.median_mc(n, 512*1024)
         print(f'  Median (MC):        {m:4.0f} {m/n:.2%}')
 
 

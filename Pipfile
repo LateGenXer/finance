@@ -11,6 +11,7 @@ xlrd = "~=2.0"
 xlsxwriter = "~=3.2"
 numpy = "~=1.26"
 openpyxl = "~=3.1"
+bs4 = "*"
 
 [dev-packages]
 coverage = "~=7.4"
