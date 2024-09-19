@@ -97,7 +97,7 @@ if "PYTEST_CURRENT_TEST" not in os.environ:
         load_state(data, override=False)
     else:
         try:
-            from devel import state as devel_state
+            from rtp.devel import state as devel_state
         except ImportError:
             pass
         else:
