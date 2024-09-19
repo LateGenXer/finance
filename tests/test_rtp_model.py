@@ -10,11 +10,15 @@ import test_tax_uk
 from rtp.model import lp
 
 
-@pytest.mark.parametrize('lump_sum', [0, 1000])
-@pytest.mark.parametrize('retirement_income_net', [0, 10000])
+@pytest.mark.parametrize('lump_sum', [pytest.param(0, id=""), pytest.param(1000, id="lump_sum")])
+@pytest.mark.parametrize('retirement_income_net', [pytest.param(0, id="max_income"), pytest.param(10000, id="fix_income")])
 @pytest.mark.parametrize('retirement_country', ['UK', 'PT', 'JP'])
-@pytest.mark.parametrize('sipp_extra_contrib', [False, True])
-@pytest.mark.parametrize('joint,marriage_allowance', [(False, False), (True, False), (True, True)])
+@pytest.mark.parametrize('sipp_extra_contrib', [pytest.param(False, id=""), pytest.param(True, id="sipp_extra_contrib")])
+@pytest.mark.parametrize('joint,marriage_allowance', [
+    pytest.param(False, False, id="single"),
+    pytest.param(True, False, id="joint"),
+    pytest.param(True, True, id="marriage_allowance"),
+])
 def test_model(joint, sipp_extra_contrib, retirement_country, retirement_income_net, lump_sum, marriage_allowance):
     params = {
         "joint": joint,
