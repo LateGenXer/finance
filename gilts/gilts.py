@@ -509,8 +509,14 @@ class Issued:
             coupon += float(units)
         return coupon
 
-    def filter(self, index_linked, settlement_date=None):
-        type_ = 'Index-linked' if index_linked else 'Conventional'
+    __types = {
+        False: ('Conventional',),
+        True:  ('Index-linked',),
+        None:  ('Conventional', 'Index-linked'),
+    }
+
+    def filter(self, index_linked:bool|None, settlement_date=None):
+        types = self.__types[index_linked]
         for g in self.all:
             # Per https://www.dmo.gov.uk/responsibilities/gilt-market/about-gilts/ :
             # "If an investor purchases a gilt for settlement on the final day
@@ -520,12 +526,8 @@ class Issued:
             # ex-dividend period."
             if settlement_date is not None and settlement_date > g.ex_dividend_date(g.maturity):
                 continue
-            if g.type_ == 'Index-linked' and g.is_redemption_fixed():
-                if type_ == 'Conventional':
-                    yield g
-                else:
-                    continue
-            if g.type_ != type_:
+            type_ = 'Conventional' if g.type_ == 'Index-linked' and g.is_redemption_fixed() else g.type_
+            if type_ not in types:
                 continue
             yield g
 

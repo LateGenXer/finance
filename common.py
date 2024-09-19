@@ -22,7 +22,7 @@ def set_page_config(page_title, page_icon=":material/savings:", layout="centered
         menu_items={
             "Get help": "https://github.com/LateGenXer/finance/discussions",
             "Report a Bug": "https://github.com/LateGenXer/finance/issues",
-            "About": f"""LateGenXer's financial tools.
+            "About": """LateGenXer's financial tools.
 
 https://lategenxer.streamlit.app/
 
