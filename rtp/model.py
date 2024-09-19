@@ -6,10 +6,10 @@
 #
 
 
+import dataclasses
 import os
 import sys
 
-from dataclasses import dataclass, field
 from typing import Any
 
 if int(os.environ.get('PULP', '0')) != 0:
@@ -31,7 +31,7 @@ verbosity = 0
 uid = 0
 
 
-@dataclass
+@dataclasses.dataclass
 class LPState:
     sipp_uf_1: Any
     sipp_uf_2: Any
@@ -60,7 +60,7 @@ class LPState:
     cgt: Any
 
 
-@dataclass
+@dataclasses.dataclass
 class ResState:
     year: int
     income_state: float
@@ -92,13 +92,13 @@ class ResState:
     cgt_rate: float
 
 
-@dataclass
+@dataclasses.dataclass
 class Result:
     retirement_income_net: float = 0
     net_worth_start: float = 0
     net_worth_end: float = 0
     total_tax: float = 0
-    data: list[ResState] = field(default_factory=list)
+    data: list[ResState] = dataclasses.field(default_factory=list)
     ls_sipp_1: float = 0
     ls_sipp_2: float = 0
     ls_isa: float = 0
@@ -638,7 +638,7 @@ def model(
         s = states[yr]
         if verbosity > 1:
             if yr == retirement_year:
-                for n, v in s._asdict().items():
+                for n, v in dataclasses.asdict(s).items():
                     print(f' {n} = {lp.value(v)}')
 
         contrib_1 = lp.value(s.contrib_1)
