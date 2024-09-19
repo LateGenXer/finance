@@ -1,5 +1,5 @@
 
-from lp import *
+from rtp.lp import *
 
 
 def test():
