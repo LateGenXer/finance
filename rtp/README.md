@@ -4,10 +4,10 @@ This is a retirement tax estimation / planning tool.
 It uses _[linear programming](https://en.wikipedia.org/wiki/Linear_programming)_ to determine when and how much to withdraw from the different pots to fund retirement spending, in order to make the money last as much as possible.
 
 I initially wrote this for my own personal use, after running against limitations in other retirement planners such as [Guiide](https://guiide.co.uk/) and [MyNetwealth](https://my.netwealth.com/).  Specifically, for failing to take in consideration the particular circumstances of married couples and the old Lifetime Allowance.
-I am not a financial or tax adviser.
 
 ## Disclaimers
 
+* I am not a financial or tax adviser.
 * There is no guarantee of accuracy or completeness of the calculations.
   In fact, at this point, it is best to assume they will be wrong.
 * This information does not constitute financial advice or tax advice.
@@ -59,9 +59,3 @@ This tool makes the following simplifying assumptions:
 
 * **Can you please add support for XYZ?**
   Maybe.  If it's relatively straightforward and generally useful I can consider it.  But I have no intention to accommodate the long tail of subtly different personal circumstances out there.  At some point people will need to accept this is a generic tool, and that they need to work out their own calculations, or pay somebody to do it.
-
-* **Can I have the source code?**
-  Source code is available [here](https://github.com/LateGenXer/finance/tree/main/rtp).  The key technologies used for this tool are: [Python](https://www.python.org/), [SciPy](https://scipy.org/), [Pandas](https://pandas.pydata.org/) and [Streamlit](https://streamlit.io/).
-
-* **How can I contact you?**
-  Try [here](https://www.reddit.com/user/LateGenXer/) but no promise.

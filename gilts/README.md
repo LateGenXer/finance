@@ -7,14 +7,16 @@ programming](https://en.wikipedia.org/wiki/Linear_programming)_ to determine whi
 
 I initially wrote this for my own personal education and simulations on gilts, mostly due to the lack of short term index-linked gilt funds, and the relative unpredictability of bond funds cash flows in general.
 
-I am not a financial or tax adviser.
-
 ## Disclaimers
+
+* I am not a financial or tax adviser.
 
 * There is no guarantee of accuracy or completeness of the calculations.
   In fact, at this point, it is best to assume they will be wrong.
 
 * This information does not constitute financial advice or tax advice.
+
+* In any doubt, get professional advice.
 
 ## Recent changes
 
@@ -47,12 +49,6 @@ I am not a financial or tax adviser.
   Read the [Debt Management Office's Glossary](https://www.dmo.gov.uk/help/glossary/) for a description of these and other key concepts.
   _Clean price_ is the price normally quoted for nominal £100, it doesn't include the accrued interest (or any inflation adjustment) therefore it's relatively stable from day to day, only varying as market expectations of the future vary (interest rates, inflation, economy.)
   _Dirty price_ is the price one will actually pay per nominal £100, and vary systematically relative to the clean price to include accrued interest (which increases daily between coupon dates, goes negative on ex-dividend date, and is zero on coupon distributions), and the published RPI index (on index-linked gilts.)
-
-* **Can I have the source code?**
-  Source code is available [here](https://github.com/LateGenXer/finance/).  The key technologies used for this tool are: [Python](https://www.python.org/), [SciPy](https://scipy.org/), [Pandas](https://pandas.pydata.org/) and [Streamlit](https://streamlit.io/).
-
-* **How can I contact you?**
-  Try [here](https://www.reddit.com/user/LateGenXer/) but no promise.
 
 ## Additional resources
 

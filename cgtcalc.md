@@ -5,16 +5,14 @@
 It is inspired by [other](#Alternative) free CGT calculators, but unlike most
 of them it handles notional distributions and equalisation payments in a consistent manner.
 
-A web instance is available [here](https://lategenxer.streamlit.app/CGT_Calculator)
-
 ## Disclaimer
 
 > [!WARNING]
 > `cgtcalc.py` is still work in progress!
 
-I wrote `cgtcalc.py` primarily for helping filing my own Self Assessment.
-It's accurate to the best of my abilities, but I am not an accountant or financial adviser.
-Always check carefully its results and engage a tax advisor in any doubt.
+* I wrote `cgtcalc.py` primarily for filing my own Self Assessment.
+* It's accurate to the best of my abilities, but I am not a tax or financial adviser.
+* Always check carefully its results and engage a tax advisor or HMRC in any doubt.
 
 ## Behavior
 
@@ -189,6 +187,8 @@ IE00B3X1LS57
 - Monevator:
   - [Accumulation units – tax on reinvested dividends UK](https://monevator.com/income-tax-on-accumulation-unit/)
   - [Excess reportable income: what it is, where to find it, and what to do with it](https://monevator.com/excess-reportable-income/)
+- KPMG
+  - [https://www.kpmgreportingfunds.co.uk/guidance](Excess Reported Income Guidance)
 
 
 # Alternatives

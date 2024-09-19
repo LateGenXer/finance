@@ -28,6 +28,14 @@ common.set_page_config(
 
 st.title("LateGenXer's financial tools.")
 
-st.markdown('Welcome!  Choose a tool on the left sidebar.')
+st.markdown('''Welcome!
+
+This site hosts several UK personal finance tools which I wrote primarily for myself but hope can be useful to others.
+
+Please read the [disclaimer](/Disclaimer) and choose a tool on the left sidebar.
+
+If you have issues or suggestions, open the menu by clicking on the top-right `⋮` button, followed by _"Report a bug"_ or _"Get help"_.
+Alternatively, you can [send me a private message on Reddit](https://www.reddit.com/message/compose/?to=LateGenXer).
+''')
 
 common.analytics_html()
