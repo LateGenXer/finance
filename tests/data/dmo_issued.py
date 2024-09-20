@@ -5,6 +5,7 @@ import csv
 import os.path
 import sys
 
+from decimal import Decimal
 
 sys.path.insert(0, os.getcwd())
 
@@ -36,7 +37,7 @@ def parse(parser):
         entry['REDEMPTION_DATE'] = Issued._parse_date(entry['REDEMPTION_DATE']).isoformat()
         entry['FIRST_ISSUE_DATE'] = Issued._parse_date(entry['FIRST_ISSUE_DATE']).isoformat()
         try:
-            entry['BASE_RPI_87'] = '{:.5f}'.format(float(entry['BASE_RPI_87']))
+            entry['BASE_RPI_87'] = round(Decimal(entry['BASE_RPI_87']), 5)
         except KeyError:
             entry['BASE_RPI_87'] = ''
 
