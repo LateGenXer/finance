@@ -22,17 +22,3 @@ income_tax_bands = [
 
 
 cgt_rate = 0.28
-
-
-def income_tax(gross_income, factor=1.0):
-    tax = 0
-    lbound = 0
-    for ubound, rate in income_tax_bands:
-        delta = max(gross_income - lbound, 0)
-        if ubound is not None:
-            ubound *= factor
-            delta = min(delta, ubound - lbound)
-        tax += delta * rate
-        lbound = ubound
-    assert tax <= gross_income
-    return tax
