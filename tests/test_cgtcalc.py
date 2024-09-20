@@ -23,6 +23,7 @@ from decimal import Decimal
 from glob import glob
 from pprint import pp
 
+from environ import ci
 from cgtcalc import *
 
 
@@ -342,7 +343,7 @@ def test_report_html(filename):
     try:
         subprocess.check_call(['tidy', '-v'])
     except (FileNotFoundError, subprocess.CalledProcessError):
-        if os.environ.get('CI') == 'true':
+        if ci:
             raise
         else:
             pytest.skip('no tidy')

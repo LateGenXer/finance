@@ -14,6 +14,7 @@ from datetime import date, MINYEAR, MAXYEAR
 
 from download import download
 
+from environ import ci
 from ukcalendar import *
 
 
@@ -26,7 +27,7 @@ def test_isukbankholiday(year,month,day,result):
     assert isukbankholiday(date(year, month, day)) == result
 
 
-@pytest.mark.skipif(os.environ.get('CI') == 'true', reason='CI')
+@pytest.mark.skipif(ci, reason='CI')
 def test_isukbankholiday_gov_api():
     download('https://www.gov.uk/bank-holidays.json', content_type='application/json')
     obj = json.load(open('bank-holidays.json', 'rt'))
