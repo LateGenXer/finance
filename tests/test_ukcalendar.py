@@ -7,6 +7,7 @@
 
 import json
 import os
+import runpy
 
 import pytest
 
@@ -102,8 +103,8 @@ def test_shift_month(d0, n, d1):
 
 
 def test_main():
-    from ukcalendar import main
+    from ukcalendar import __file__ as path
     try:
-        main()
+        runpy.run_path(path, run_name='__main__')
     except ValueError:
         pytest.skip("captcha")
