@@ -32,10 +32,17 @@ st.markdown('''Welcome!
 
 This site hosts several UK personal finance tools which I wrote primarily for myself but hope can be useful to others.
 
+Personal data entered into the website will not persist across page reloads.
+However some tools will give you the option to download or upload the relevant data.
+
+The site uses analytic cookies for traffic analysis.
+This helps me understand which tools are most used, and therefore which tools to further invest time into.
+You can opt out of analytic cookies [here](https://statcounter.com/about/set-refusal-cookie/).
+
 Please read the [disclaimer](/Disclaimer) and choose a tool on the left sidebar.
 
 If you have issues or suggestions, open the menu by clicking on the top-right `⋮` button, followed by _"Report a bug"_ or _"Get help"_.
-Alternatively, you can [send me a private message on Reddit](https://www.reddit.com/message/compose/?to=LateGenXer).
+Alternatively, you can message me through [Reddit](https://www.reddit.com/message/compose/?to=LateGenXer).
 ''')
 
 common.analytics_html()
