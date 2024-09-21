@@ -10,13 +10,21 @@
 #
 
 
-import sys
-import operator
+import datetime
+import logging
 import multiprocessing.dummy
-
-import numpy as np
+import operator
+import re
+import sys
 
 from math import exp, factorial, lgamma, log
+
+import numpy as np
+import requests
+import bs4
+
+
+logger = logging.getLogger('nsandi')
 
 
 # Binomial PDF
@@ -41,7 +49,7 @@ def combine(dist0, dist1):
 
 class Calculator:
 
-    def __init__(self, odds:int, prizes:list[tuple[int, int]]):
+    def __init__(self, odds:int, prizes:list[tuple[int, int]], date:datetime.date):
         self.odds = odds
         self.prizes = prizes.copy()
         self.prizes.sort(key=operator.itemgetter(0))
@@ -53,16 +61,17 @@ class Calculator:
         odds_per_bond = 25 * odds
         self.total_bonds = self.total_volume / odds_per_bond
 
+        self.date = date
+
+    # Scrape prizes and odds from nsandi.com
     @classmethod
     def from_latest(cls):
-        import requests
-        from bs4 import BeautifulSoup
+        session = requests.Session()
 
-
-        r = requests.get('https://www.nsandi.com/get-to-know-us/monthly-prize-allocation')
+        r = session.get('https://www.nsandi.com/get-to-know-us/monthly-prize-allocation')
         assert r.ok
 
-        soup = BeautifulSoup(r.text, features='html.parser')
+        soup = bs4.BeautifulSoup(r.text, features='html.parser')
 
         table = soup.find('table')
         table_head = table.find('thead')
@@ -70,7 +79,11 @@ class Calculator:
         cells = table_row.find_all('th')
         head = [cell.text for cell in cells]
         _, _, _, header = head
-        sys.stderr.write(f'info: using prizes for {header}\n')
+
+        logger.info(f'info: using prizes for {header}\n')
+
+        date = datetime.datetime.strptime(header, 'Estimated %B %Y draw').date()
+
         table_body = table.find('tbody')
 
         prizes = []
@@ -90,11 +103,17 @@ class Calculator:
 
         assert(len(prizes) == 11)
 
-        # XXX: Scrape too?
-        # https://www.nsandi.com/products/premium-bonds
-        odds = 1/21000
+        r = session.get('https://www.nsandi.com/products/premium-bonds')
+        assert r.ok
+        soup = bs4.BeautifulSoup(r.text, features='html.parser')
+        dl = soup.find('dl', class_='product-definition')
+        odds_re = re.compile("([0-9,]+) to 1 for every £1 Bond")
+        text = dl.find(string=lambda text: not isinstance(text, bs4.Comment) and odds_re.search(text))
+        mo = odds_re.search(text)
+        inv_odds = int(mo.group(1).replace(',', ''))
+        odds = 1/inv_odds
 
-        return cls(odds, prizes)
+        return cls(odds, prizes, date)
 
     def mean(self):
         mean = 0
@@ -175,9 +194,11 @@ class Calculator:
         return median
 
 
-def main(args):
+def main():
+    logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s %(message)s', level=logging.INFO)
     c = Calculator.from_latest()
     print(f'Mean:   {c.mean():.2%}')
+    args = sys.argv[1:] if len(sys.argv) > 1 else ["50000"]
     for arg in args:
         n = int(arg)
         print(f'{n}:')
@@ -187,5 +208,5 @@ def main(args):
         print(f'  Median (MC):        {m:4.0f} {m/n:.2%}')
 
 
-if __name__ == '__main__': # pragma: no cover
-    main(sys.argv[1:])
+if __name__ == '__main__':
+    main()
