@@ -75,7 +75,7 @@ cgt_rate = 0.10 if marginal_income_tax <= 0.20 else 0.20
 
 
 # https://www.bankofengland.co.uk/boeapps/database/help.asp?Back=Y&Highlight=CSV#CSV
-@st.cache_data(ttl=24*60*60)
+@st.cache_data(ttl=24*60*60, show_spinner='Getting latest SONIA rate.')
 def latest_sonia_rate():
     logger.info('Getting latest SONIA rate.')
 
@@ -95,7 +95,7 @@ def latest_sonia_rate():
 
 
 @st.cache_data(ttl=24*60*60)
-def latest_premium_bonds_rate():
+def latest_premium_bonds_rate(show_spinner='Getting latest NS&I Premium Bonds prizes.'):
     logger.info('Getting latest NS&I Premium Bonds prizes.')
     amount = 50000
     return nsandi_premium_bonds.Calculator.from_latest().median(amount) / amount
@@ -116,6 +116,7 @@ if index_linked is None:
 msgs.append('Net yield ignores '
 '[Personal Savings Allowance](https://www.gov.uk/apply-tax-free-interest-on-savings#personal-savings-allowance) and '
 '[Capital Gains Tax allowance](https://www.gov.uk/capital-gains-tax/allowances).')
+msgs.append('Equivalent gross yield is the standard cash savings account interest necessary to yield the same net interest.')
 
 if not index_linked:
     premium_bonds_rate = latest_premium_bonds_rate()
@@ -188,11 +189,11 @@ if index_linked is not False:
 
 
 data = [
-    (instrument, url, gross_yield*100.0, net_yield*100.0)
+    (instrument, url, gross_yield*100.0, net_yield*100.0, net_yield*100.0/(1.0 - marginal_income_tax))
     for instrument, tidm, url, gross_yield, net_yield in data
 ]
 
-df = pd.DataFrame(data, columns=['Instrument', 'TIDM', 'GrossYield', 'NetYield'])
+df = pd.DataFrame(data, columns=['Instrument', 'TIDM', 'GrossYield', 'NetYield', 'EquivalentGrossYield'])
 
 st.dataframe(
     df,
@@ -200,10 +201,11 @@ st.dataframe(
     height=768,
     hide_index=True,
     column_config={
-        "Instrument": st.column_config.TextColumn(width="large"),
-        "TIDM": st.column_config.LinkColumn(display_text=r'https://www\.londonstockexchange\.com/stock/([^/]*).*'),
+        "Instrument": st.column_config.TextColumn(width="medium"),
+        "TIDM": st.column_config.LinkColumn(display_text=r'https://www\.londonstockexchange\.com/stock/([^/]*).*', width='small'),
         "GrossYield": st.column_config.NumberColumn(label="Gross Yield", format="%.2f%%"),
         "NetYield": st.column_config.NumberColumn(label="Net Yield", format="%.2f%%"),
+        "EquivalentGrossYield": st.column_config.NumberColumn(label="Equivalent Gross", format="%.2f%%"),
     },
 )
 
