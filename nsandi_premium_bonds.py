@@ -80,7 +80,7 @@ class Calculator:
         head = [cell.text for cell in cells]
         _, _, _, header = head
 
-        logger.info(f'info: using prizes for {header}\n')
+        logger.info(f'using prizes for {header}')
 
         date = datetime.datetime.strptime(header, 'Estimated %B %Y draw').date()
 

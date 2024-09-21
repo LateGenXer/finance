@@ -91,7 +91,15 @@ def latest_sonia_rate():
         for row in csv.DictReader(io.StringIO(r.text)):
             date = datetime.datetime.strptime(row['DATE'], '%d %b %Y').date()
             rate = float(row[series])
-    return rate * .01, date
+
+    # Scale from percentage
+    rate *= .01
+
+    # SONIA compounds daily
+    # https://www.bankofengland.co.uk/markets/sonia-benchmark/sonia-key-features-and-policies
+    rate = (1.0 + rate/365.0)**365 - 1.0
+
+    return rate, date
 
 
 @st.cache_data(ttl=24*60*60)
@@ -112,9 +120,9 @@ msgs = []
 if index_linked:
     msgs.append('_Real_ gross/net yields shown.')
 if index_linked is None:
-    msgs.append(f'_Nominal_ gross/net yields shown.  Assuming {IndexLinkedGilt.inflation_rate:.1%} inflation rate for index-linked Gilts.')
-msgs.append('Net yield ignores '
-'[Personal Savings Allowance](https://www.gov.uk/apply-tax-free-interest-on-savings#personal-savings-allowance) and '
+    msgs.append(f'_Nominal_ gross/net yields shown.  Assuming {IndexLinkedGilt.inflation_rate:.1%} inflation rate for index-linked gilts.')
+msgs.append('Net yield ignores the '
+'[Personal Savings Allowance](https://www.gov.uk/apply-tax-free-interest-on-savings#personal-savings-allowance) and the '
 '[Capital Gains Tax allowance](https://www.gov.uk/capital-gains-tax/allowances).')
 msgs.append('Equivalent gross yield is the standard cash savings account interest necessary to yield the same net interest.')
 
@@ -126,8 +134,8 @@ if not index_linked:
     sonia_rate, sonia_date = latest_sonia_rate()
     data.append(('GBP Money Market Fund', '', '', sonia_rate, sonia_rate * (1 - marginal_income_tax)))
     data.append(('Lyxor Smart Overnight Return', 'CSH2', 'https://www.londonstockexchange.com/stock/CSH2/amundi', sonia_rate, sonia_rate * (1 - cgt_rate)))
-    msgs.append(f'GBP MMF and Lyxor Smart Overnight Return gross yield is based from [SONIA interest rate benchmark](https://www.bankofengland.co.uk/markets/sonia-benchmark) from {sonia_date.day} {sonia_date:%B} {sonia_date.year}.')
-    msgs.append("Lyxor Smart Overnight Return's net yield presumes zero [Excess Reportable Income](https://www.gov.uk/government/publications/offshore-funds-self-assessment-helpsheet-hs265/hs265-offshore-funds) (ERI), as in recent years.")
+    msgs.append(f'GBP MMF and Lyxor Smart Overnight Return gross yield is based from [SONIA interest rate benchmark](https://www.bankofengland.co.uk/markets/sonia-benchmark) from {sonia_date.day} {sonia_date:%B} {sonia_date.year}.  Fees have _not_ been deducted.')
+    msgs.append("Lyxor Smart Overnight Return's net yield presumes zero [Excess Reportable Income (ERI)](https://www.gov.uk/government/publications/offshore-funds-self-assessment-helpsheet-hs265/hs265-offshore-funds), as in [recent years](https://www.kpmgreportingfunds.co.uk/).")
 
 
 issued = Issued()
