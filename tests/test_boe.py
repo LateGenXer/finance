@@ -5,6 +5,10 @@
 #
 
 
+import pytest
+
+import pandas as pd
+
 from data import boe
 
 
@@ -12,10 +16,12 @@ def test_load():
     boe.load()
 
 
-def test_yield_curves():
-    df = boe.yield_curves()
+@pytest.mark.parametrize('measure', ('Nominal', 'Real', 'Inflation'))
+def test_yield_curves(measure):
+    yield_curve = boe.YieldCurve(measure)
 
-    assert tuple(df.columns) == ('Nominal_Spot', 'Real_Spot', 'Inflation_Spot')
+    ds = yield_curve.series
+    assert isinstance(ds, pd.Series)
 
-    for i in range(len(df.index)):
-        assert df.index[i] == 0.5 * (i + 1)
+    for i in range(len(ds.index)):
+        assert ds.index[i] == 0.5 * (i + 1)

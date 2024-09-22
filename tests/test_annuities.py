@@ -9,7 +9,7 @@ import pytest
 
 import annuities
 
-from data import mortality
+from data import mortality, boe
 
 
 @pytest.fixture(scope='module', params=('unisex', 'male', 'female'))
@@ -21,7 +21,12 @@ def table(request):
         return mortality.get_ons_table('cohort', gender)
 
 
-@pytest.mark.parametrize('kind', ('Real', 'Nominal'))
-def test_annuity_rate(kind, table):
-    ar = annuities.annuity_rate(66, kind, table)
+@pytest.fixture(scope='module', params=('Real', 'Nominal'))
+def yield_curve(request):
+    measure = request.param
+    return boe.YieldCurve(measure)
+
+
+def test_annuity_rate(yield_curve, table):
+    ar = annuities.annuity_rate(66, yield_curve, table)
     assert 0.0 < ar < 1.0

@@ -11,7 +11,7 @@ import common
 
 from rtp.uk import state_pension_full
 
-from data import mortality
+from data import mortality, boe
 import annuities
 
 
@@ -44,17 +44,22 @@ escalation = st.radio('Annuity escalation', escalations.keys(), index=1, key='es
 def get_cmi_table():
     return mortality.get_cmi_table()
 
+@st.cache_data(ttl=12*3600, show_spinner='Getting BoE yield curves')
+def get_yield_curve(kind):
+    return boe.YieldCurve(kind)
+
+
 table = get_cmi_table()
 
+kind = escalations[escalation]
+yield_curve = get_yield_curve(kind)
 
 
 st.header('Results')
 
 st.warning('Yield curves are not yet being updated daily and might be out of date', icon="🚧")
 
-kind = escalations[escalation]
-
-unit_present_value = annuities.present_value(age, kind, table)
+unit_present_value = annuities.present_value(age, yield_curve, table)
 
 present_value = pay * unit_present_value
 

@@ -89,13 +89,18 @@ def load():
         plt.show()
 
 
-def yield_curves():
-    if not os.path.exists(_filename):
-        load()
-    df = pd.read_csv(_filename, header=0, index_col=0)
-    for _measure in _measures:
-        df[f'{_measure}_Spot'] = df[f'{_measure}_Spot'].multiply(.01)
-    return df
+class YieldCurve:
+
+    def __init__(self, measure:str):
+        assert measure in _measures
+        if not os.path.exists(_filename):
+            load()
+        df = pd.read_csv(_filename, header=0, index_col=0)
+        self.series = df[f'{measure}_Spot'].multiply(.01)
+
+    def __call__(self, years):
+        assert years * 2 == round(years * 2)
+        return self.series[years]
 
 
 if __name__ == '__main__':
