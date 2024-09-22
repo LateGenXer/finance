@@ -25,41 +25,16 @@ from numpy.typing import ArrayLike
 
 from rtp import uk
 
-from data.mortality import mortality
-from data.boe import yield_curves
-
+from data import mortality, boe
+import annuities
 
 cur_year = datetime.datetime.utcnow().year
 
-yc = yield_curves()
+yield_curve = boe.YieldCurve('Real')
 
-
-def annuity_rate(cur_age, kind, gender='unisex'):
-    yob = cur_year - cur_age
-
-    basis = 'cohort' if gender == 'unisex' else 'period'
-    basis = 'cohort'
-
-    ages = list(range(cur_age, 121))
-
-    p = 1
-    npv = 0
-    s = yc[f'{kind}_Spot']
-    for age in ages:
-        years = age - cur_age
-        index = float(years)
-        index = max(index,  0.5)
-        index = min(index, 40.0)
-        rate = s[index]
-        if False:
-            print(f'{years:2d}  {r:6.2%}  {p:7.2%}')
-        npv += p * (1 + rate)**-years
-        qx = mortality(yob + age, age, gender=gender, basis=basis)
-        p *= 1 - qx
-
-    ar = 1.0/npv
-
-    return ar
+table = mortality.get_cmi_table()
+#max_age = 121
+max_age = 100
 
 
 # TODO: Use https://jax.readthedocs.io/en/latest/persistent_compilation_cache.html ?
@@ -193,26 +168,18 @@ def unpack(x):
 def model(P, cur_age, r):
 
     yob = cur_year - cur_age
-    gender = 'female' # longer life expectancy
-    #gender = 'male'
-    gender = 'unisex'
 
-    ar = annuity_rate(cur_age, 'Real')
+    ar = annuities.annuity_rate(cur_age, yield_curve, table)
     if int(os.environ.get('ANNUITY', '1')) == 0:
         ar *= 0.0
     print(f'Annuity Rate: £{100000*ar:,.2f} / £100k')
-
-    # XXX ONS cohort tables have a high survivorship
-    basis = 'cohort' if gender == 'unisex' else 'period'
-
-    max_age = 120 if gender == 'unisex' else 101
 
     N = max_age - cur_age + 1
     print(N)
 
     ages = list(range(cur_age, max_age + 1))
 
-    qx = onp.array([mortality(yob + age, age, gender, basis) for age in ages], dtype=onp.float64)
+    qx = onp.array([table.mortality(yob + age, age) for age in ages], dtype=onp.float64)
     px = onp.cumprod(1 - qx)
 
     print("px", px)
