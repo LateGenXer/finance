@@ -11,6 +11,7 @@ import common
 
 from rtp.uk import state_pension_full
 
+from data import mortality
 import annuities
 
 
@@ -39,13 +40,21 @@ pay = st.number_input('Annuity annual pay', value=state_pension_full, min_value=
 escalation = st.radio('Annuity escalation', escalations.keys(), index=1, key='escalation')
 
 
+@st.cache_data(ttl=30*24*3600, show_spinner='Getting CMI mortality rates')
+def get_cmi_table():
+    return mortality.get_cmi_table()
+
+table = get_cmi_table()
+
+
+
 st.header('Results')
 
-st.warning('Mortality tables and yield curves are not yet being updated daily and might be out of date', icon="🚧")
+st.warning('Yield curves are not yet being updated daily and might be out of date', icon="🚧")
 
 kind = escalations[escalation]
 
-unit_present_value = annuities.present_value(age, kind)
+unit_present_value = annuities.present_value(age, kind, table)
 
 present_value = pay * unit_present_value
 
