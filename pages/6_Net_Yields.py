@@ -235,3 +235,5 @@ Related tools:
 - https://www.yieldgimp.com/
 - https://www.dividenddata.co.uk/uk-gilts-prices-yields.py
 ''')
+
+common.analytics_html()
