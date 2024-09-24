@@ -12,10 +12,7 @@ import sys
 
 from typing import Any
 
-if int(os.environ.get('PULP', '0')) != 0:
-    import pulp as lp
-else:
-    from rtp import lp
+import lp
 
 from rtp import hmrc
 

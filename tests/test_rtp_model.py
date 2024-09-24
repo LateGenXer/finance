@@ -7,7 +7,7 @@ from rtp import model
 
 import test_tax_uk
 
-from rtp.model import lp
+import lp
 
 
 @pytest.mark.parametrize('lump_sum', [pytest.param(0, id=""), pytest.param(1000, id="lump_sum")])
