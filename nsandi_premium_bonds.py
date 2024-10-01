@@ -82,7 +82,7 @@ class Calculator:
 
         logger.info(f'using prizes for {header}')
 
-        date = datetime.datetime.strptime(header, 'Estimated %B %Y draw').date()
+        date = datetime.datetime.strptime(header, 'Estimated %B%Y draw').date()
 
         table_body = table.find('tbody')
 
