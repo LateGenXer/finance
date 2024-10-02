@@ -10,7 +10,6 @@
 #
 
 
-import datetime
 import logging
 import multiprocessing.dummy
 import operator
@@ -49,7 +48,7 @@ def combine(dist0, dist1):
 
 class Calculator:
 
-    def __init__(self, odds:int, prizes:list[tuple[int, int]], date:datetime.date):
+    def __init__(self, odds:int, prizes:list[tuple[int, int]], desc:str):
         self.odds = odds
         self.prizes = prizes.copy()
         self.prizes.sort(key=operator.itemgetter(0))
@@ -61,7 +60,7 @@ class Calculator:
         odds_per_bond = 25 * odds
         self.total_bonds = self.total_volume / odds_per_bond
 
-        self.date = date
+        self.desc = desc
 
     # Scrape prizes and odds from nsandi.com
     @classmethod
@@ -78,11 +77,9 @@ class Calculator:
         table_row = table.find('tr')
         cells = table_row.find_all('th')
         head = [cell.text for cell in cells]
-        _, _, _, header = head
+        _, _, _, desc = head
 
-        logger.info(f'using prizes for {header}')
-
-        date = datetime.datetime.strptime(header, 'Estimated %B%Y draw').date()
+        logger.info(f'using prizes for {desc}')
 
         table_body = table.find('tbody')
 
@@ -113,7 +110,7 @@ class Calculator:
         inv_odds = int(mo.group(1).replace(',', ''))
         odds = 1/inv_odds
 
-        return cls(odds, prizes, date)
+        return cls(odds, prizes, desc)
 
     def mean(self):
         mean = 0
