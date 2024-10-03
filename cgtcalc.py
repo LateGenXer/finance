@@ -24,6 +24,7 @@ import sys
 from collections import namedtuple
 from enum import IntEnum, Enum
 from decimal import Decimal, ROUND_HALF_EVEN, ROUND_CEILING, ROUND_FLOOR
+from abc import ABC, abstractmethod
 
 
 Kind = IntEnum('Kind', ['DIVIDEND', 'CAPRETURN', 'BUY', 'SELL'])
@@ -136,17 +137,20 @@ def dround(d:Decimal, places:int=0, rounding=None):
         return d.quantize(q, rounding=rounding)
 
 
-class Report:
+class Report(ABC):
 
     def start(self):
         pass
 
+    @abstractmethod
     def write_heading(self, heading, level=1):  # pragma: no cover
         raise NotImplementedError
 
+    @abstractmethod
     def write_paragraph(self, paragraph):  # pragma: no cover
         raise NotImplementedError
 
+    @abstractmethod
     def write_table(self, rows, header=None, footer=None, just=None, indent=''):  # pragma: no cover
         raise NotImplementedError
 

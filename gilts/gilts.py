@@ -522,25 +522,9 @@ class Issued:
             yield g
 
 
-class Prices:
-
-    def __init__(self):
-        pass
-
-    def lookup_tidm(self, isin):  # pragma: no cover
-        raise NotImplementedError
-
-    def get_price(self, tidm):  # pragma: no cover
-        raise NotImplementedError
-
-    def get_prices_date(self):  # pragma: no cover
-        raise NotImplementedError
-
-
-class GiltPrices(Prices):
+class GiltPrices:
 
     def __init__(self, filename=None):
-        Prices.__init__(self)
         if filename is None:
             entries = self._download()
         else:
