@@ -188,7 +188,7 @@ IE00B3X1LS57
   - [Accumulation units – tax on reinvested dividends UK](https://monevator.com/income-tax-on-accumulation-unit/)
   - [Excess reportable income: what it is, where to find it, and what to do with it](https://monevator.com/excess-reportable-income/)
 - KPMG
-  - [https://www.kpmgreportingfunds.co.uk/guidance](Excess Reported Income Guidance)
+  - [Excess Reported Income Guidance](https://www.kpmgreportingfunds.co.uk/guidance)
 
 
 # Alternatives
