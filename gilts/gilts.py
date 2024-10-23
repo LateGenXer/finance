@@ -424,7 +424,8 @@ class Issued:
                 except KeyError:
                     pass
                 else:
-                    _, next_coupon_date = gilt.prev_next_coupon_date(self.close_date)
+                    settlement_date = next_business_day(self.close_date)
+                    _, next_coupon_date = gilt.prev_next_coupon_date(settlement_date)
                     assert gilt.ex_dividend_date(next_coupon_date) == current_xd_date
 
             self.all.append(gilt)
