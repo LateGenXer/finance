@@ -723,7 +723,7 @@ class BondLadder:
                 if self.lag:
                     while consumption_dates and consumption_dates[0] <= d:
                         cd = consumption_dates.pop(0)
-                        if maturity < shift_year(cd, self.lag):
+                        if maturity < shift_year(cd, self.lag) and cd <= g.ex_dividend_date(maturity):
                             sell = lp.LpVariable(f'Sell_{tidm}_{cd:%Y%m%d}', 0)
                             quantity = quantity - sell
                             prob += quantity >= 0
