@@ -106,7 +106,8 @@ def latest_sonia_rate():
 def latest_premium_bonds_rate(show_spinner='Getting latest NS&I Premium Bonds prizes.'):
     logger.info('Getting latest NS&I Premium Bonds prizes.')
     amount = 50000
-    return nsandi_premium_bonds.Calculator.from_latest().median(amount) / amount
+    calculator = nsandi_premium_bonds.Calculator.from_latest()
+    return calculator.median(amount) / amount, calculator.desc
 
 
 #
@@ -127,9 +128,9 @@ msgs.append('Net yield ignores the '
 msgs.append('Equivalent gross yield is the standard cash savings account interest necessary to yield the same net interest.')
 
 if not index_linked:
-    premium_bonds_rate = latest_premium_bonds_rate()
+    premium_bonds_rate, premium_bonds_desc = latest_premium_bonds_rate()
     data.append(("Premium bonds", '', '', premium_bonds_rate, premium_bonds_rate))
-    msgs.append("Premium Bonds' yield is the median interest rate for a £50k investment.")
+    msgs.append(f"Premium Bonds' yield is the [median](https://www.moneysavingexpert.com/savings/premium-bonds/#tips-3) interest rate for a £50k investment, based on the [{premium_bonds_desc}](https://www.nsandi.com/get-to-know-us/monthly-prize-allocation).")
 
     sonia_rate, sonia_date = latest_sonia_rate()
     data.append(('GBP Money Market Fund', '', '', sonia_rate, sonia_rate * (1 - marginal_income_tax)))
