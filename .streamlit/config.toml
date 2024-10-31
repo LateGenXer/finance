@@ -3,3 +3,4 @@ magicEnabled = false
 
 [server]
 maxUploadSize = 1
+address = "localhost"
