@@ -163,8 +163,10 @@ def uk_tax_lp(prob, gross_income, cg, marriage_allowance=0):
 
     prob += income_pa + income_basic_rate + cg_basic_rate <= income_tax_threshold_40
 
-    cgt = cg_basic_rate  * 0.10 \
-        + cg_higher_rate * 0.20
+    cgt_rate_basic, cgt_rate_higher = UK.cgt_rates
+
+    cgt = cg_basic_rate  * cgt_rate_basic \
+        + cg_higher_rate * cgt_rate_higher
 
     uid += 1
 
@@ -301,14 +303,6 @@ class GIA:
 # GIAs to stabilize results, and prevent redundant money flows that
 # arise when the optimal solution is not unique
 eps = 2**-14
-
-
-cgt_rate_map = {
-    0.00: cgt_rates[0],
-    0.20: cgt_rates[0],
-    0.40: cgt_rates[1],
-    0.45: cgt_rates[1],
-}
 
 
 def solve(prob):

@@ -25,6 +25,8 @@ import ukcalendar
 from gilts.gilts import Issued, IndexLinkedGilt, GiltPrices
 from xirr import xirr
 
+from rtp.uk import cgt_rates
+
 import common
 
 
@@ -71,7 +73,7 @@ tc = 5*0
 qt = 1000/100
 
 
-cgt_rate = 0.10 if marginal_income_tax <= 0.20 else 0.20
+cgt_rate = cgt_rates[0] if marginal_income_tax <= 0.20 else cgt_rates[1]
 
 
 # https://www.bankofengland.co.uk/boeapps/database/help.asp?Back=Y&Highlight=CSV#CSV
