@@ -65,6 +65,24 @@ class Calculator:
     # Scrape prizes and odds from nsandi.com
     @classmethod
     def from_latest(cls):
+        # https://nsandi-corporate.com/news-research/news/nsi-announces-rate-changes-some-variable-and-fixed-term-products
+        odds = 1/22000
+        prizes = [
+            ( 1000000,       2),
+            (  100000,      83),
+            (   50000,     167),
+            (   25000,     332),
+            (   10000,     830),
+            (    5000,    1664),
+            (    1000,   17426),
+            (     500,   52278),
+            (     100, 2072099),
+            (      50, 2072099),
+            (      25, 1509458),
+        ]
+        desc = "December 2024 (estimate)"
+        return cls(odds, prizes, desc)
+
         session = requests.Session()
 
         r = session.get('https://www.nsandi.com/get-to-know-us/monthly-prize-allocation')

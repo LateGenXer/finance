@@ -132,7 +132,7 @@ msgs.append('Equivalent gross yield is the standard cash savings account interes
 if not index_linked:
     premium_bonds_rate, premium_bonds_desc = latest_premium_bonds_rate()
     data.append(("Premium bonds", '', '', premium_bonds_rate, premium_bonds_rate))
-    msgs.append(f"Premium Bonds' yield is the [median](https://www.moneysavingexpert.com/savings/premium-bonds/#tips-3) interest rate for a £50k investment, based on the [{premium_bonds_desc}](https://www.nsandi.com/get-to-know-us/monthly-prize-allocation).")
+    msgs.append(f"Premium Bonds' yield is the [median](https://www.moneysavingexpert.com/savings/premium-bonds/#tips-3) interest rate for a £50k investment, based on the [{premium_bonds_desc}](https://nsandi-corporate.com/news-research/news/nsi-announces-rate-changes-some-variable-and-fixed-term-products).")
 
     sonia_rate, sonia_date = latest_sonia_rate()
     data.append(('GBP Money Market Fund', '', '', sonia_rate, sonia_rate * (1 - marginal_income_tax)))
