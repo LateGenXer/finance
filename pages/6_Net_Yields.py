@@ -136,9 +136,7 @@ if not index_linked:
 
     sonia_rate, sonia_date = latest_sonia_rate()
     data.append(('GBP Money Market Fund', '', '', sonia_rate, sonia_rate * (1 - marginal_income_tax)))
-    data.append(('Lyxor Smart Overnight Return', 'CSH2', 'https://www.londonstockexchange.com/stock/CSH2/amundi', sonia_rate, sonia_rate * (1 - cgt_rate)))
     msgs.append(f'GBP MMF and Lyxor Smart Overnight Return gross yield is based from [SONIA interest rate benchmark](https://www.bankofengland.co.uk/markets/sonia-benchmark) from {sonia_date.day} {sonia_date:%B} {sonia_date.year}.  Fees have _not_ been deducted.')
-    msgs.append("Lyxor Smart Overnight Return's net yield presumes zero [Excess Reportable Income (ERI)](https://www.gov.uk/government/publications/offshore-funds-self-assessment-helpsheet-hs265/hs265-offshore-funds), as in [recent years](https://www.kpmgreportingfunds.co.uk/).")
 
 
 issued = Issued()
