@@ -123,7 +123,7 @@ def get_ons_table(basis:str, gender:str) -> Table:
 
 # https://www.actuaries.org.uk/learn-and-develop/continuous-mortality-investigation/other-cmi-outputs/unisex-rates-0
 def get_cmi_table() -> Table:
-    url = "https://www.actuaries.org.uk/system/files/field/document/Unisex%20mortality%20rates%20for%202024-2025%20illustrations%20v01%202023-12-13.xlsx"
+    url = "https://www.actuaries.org.uk/system/files/field/document/Unisex%20mortality%20rates%20for%202025-2026%20illustrations%20v01%202024-11-04_0.xlsx"
     filename = os.path.join(data_dir, posixpath.basename(url))
     basis = 'cohort'
     gender = 'unisex'
