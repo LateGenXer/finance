@@ -29,8 +29,14 @@ jobs:
     - run: uv pip install -r requirements-dev.txt
     - if: ${{ github.event_name == 'pull_request' }}
       run: uv run pre-commit run --show-diff-on-failure --color always --all-files --hook-stage pre-commit
-    - run: uv run pytest -n auto --cov=.
+    - run: uv run pytest -n auto --cov=. --junitxml=junit.xml -o junit_family=legacy
     - run: uv run coverage xml
-    - uses: codecov/codecov-action@v4
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      if: ${{ !cancelled() }}
+    - uses: codecov/codecov-action@v5
+      if: ${{ !cancelled() }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+    - uses: codecov/test-results-action@v1
+      if: ${{ !cancelled() }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
