@@ -22,7 +22,7 @@ logger.setLevel(logging.DEBUG)
 
 # Stub for streamlit.cache_data.
 def cache_data(ttl=None):
-    logger.debug('cache_date wrapper called', stack_info=True)
+    logger.debug('cache_data wrapper called', stack_info=True)
     return lambda fn: fn
 
 
