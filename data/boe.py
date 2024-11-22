@@ -72,7 +72,7 @@ def load():
     for measure in _measures:
         filename = f'GLC {measure} daily data current month.xlsx'
         stream = archive.open(filename, 'r')
-        wb = openpyxl.load_workbook(stream)
+        wb = openpyxl.load_workbook(stream, read_only=True)
 
         # Spot curve, long end
         sh = wb['4. spot curve']
