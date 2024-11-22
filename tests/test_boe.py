@@ -25,3 +25,5 @@ def test_yield_curves(measure):
 
     for i in range(len(ds.index)):
         assert ds.index[i] == 0.5 * (i + 1)
+
+    assert not ds.isna().any()

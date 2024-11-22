@@ -38,7 +38,11 @@ def read(sh, name):
         if years is None:
             break
         assert years - math.floor(years) in (0.0, 0.5)
-        rate = sh.cell(row, col).value
+        value = sh.cell(row, col).value
+        try:
+            rate = float(value)
+        except ValueError:
+            rate = math.nan
         data.append((years, rate))
 
     df = pd.DataFrame(data, columns=['Years', name])
@@ -83,7 +87,7 @@ def load():
 
     df.to_csv(_filename, float_format='{:.6f}'.format)
 
-    if False:
+    if __name__ == '__main__':
         df.plot()
         import matplotlib.pyplot as plt
         plt.show()
