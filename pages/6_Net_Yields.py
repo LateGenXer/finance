@@ -10,6 +10,7 @@ import csv
 import datetime
 import io
 import math
+import operator
 import logging
 
 from zoneinfo import ZoneInfo
@@ -201,6 +202,8 @@ data = [
     (instrument, url, gross_yield*100.0, net_yield*100.0, net_yield*100.0/(1.0 - marginal_income_tax))
     for instrument, tidm, url, gross_yield, net_yield in data
 ]
+
+data.sort(key=operator.itemgetter(-1), reverse=True)
 
 df = pd.DataFrame(data, columns=['Instrument', 'TIDM', 'GrossYield', 'NetYield', 'EquivalentGrossYield'])
 
