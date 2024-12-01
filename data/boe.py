@@ -58,7 +58,12 @@ _data_dir = os.path.dirname(__file__)
 _filename = os.path.join(_data_dir, 'boe-yield-curves.csv')
 
 
-_measures = 'Nominal', 'Real', 'Inflation'
+_measures = {
+    'Nominal':   'GLC Nominal',
+    'Real':      'GLC Real',
+    'Inflation': 'GLC Inflation',
+    'OIS':       'OIS',
+}
 
 
 def load():
@@ -69,8 +74,8 @@ def load():
 
     dfs = []
 
-    for measure in _measures:
-        filename = f'GLC {measure} daily data current month.xlsx'
+    for measure, name in _measures.items():
+        filename = f'{name} daily data current month.xlsx'
         stream = archive.open(filename, 'r')
         wb = openpyxl.load_workbook(stream, read_only=True)
 
