@@ -136,8 +136,13 @@ if not index_linked:
     msgs.append(f"Premium Bonds' yield is the [median](https://www.moneysavingexpert.com/savings/premium-bonds/#tips-3) interest rate for a £50k investment, based on the [{premium_bonds_desc}](https://nsandi-corporate.com/news-research/news/nsi-announces-rate-changes-some-variable-and-fixed-term-products).")
 
     sonia_rate, sonia_date = latest_sonia_rate()
-    data.append(('GBP Money Market Fund', '', '', sonia_rate, sonia_rate * (1 - marginal_income_tax)))
-    msgs.append(f'GBP MMF and Lyxor Smart Overnight Return gross yield is based from [SONIA interest rate benchmark](https://www.bankofengland.co.uk/markets/sonia-benchmark) from {sonia_date.day} {sonia_date:%B} {sonia_date.year}.  Fees have _not_ been deducted.')
+    data.append(('GBP MMF (Income)', '', '', sonia_rate, sonia_rate * (1 - marginal_income_tax)))
+    data.append(('GBP MMF (Capital Gains)', '', '', sonia_rate, sonia_rate * (1 - cgt_rate)))
+    msgs.append('  '.join([
+        f'GBP Money Market Fund (MMF) gross yield is based from [SONIA interest rate benchmark](https://www.bankofengland.co.uk/markets/sonia-benchmark) from {sonia_date.day} {sonia_date:%B} {sonia_date.year}.',
+        '_Capital Gains_ figure assume funds are held for short time, without overlapping income distribution or [Excess Reportable Income (ERI)](https://www.gov.uk/government/publications/offshore-funds-self-assessment-helpsheet-hs265/hs265-offshore-funds).',
+        'Fees have _not_ been deducted.',
+    ]))
 
 
 issued = Issued()
