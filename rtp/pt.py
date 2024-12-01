@@ -21,4 +21,6 @@ income_tax_bands = [
 ]
 
 
+# https://taxsummaries.pwc.com/portugal/individual/income-determination
+# XXX: gains are inflation adjusted
 cgt_rate = 0.28

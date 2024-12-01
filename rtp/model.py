@@ -268,7 +268,7 @@ class GIA:
         self.inflation_rate = inflation_rate
         self.growth_rate_real = inflation_ajusted_return(self.growth_rate, self.inflation_rate)
 
-    def flow(self):
+    def flow(self, inflation_adjusted=False):
         global uid
 
         total = 0
@@ -277,12 +277,14 @@ class GIA:
         purchase = lp.LpVariable(f'gia_purchase_{uid}', 0)
         self.assets.insert(0, purchase)
 
+        growth_rate = self.growth_rate_real if inflation_adjusted else self.growth_rate
+
         for yr in range(1, len(self.assets)):
             proceeds = lp.LpVariable(f'gia_proceeds_{uid}_{yr}', 0)
             self.assets[yr] -= proceeds
             self.prob += self.assets[yr] >= 0
             total += proceeds
-            gains += proceeds * (1.0 - (1.0 + self.growth_rate) ** -yr)
+            gains += proceeds * (1.0 - (1.0 + growth_rate) ** -yr)
 
         for yr in range(0, len(self.assets)):
             self.assets[yr] *= (1.0 + self.growth_rate_real) * (1.0 - eps)
@@ -502,7 +504,7 @@ def model(
             drawdown_isa = 0
             assert isa == 0
 
-        drawdown_gia, cg = gia.flow()
+        drawdown_gia, cg = gia.flow(not uk_yr and country == 'PT')
 
         sipp_1.uf *= 1.0 + eps
         sipp_2.uf *= 1.0 + eps
@@ -824,6 +826,15 @@ def run(params):
 
     print(f"Start net worth:       {result.net_worth_start:10,.0f}")
     print(f"Retirement net income: {result.retirement_income_net:10,.0f}")
+
+    country=params['country']
+    if country == 'PT':
+        gbpeur = hmrc.exchange_rate('EUR')
+        print(f"Retirement net income: {result.retirement_income_net*gbpeur:10,.0f} EUR")
+    if country == 'JP':
+        gbpjpy = hmrc.exchange_rate('JPY')
+        print(f"Retirement net income: {result.retirement_income_net*gbpjpy:10,.0f} JPY")
+
     print(f"End net worth:         {result.net_worth_end:10,.0f}")
     print(f"Total tax:             {result.total_tax:10,.0f}")
 
