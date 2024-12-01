@@ -10,6 +10,7 @@ import os
 import streamlit as st
 import streamlit.components.v1 as components
 
+import environ
 
 
 # https://docs.streamlit.io/library/api-reference/utilities/st.set_page_config
@@ -54,7 +55,7 @@ def analytics_html():
         '</a>'
         '</div>'
         '</noscript>'
-        if int(os.environ.get('PRODUCTION', '0')) else
+        if environ.production else
         '<div class="statcounter">'
         '</div>'
     )

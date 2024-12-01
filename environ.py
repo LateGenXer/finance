@@ -10,6 +10,9 @@ import subprocess
 ci = os.environ.get('CI', 'false').lower() == 'true'
 
 
+production = int(os.environ.get('PRODUCTION', '0'))
+
+
 def get_version():
     try:
         version = subprocess.check_output([
