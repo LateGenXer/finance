@@ -7,7 +7,6 @@
 
 
 import dataclasses
-import os
 import sys
 
 from typing import Any
@@ -566,7 +565,7 @@ def model(
             tax_2 = income_tax_lp(prob, income_gross_2, JP.income_tax_bands, 1/gbpjpy)
             cgt = cg * JP.cgt_rate
         else:
-            raise NotImplemetedError
+            raise NotImplementedError
 
         incomings = income_gross_1 + income_gross_2 + drawdown_isa + drawdown_gia
         if uk_yr:
