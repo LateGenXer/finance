@@ -118,31 +118,22 @@ def latest_premium_bonds_rate(show_spinner='Getting latest NS&I Premium Bonds pr
 #
 
 data = []
-msgs = []
 
 
-if index_linked:
-    msgs.append('_Real_ gross/net yields shown.')
+gross_yield_footnote = f'_{"Real" if index_linked else "Nominal"}_ gross/net yields shown.'
 if index_linked is None:
-    msgs.append(f'_Nominal_ gross/net yields shown.  Assuming {IndexLinkedGilt.inflation_rate:.1%} inflation rate for index-linked gilts.')
-msgs.append('Net yield ignores the '
-'[Personal Savings Allowance](https://www.gov.uk/apply-tax-free-interest-on-savings#personal-savings-allowance) and the '
-'[Capital Gains Tax allowance](https://www.gov.uk/capital-gains-tax/allowances).')
-msgs.append('Equivalent gross yield is the standard cash savings account interest necessary to yield the same net interest.')
+    gross_yield_footnote += f'  Assuming {IndexLinkedGilt.inflation_rate:.1%} inflation rate for index-linked gilts.'
+
+premium_bonds_rate, premium_bonds_desc = latest_premium_bonds_rate()
+
+sonia_rate, sonia_date = latest_sonia_rate()
 
 if not index_linked:
-    premium_bonds_rate, premium_bonds_desc = latest_premium_bonds_rate()
-    data.append(("Premium bonds", '', '', premium_bonds_rate, premium_bonds_rate))
-    msgs.append(f"Premium Bonds' yield is the [median](https://www.moneysavingexpert.com/savings/premium-bonds/#tips-3) interest rate for a £50k investment, based on the [{premium_bonds_desc}](https://nsandi-corporate.com/news-research/news/nsi-announces-rate-changes-some-variable-and-fixed-term-products).")
+    data.append(("Premium bonds⁴", '', '', premium_bonds_rate, premium_bonds_rate))
 
-    sonia_rate, sonia_date = latest_sonia_rate()
-    data.append(('GBP MMF (Income)', '', '', sonia_rate, sonia_rate * (1 - marginal_income_tax)))
-    data.append(('GBP MMF (Capital Gains)', '', '', sonia_rate, sonia_rate * (1 - cgt_rate)))
-    msgs.append('  '.join([
-        f'GBP Money Market Fund (MMF) gross yield is based from [SONIA interest rate benchmark](https://www.bankofengland.co.uk/markets/sonia-benchmark) from {sonia_date.day} {sonia_date:%B} {sonia_date.year}.',
-        '_Capital Gains_ figure assume funds are held for short time, without overlapping income distribution or [Excess Reportable Income (ERI)](https://www.gov.uk/government/publications/offshore-funds-self-assessment-helpsheet-hs265/hs265-offshore-funds).',
-        'Fees have _not_ been deducted.',
-    ]))
+    data.append(('GBP MMF - Income⁵', '', '', sonia_rate, sonia_rate * (1 - marginal_income_tax)))
+    data.append(('GBP MMF - Capital Gain⁶', '', '', sonia_rate, sonia_rate * (1 - cgt_rate)))
+
 
 
 issued = Issued()
@@ -187,15 +178,15 @@ for g in issued.filter(index_linked=index_linked, settlement_date=settlement_dat
 
     url = f'https://www.londonstockexchange.com/stock/{tidm}/united-kingdom'
 
-    data.append((g.short_name() + ' Gilt', tidm, url, gross_yield, net_yield))
+    data.append((g.short_name() + ' Gilt⁷', tidm, url, gross_yield, net_yield))
 
 
 prices_date = prices.get_prices_date()
 prices_date = prices_date.astimezone(ZoneInfo("Europe/London"))
 
-msgs.append(f'Gilt prices from {prices_date.date()}, based on gilts in issue on the close of {issued.close_date}.')
+gilts_footnote = f'Gilt prices from {prices_date.date()}, based on gilts in issue on the close of {issued.close_date}.'
 if index_linked is not False:
-    msgs.append(f'Using RPI published on {issued.rpi_series.release_date}.')
+    gilts_footnote += f'  Using RPI published on {issued.rpi_series.release_date}.'
 
 
 #
@@ -220,13 +211,22 @@ st.dataframe(
     column_config={
         "Instrument": st.column_config.TextColumn(width="medium"),
         "TIDM": st.column_config.LinkColumn(display_text=r'https://www\.londonstockexchange\.com/stock/([^/]*).*', width='small'),
-        "GrossYield": st.column_config.NumberColumn(label="Gross Yield", format="%.2f%%"),
-        "NetYield": st.column_config.NumberColumn(label="Net Yield", format="%.2f%%"),
-        "EquivalentGrossYield": st.column_config.NumberColumn(label="Equivalent Gross", format="%.2f%%"),
+        "GrossYield": st.column_config.NumberColumn(label="Gross Yield¹", format="%.2f%%"),
+        "NetYield": st.column_config.NumberColumn(label="Net Yield²", format="%.2f%%"),
+        "EquivalentGrossYield": st.column_config.NumberColumn(label="Equivalent Gross³", format="%.2f%%"),
     },
 )
 
-st.info(''.join([f'- {msg}\n' for msg in msgs]), icon="ℹ️")
+st.markdown(f"""
+Notes:
+1. {gross_yield_footnote}
+2. Net yield deducts tax but ignores the [Personal Savings Allowance](https://www.gov.uk/apply-tax-free-interest-on-savings#personal-savings-allowance) and the [Capital Gains Tax allowance](https://www.gov.uk/capital-gains-tax/allowances).
+3. Equivalent gross yield is the standard cash savings account interest necessary to yield the same net yield.
+4. Premium Bonds' yield is the [median](https://www.moneysavingexpert.com/savings/premium-bonds/#tips-3) interest rate for a £50k investment, based on the [{premium_bonds_desc}](https://nsandi-corporate.com/news-research/news/nsi-announces-rate-changes-some-variable-and-fixed-term-products).
+5. GBP Money Market Fund (MMF) gross yield is based from [SONIA interest rate benchmark](https://www.bankofengland.co.uk/markets/sonia-benchmark) from {sonia_date.day} {sonia_date:%B} {sonia_date.year}, ignoring fees.
+6. GBP MMF _Capital Gain_ figure assumes funds are held for a short time, without overlapping income distribution or [Excess Reportable Income (ERI)](https://www.gov.uk/government/publications/offshore-funds-self-assessment-helpsheet-hs265/hs265-offshore-funds), therefore being only liable for Capital Gains Tax.
+7. {gilts_footnote}
+""")
 
 
 #
