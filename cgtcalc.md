@@ -1,6 +1,6 @@
 # About
 
-`cgtcalc.py` is a UK Capital Gains Tax calculator written in Python.
+`cgtcalc.py` is a UK Capital Gains calculator written in Python.
 
 It is inspired by [other](#Alternative) free CGT calculators, but unlike most
 of them it handles notional distributions and equalisation payments in a consistent manner.

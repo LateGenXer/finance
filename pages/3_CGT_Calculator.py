@@ -22,10 +22,10 @@ common.set_page_config(
 )
 
 
-st.title('Capital Gains Tax Calculator')
+st.title('Capital Gains Calculator')
 
 
-st.markdown('''This is a UK Capital Gains Tax calculator.
+st.markdown('''This is a UK Capital Gains calculator.
 Please read more [here](https://github.com/LateGenXer/finance/blob/main/cgtcalc.md).
 ''')
 
