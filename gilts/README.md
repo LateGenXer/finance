@@ -40,8 +40,6 @@ I initially wrote this for my own personal education and simulations on gilts, m
 * For start dates in the future, early coupons are not reinvested.
 * The tool does not yet consider the possibility of selling gilts before maturity, which might be advantageous, especially with index-linked gilts and/or high income marginal tax rates, as low coupon gilts are fewer and further apart.
 * The tool does not consider BoE's yield or inflation curves.
-* It does not take special care with index-linked gilts whose redemption value is known (due to the indexation lag) and therefore are more akin to conventional gilts.
-* Accrued interest for non-standard first coupon periods is not always accurate.
 
 ## Questions
 
