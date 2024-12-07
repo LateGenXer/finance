@@ -424,7 +424,8 @@ class Issued:
                 except KeyError:
                     pass
                 else:
-                    settlement_date = next_business_day(self.close_date)
+                    # DMO seems to determine current/next xd-date from the next calendar day after close
+                    settlement_date = self.close_date + datetime.timedelta(days=1)
                     _, next_coupon_date = gilt.prev_next_coupon_date(settlement_date)
                     assert gilt.ex_dividend_date(next_coupon_date) == current_xd_date
 
