@@ -59,6 +59,8 @@ with col1:
 with col2:
     maturity = st.number_input("Maturity (years):", value=5, min_value=1, max_value=100, key="maturity")
 
+mortgage_rate = st.number_input("Mortgage rate (%)", value=0., min_value=0., max_value=100., format='%.2f', key='mortgage_rate')
+
 
 #
 # Data
@@ -134,6 +136,9 @@ if not index_linked:
     data.append(('GBP MMF - Income⁵', '', '', sonia_rate, sonia_rate * (1 - marginal_income_tax)))
     data.append(('GBP MMF - Capital Gain⁶', '', '', sonia_rate, sonia_rate * (1 - cgt_rate)))
 
+    if mortgage_rate:
+        mortgage_rate = float(mortgage_rate) / 100.0
+        data.append(('Mortgage Overpayment', '', '', mortgage_rate, mortgage_rate))
 
 
 issued = Issued()
