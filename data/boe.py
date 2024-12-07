@@ -103,8 +103,7 @@ class YieldCurve:
 
     def __init__(self, measure:str):
         assert measure in _measures
-        if not os.path.exists(_filename):
-            load()
+        download('https://lategenxer.github.io/finance/boe-yield-curves.csv', _filename)
         df = pd.read_csv(_filename, header=0, index_col=0)
         self.series = df[f'{measure}_Spot'].multiply(.01)
 

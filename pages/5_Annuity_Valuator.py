@@ -23,8 +23,8 @@ st.title('Annuity Valuator')
 
 
 st.markdown('''This tool calculates the [Actuary Present Value](https://en.wikipedia.org/wiki/Actuarial_present_value) of an annuity.  It uses:
-- Institute and Faculty of Actuaries' [Unisex mortality rates](https://www.actuaries.org.uk/learn-and-develop/continuous-mortality-investigation/other-cmi-outputs/unisex-rates-0) for the probability of surviving to future payments
-- Bank of England's [Yield Curves](https://www.bankofengland.co.uk/statistics/yield-curves), specifically the nominal and real spot yield curves, to discount future payments.
+- [Institute and Faculty of Actuaries' Unisex mortality rates](https://www.actuaries.org.uk/learn-and-develop/continuous-mortality-investigation/other-cmi-outputs/unisex-rates-0) for the probability of surviving to future payments;
+- [Bank of England's Yield Curves](https://www.bankofengland.co.uk/statistics/yield-curves), specifically the nominal and real spot yield curves, to discount future payments.
 ''')
 
 
@@ -57,8 +57,6 @@ yield_curve = get_yield_curve(kind)
 
 
 st.header('Results')
-
-st.warning('Yield curves are not yet being updated daily and might be out of date', icon="🚧")
 
 unit_present_value = annuities.present_value(age, yield_curve, table, escalation=escalation_func)
 
