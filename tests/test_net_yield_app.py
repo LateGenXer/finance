@@ -42,3 +42,10 @@ def test_index_linked(at):
     gilts_type.set_value('Both')
     at.run()
     assert not at.exception
+
+
+def test_mortgage(at):
+    mortgage_rate = at.number_input(key="mortgage_rate")
+    mortgage_rate.set_value(5.0)
+    at.run()
+    assert not at.exception
