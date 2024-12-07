@@ -19,6 +19,7 @@ I initially wrote this for my own personal use, after running against limitation
 
 ## Recent changes
 
+* Reflect frozen ISA allowance until 2030.
 * Update CGT rates to those announced on Autumn Budget 2024.
 * Allow to change the 100 years old age limit.
 * Drop LTA modelling.

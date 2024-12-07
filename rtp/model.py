@@ -417,6 +417,8 @@ def model(
     base_income_tax_1, _ = UK.tax(base_salary_1, 0)
     base_income_tax_2, _ = UK.tax(base_salary_2, 0)
 
+    isa_allowance = UK.isa_allowance
+
     # XXX: Lump sum analysis
     if lump_sum:
         ls_sipp_1 = lp.LpVariable("ls_sipp_1", 0)
@@ -503,6 +505,8 @@ def model(
         else:
             drawdown_isa = 0
             assert isa == 0
+        if yr < 2030:
+            isa_allowance /= 1.0 + inflation_rate
 
         drawdown_gia, cg = gia.flow(not uk_yr and country == 'PT')
 
