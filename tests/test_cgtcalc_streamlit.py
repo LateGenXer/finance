@@ -10,7 +10,7 @@ import os.path
 
 import pytest
 
-from cgtcalc import calculate, TextReport
+from cgtcalc import calculate, TextReport, TaxYear
 
 try:
     from streamlit.testing.v1 import AppTest
@@ -88,4 +88,4 @@ def test_calculation(at):
     tax_year.select('2021/2022')
     at.run()
     assert not at.exception
-    check_text_report(at, filename, False, (2021, 2022))
+    check_text_report(at, filename, False, TaxYear(2021, 2022))

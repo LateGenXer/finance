@@ -22,7 +22,7 @@ import ukcalendar
 
 from data.lse import is_tidm, is_isin
 from gilts import gilts
-from cgtcalc import date_to_tax_year, TextReport
+from cgtcalc import TaxYear, TextReport
 
 
 # XXX Should auto update
@@ -166,9 +166,9 @@ class Calculator:
 
         accrued_incomes.sort(key=operator.itemgetter(0, 1))
 
-        self.yearly_acrued_income: dict[tuple[int, int], list[tuple[datetime.date, datetime.date, gilts.Gilt, str, Decimal]]] = {}
+        self.yearly_acrued_income: dict[TaxYear, list[tuple[datetime.date, datetime.date, gilts.Gilt, str, Decimal]]] = {}
         for interest_date, date, gilt, description, income in accrued_incomes:
-            tax_year = date_to_tax_year(interest_date)
+            tax_year = TaxYear.from_date(interest_date)
             year_acrued_income = self.yearly_acrued_income.setdefault(tax_year, [])
             year_acrued_income.append((interest_date, date, gilt, description, income))
 
@@ -177,8 +177,7 @@ class Calculator:
         tax_years.sort()
 
         for tax_year in tax_years:
-            year1, year2 = tax_year
-            report.write_heading(f'Tax year {year1}/{year2}')
+            report.write_heading(f'Tax year {tax_year}')
 
             header = ['Interest date', 'Gilt', 'Transaction date', 'Description', 'Income']
             rows: list[tuple[typing.Any, ...]] = []

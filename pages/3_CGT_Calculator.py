@@ -13,7 +13,7 @@ import streamlit as st
 
 import common
 
-from cgtcalc import calculate, date_to_tax_year, str_to_tax_year, HtmlReport, TextReport
+from cgtcalc import calculate, TaxYear, HtmlReport, TextReport
 
 
 common.set_page_config(
@@ -37,7 +37,7 @@ Please read more [here](https://github.com/LateGenXer/finance/blob/main/cgtcalc.
 with st.sidebar:
     st.header("Parameters")
 
-    _, current_tax_year_end = date_to_tax_year(datetime.date.today())
+    _, current_tax_year_end = TaxYear.from_date(datetime.date.today())
 
     options = ['All']
     for y in range(current_tax_year_end, 2008, -1):
@@ -78,7 +78,7 @@ for warning in result.warnings:
     st.warning(warning, icon="⚠️")
 
 if tax_year != 'All':
-    result.filter_tax_year(str_to_tax_year(tax_year))
+    result.filter_tax_year(TaxYear.from_string(tax_year))
 
 with st.container(border=True):
     if format_ == 'HTML':

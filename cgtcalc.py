@@ -94,11 +94,50 @@ class DisposalResult:
     table: list
 
 
-def date_to_tax_year(date: datetime.date):
-    if date < date.replace(date.year, 4, 6):
-        return date.year - 1, date.year
-    else:
-        return date.year, date.year + 1
+class TaxYear(namedtuple('TaxYear', ['year1', 'year2'])):
+
+    def __str__(self):
+        return f'{self.year1}/{self.year2}'
+
+    def start_date(self):
+        return datetime.date(self.year1, 4, 6)
+
+    def end_date(self):
+        return datetime.date(self.year2, 4, 5)
+
+    @classmethod
+    def from_date(cls, date:datetime.date):
+        if date < date.replace(date.year, 4, 6):
+            year1, year2 = date.year - 1, date.year
+        else:
+            year1, year2 = date.year, date.year + 1
+        return cls(year1, year2)
+
+    @staticmethod
+    def _str_to_year(s:str):
+        assert isinstance(s, str)
+        if not s.isdigit():
+            raise ValueError(s)
+        y = int(s)
+        if len(s) == 2 and s.isdigit():
+            y += 2000
+        if y < datetime.MINYEAR or y > datetime.MAXYEAR:
+            raise ValueError(f'{s} out of range')
+        return y
+
+    @classmethod
+    def from_string(cls, s:str):
+        try:
+            s1, s2 = s.split('/', maxsplit=1)
+        except ValueError:
+            y2 = cls._str_to_year(s)
+            y1 = y2 - 1
+        else:
+            y1 = cls._str_to_year(s1)
+            y2 = cls._str_to_year(s2)
+            if y1 + 1 != y2:
+                raise ValueError(f'{s1} and {s2} are not consecutive years')
+        return cls(y1, y2)
 
 
 # https://www.gov.uk/guidance/capital-gains-tax-rates-and-allowances
@@ -352,11 +391,11 @@ version = get_version()
 class Result:
     warnings: list[str] = dataclasses.field(default_factory=list)
     section104_tables: dict[str, list] = dataclasses.field(default_factory=dict)
-    tax_years: dict[tuple[int, int], TaxYearResult] = dataclasses.field(default_factory=dict)
+    tax_years: dict[TaxYear, TaxYearResult] = dataclasses.field(default_factory=dict)
 
     def add_disposal(self, disposal):
 
-        tax_year = date_to_tax_year(disposal.date)
+        tax_year = TaxYear.from_date(disposal.date)
 
         try:
             tax_year_result = self.tax_years[tax_year]
@@ -414,9 +453,7 @@ class Result:
         for tax_year, tyr in self.tax_years.items():
             assert tyr.disposals
 
-            tax_year1, tax_year2 = tax_year
-
-            report.write_heading(f'Tax year {tax_year1}/{tax_year2}')
+            report.write_heading(f'Tax year {tax_year}')
 
             for no, disposal in enumerate(tyr.disposals, start=1):
                 gain = disposal.proceeds - disposal.costs
@@ -458,10 +495,9 @@ class Result:
         else:
             self.tax_years = {tax_year: tyr}
 
-        tax_year1, tax_year2 = tax_year
-        assert tax_year1 + 1 == tax_year2
-        start_date = datetime.date(tax_year1, 4, 6)
-        end_date = datetime.date(tax_year2, 4, 5)
+        assert tax_year.year1 + 1 == tax_year.year2
+        start_date = tax_year.start_date()
+        end_date = tax_year.end_date()
 
         for security, table in list(self.section104_tables.items()):
             filtered = []
@@ -796,32 +832,6 @@ def calculate(stream, rounding=True):
     return result
 
 
-def str_to_year(s):
-    assert isinstance(s, str)
-    if not s.isdigit():
-        raise ValueError(s)
-    y = int(s)
-    if len(s) == 2 and s.isdigit():
-        y += 2000
-    if y < datetime.MINYEAR or y > datetime.MAXYEAR:
-        raise ValueError(f'{s} out of range')
-    return y
-
-
-def str_to_tax_year(s):
-    try:
-        s1, s2 = s.split('/', maxsplit=1)
-    except ValueError:
-        y2 = str_to_year(s)
-        y1 = y2 - 1
-    else:
-        y1 = str_to_year(s1)
-        y2 = str_to_year(s2)
-        if y1 + 1 != y2:
-            raise ValueError(f'{s1} and {s2} are not consecutive years')
-    return (y1, y2)
-
-
 def main():
     argparser = argparse.ArgumentParser()
     argparser.add_argument('-y', '--tax-year', metavar='TAX_YEAR', default=None, help='tax year in XXXX/YYYY, XX/YY, YYYY, or YY format')
@@ -838,7 +848,7 @@ def main():
 
     if args.tax_year is not None:
         try:
-            tax_year = str_to_tax_year(args.tax_year)
+            tax_year = TaxYear.from_string(args.tax_year)
         except ValueError as e:
             argparser.error(f'invalid tax year {args.tax_year!r}: {e}')
         result.filter_tax_year(tax_year)

@@ -86,7 +86,7 @@ def object_hook(obj):
 def parse_json_result(filename):
     result = {}
     for tyr in json.load(open(filename, 'rt'), parse_float=Decimal, object_hook=object_hook):
-        tax_year = str_to_tax_year(tyr['tax_year'])
+        tax_year = TaxYear.from_string(tyr['tax_year'])
         result[tax_year] = tyr
     return result
 
@@ -108,7 +108,7 @@ def parse_cgtcalculator_result(filename):
             tax_year1 = int('20' + mo.group(1))
             tax_year2 = int('20' + mo.group(2))
             assert tax_year1 + 1 == tax_year2
-            tax_year = tax_year1, tax_year2
+            tax_year = TaxYear(tax_year1, tax_year2)
 
         mo = disposal_re.match(line)
         if mo is not None:
@@ -150,7 +150,7 @@ def parse_cgtcalculator_result(filename):
         if mo is not None:
             tax_year1 = int('20' + mo.group('year1'))
             tax_year2 = int('20' + mo.group('year2'))
-            tax_year = tax_year1, tax_year2
+            tax_year = TaxYear(tax_year1, tax_year2)
             tyr = result[tax_year]
             tyr["proceeds"] = Decimal(mo.group('proceeds').replace(',', ''))
             tyr["costs"] = Decimal(mo.group('costs').replace(',', ''))
@@ -158,7 +158,7 @@ def parse_cgtcalculator_result(filename):
         if mo is not None:
             tax_year1 = int('20' + mo.group('year1'))
             tax_year2 = int('20' + mo.group('year2'))
-            tax_year = tax_year1, tax_year2
+            tax_year = TaxYear(tax_year1, tax_year2)
             tyr = result[tax_year]
             tyr["gains"] = Decimal(mo.group('gains').replace(',', ''))
             tyr["losses"] = Decimal(mo.group('losses').replace(',', ''))
@@ -278,13 +278,13 @@ def test_calculate(filename):
 
 
 str_to_tax_year_params = [
-    ("2023/2024", nullcontext((2023, 2024))),
-    ("2023/24",   nullcontext((2023, 2024))),
-    ("23/2024",   nullcontext((2023, 2024))),
-    ("23/24",     nullcontext((2023, 2024))),
-    ("2024",      nullcontext((2023, 2024))),
-    ("24",        nullcontext((2023, 2024))),
-    ("00",        nullcontext((1999, 2000))),
+    ("2023/2024", nullcontext(TaxYear(2023, 2024))),
+    ("2023/24",   nullcontext(TaxYear(2023, 2024))),
+    ("23/2024",   nullcontext(TaxYear(2023, 2024))),
+    ("23/24",     nullcontext(TaxYear(2023, 2024))),
+    ("2024",      nullcontext(TaxYear(2023, 2024))),
+    ("24",        nullcontext(TaxYear(2023, 2024))),
+    ("00",        nullcontext(TaxYear(1999, 2000))),
     ("0",         pytest.raises(ValueError)),
     ("10000",     pytest.raises(ValueError)),
     ("XX/YY",     pytest.raises(ValueError)),
@@ -295,7 +295,7 @@ str_to_tax_year_params = [
 @pytest.mark.parametrize("s,eyc", [pytest.param(s, eyc, id=s) for s, eyc in str_to_tax_year_params])
 def test_str_to_tax_year(s, eyc):
     with eyc as ey:
-        assert str_to_tax_year(s) == ey
+        assert TaxYear.from_string(s) == ey
 
 
 @pytest.mark.parametrize("filename", collect_filenames(no_raises=True))
@@ -326,7 +326,7 @@ def test_filter_tax_year(filename):
                 pool_shares = update.pool_shares
 
     filtered_result = copy.copy(result)
-    filtered_result.filter_tax_year((9998, 9999))
+    filtered_result.filter_tax_year(TaxYear(9998, 9999))
     assert not filtered_result.tax_years
 
 
