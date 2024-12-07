@@ -20,6 +20,7 @@ on:
       - .github/scripts/gh-pages.sh
       - download.py
       - data/lse.py
+      - data/boe.py
 
   # Manually
   workflow_dispatch:
@@ -46,7 +47,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v4
-      - run: .github/scripts/gh-pages.sh
+      - run: pip install --upgrade pipenv wheel
+      - run: pipenv install --dev
+      - run: pipenv run pip list
+      - run: pipenv run .github/scripts/gh-pages.sh
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

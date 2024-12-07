@@ -9,6 +9,7 @@
 import math
 import os
 import posixpath
+import sys
 import zipfile
 
 import openpyxl
@@ -92,7 +93,7 @@ def load():
 
     df.to_csv(_filename, float_format='{:.6f}'.format)
 
-    if __name__ == '__main__':
+    if __name__ == '__main__' and 'plot' in sys.argv[1:]:
         df.plot()
         import matplotlib.pyplot as plt
         plt.show()
