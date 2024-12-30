@@ -22,7 +22,7 @@ from download import download
 def read(sh, name):
     # Find the last row
     row = sh.max_row
-    for row in range(6, sh.max_row):
+    for row in range(6, sh.max_row + 1):
         if sh.cell(row + 1, 1).value is None:
             break
 
@@ -42,7 +42,7 @@ def read(sh, name):
         value = sh.cell(row, col).value
         try:
             rate = float(value)
-        except ValueError:
+        except (ValueError, TypeError):
             rate = math.nan
         data.append((years, rate))
 
