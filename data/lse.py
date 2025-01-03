@@ -146,7 +146,7 @@ def get_latest_gilt_prices():
         "components": [
             {
                 "componentId": "block_content%3A9524a5dd-7053-4f7a-ac75-71d12db796b4",
-                "parameters": "categories=BONDS&issuers=TRIH&size=100"
+                "parameters": "categories=BONDS&issuers=TRIH&size=128"
             }
         ]
     }
