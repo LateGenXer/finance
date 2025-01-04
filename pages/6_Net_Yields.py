@@ -142,7 +142,7 @@ if not index_linked:
 
 
 issued = Issued()
-prices = GiltPrices()
+prices = GiltPrices.from_last_close()
 maturity_limit = ukcalendar.shift_year(today, maturity)
 for g in issued.filter(index_linked=index_linked, settlement_date=settlement_date):
     if g.maturity > maturity_limit:

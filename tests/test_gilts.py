@@ -46,16 +46,24 @@ gilts_closing_prices_csv = os.path.join(data_dir, 'gilts-closing-prices-20231201
 
 @pytest.fixture
 def prices(scope='module'):
-    return GiltPrices(gilts_closing_prices_csv)
+    return GiltPrices.from_last_close(gilts_closing_prices_csv)
 
 
 @pytest.mark.parametrize('filename', [
     pytest.param(None, id="cached"),
     pytest.param(gilts_closing_prices_csv, id="local"),
 ])
-def test_prices(filename):
-    prices = GiltPrices(filename)
+def test_prices_last_close(filename):
+    prices = GiltPrices.from_last_close(filename)
     isin, tidm = 'GB00BBJNQY21', 'TR68'
+    assert prices.lookup_tidm(isin) == tidm
+    assert prices.get_price(tidm) >= 0
+    assert isinstance(prices.get_prices_date(), datetime.datetime)
+
+
+def test_prices_latest():
+    prices = GiltPrices.from_latest()
+    isin, tidm = 'GB00BLBDX619', 'TR73'
     assert prices.lookup_tidm(isin) == tidm
     assert prices.get_price(tidm) >= 0
     assert isinstance(prices.get_prices_date(), datetime.datetime)

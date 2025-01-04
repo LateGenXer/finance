@@ -199,7 +199,7 @@ def main():
             lastclosedate = lastclosedate.date()
             lastclosedate = lastclosedate.isoformat()
 
-        except:
+        except:  # pragma: no cover
             pp(data, stream=sys.stderr)
             raise
 

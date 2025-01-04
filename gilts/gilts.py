@@ -20,6 +20,8 @@ import sys
 
 import xml.etree.ElementTree
 
+from zoneinfo import ZoneInfo
+
 from download import download
 
 import scipy.optimize as optimize
@@ -33,9 +35,13 @@ import lp
 from xirr import *
 from ukcalendar import *
 from data.rpi import RPI
+from data import lse
+
 
 logger = logging.getLogger('gilts')
 
+
+tzinfo = ZoneInfo("Europe/London")
 
 
 SHORT, STANDARD, LONG = -1, 0, 1
@@ -526,30 +532,53 @@ class Issued:
 
 class GiltPrices:
 
-    def __init__(self, filename=None):
-        if filename is None:
-            entries = self._download()
-        else:
-            entries = csv.DictReader(open(filename, 'rt'))
-
+    def __init__(self):
+        self.datetime = datetime.datetime(year=datetime.MINYEAR, month=1, day=1, tzinfo=tzinfo)
         self.tidms = {}
         self.prices = {}
 
-        from zoneinfo import ZoneInfo
-        tzinfo = ZoneInfo("Europe/London")
+    def add_price(self, dt:datetime, isin:str, tidm:str, price:float):
+        assert isinstance(dt, datetime.datetime)
+        assert lse.is_isin(isin)
+        assert lse.is_tidm(tidm)
+        assert isinstance(price, numbers.Number)
+        self.datetime = max(self.datetime, dt)
+        self.tidms[isin] = tidm
+        self.prices[tidm] = price
 
+    @classmethod
+    def from_last_close(cls, filename=None):
+        if filename is None:
+            entries = cls._download()
+        else:
+            entries = csv.DictReader(open(filename, 'rt'))
+
+        prices = cls()
         for entry in entries:
             date = datetime.date.fromisoformat(entry['date'])
 
             # https://www.lsegissuerservices.com/spark/lse-whitepaper-trading-insights
-            self.datetime = datetime.datetime(date.year, date.month, date.day, 16, 35, 0, tzinfo=tzinfo)
+            dt = datetime.datetime(date.year, date.month, date.day, 16, 35, 0, tzinfo=tzinfo)
 
             isin = entry['isin']
             tidm = entry['tidm']
             price = float(entry['price'])
 
-            self.tidms[isin] = tidm
-            self.prices[tidm] = price
+            prices.add_price(dt, isin, tidm, price)
+
+        return prices
+
+    @classmethod
+    def from_latest(cls):
+        prices = cls()
+        dt, content = lse.get_latest_gilt_prices()
+
+        for item in content:
+            isin = item['isin']
+            tidm = item['tidm']
+            price = item['lastprice']
+            prices.add_price(dt, isin, tidm, price)
+        return prices
 
     @staticmethod
     @caching.cache_data(ttl=15*60)

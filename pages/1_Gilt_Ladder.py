@@ -134,7 +134,7 @@ else:
 with st.spinner('Downloading data...'):
     rpi_series = RPI()
     issued = Issued(rpi_series=rpi_series)
-    prices = GiltPrices()
+    prices = GiltPrices.from_last_close()
 bl = BondLadder(issued, prices, s)
 bl.index_linked = index_linked
 bl.marginal_income_tax = st.session_state.marginal_income_tax
