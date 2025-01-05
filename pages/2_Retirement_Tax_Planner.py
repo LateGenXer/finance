@@ -152,7 +152,7 @@ with st.form(key='form'):
 
         marginal_income_tax_help = "Used to estimate income tax from withdrawing more than the Tax Free Cash from a pension before retirement."
 
-        sipp_help = """_Uncrystalized_ funds held in Defined Benefit Pension schemes.
+        sipp_help = """_Uncrystalized_ funds held in Defined Contribution Pension schemes.
 
 If pension funds have been accessed as tax-free-allowance or moved into flexi-access drawdown then the appropriate fields in the _Post-retirement_ tab should be filled in.
 """
