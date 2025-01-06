@@ -46,8 +46,8 @@ class LPState:
     drawdown_2: Any
     drawdown_isa: Any
     drawdown_gia: Any
-    income_state_1: Any
-    income_state_2: Any
+    ann_income_1: Any
+    ann_income_2: Any
     income_gross_1: Any
     income_gross_2: Any
     income_net: Any
@@ -59,7 +59,8 @@ class LPState:
 @dataclasses.dataclass
 class ResState:
     year: int
-    income_state: float
+    ann_1: float
+    ann_2: float
     sipp_uf_1: float
     sipp_uf_2: float
     sipp_df_1: float
@@ -348,6 +349,10 @@ def model(
         sipp_contrib_1,
         sipp_contrib_2,
         sipp_extra_contrib,
+        db_payments_1,
+        db_payments_2,
+        db_ages_1,
+        db_ages_2,
         lsa_ratio_1,
         lsa_ratio_2,
         isa,
@@ -522,9 +527,17 @@ def model(
             income_state_1 *= (1.0/(1.0 + inflation_rate)) ** max(age_1 - spa_1, 0)
             income_state_2 *= (1.0/(1.0 + inflation_rate)) ** max(age_2 - spa_2, 0)
 
+        # DB pensions
+        ann_income_1 = income_state_1
+        for pay, age in zip(db_payments_1, db_ages_1):
+            ann_income_1 += pay if age_1 >= age else 0
+        ann_income_2 = income_state_2
+        for pay, age in zip(db_payments_2, db_ages_2):
+            ann_income_2 += pay if age_2 >= age else 0
+
         # Income and Capital Gain Taxes modelling
-        income_gross_1 = income_state_1 + drawdown_1
-        income_gross_2 = income_state_2 + drawdown_2
+        income_gross_1 = ann_income_1 + drawdown_1
+        income_gross_2 = ann_income_2 + drawdown_2
 
         if uk_yr:
             # UK
@@ -537,7 +550,7 @@ def model(
                 tax_1 -= base_income_tax_1
                 tax_2 -= base_income_tax_2
             else:
-                if marriage_allowance and income_state_2 <= UK.income_tax_threshold_20:
+                if marriage_allowance and ann_income_2 <= UK.income_tax_threshold_20:
                     prob += income_gross_1 <= UK.income_tax_threshold_40
                     prob += income_gross_2 <= UK.income_tax_threshold_20
                     tax_1, cgt_1 = uk_tax_lp(prob, income_gross_1, cg_1, marriage_allowance=marriage_allowance)
@@ -601,8 +614,8 @@ def model(
             drawdown_2=drawdown_2,
             drawdown_isa=drawdown_isa,
             drawdown_gia=drawdown_gia,
-            income_state_1=income_state_1,
-            income_state_2=income_state_2,
+            ann_income_1=ann_income_1,
+            ann_income_2=ann_income_2,
             income_gross_1=income_gross_1,
             income_gross_2=income_gross_2,
             income_net=income_net,
@@ -662,9 +675,8 @@ def model(
 
         cg = lp.value(s.cg)
 
-        # State pension
-        income_state_1 = s.income_state_1
-        income_state_2 = s.income_state_2
+        ann_income_1 = s.ann_income_1
+        ann_income_2 = s.ann_income_2
 
         # Income and Capital Gain Taxes calculation
         income_gross_1 = lp.value(s.income_gross_1)
@@ -683,7 +695,7 @@ def model(
         if verbosity > 0:
             print(' '.join((
                     '%4u:',
-                    'St %5.0f',
+                    'DB %5.0f',
                     'SIPP1 [%7.0f %7.0f] (%6.0f %7.0f) %5.1f%%',
                     'SIPP2 [%7.0f %7.0f] (%6.0f %7.0f) %5.1f%%',
                     'ISA %7.0f (%7.0f)',
@@ -692,7 +704,7 @@ def model(
                     'Tax %6.0f %4.1f%% %6.0f %4.1f%% %6.0f %4.1f%%'
                 )) % (
                     yr,
-                    income_state_1 + income_state_2,
+                    ann_income_1 + ann_income_2,
                     sipp_uf_1, sipp_df_1, contrib_1, -tfc_1 - drawdown_1, 100*lsa_1/lsa,
                     sipp_uf_2, sipp_df_2, contrib_2, -tfc_2 - drawdown_2, 100*lsa_2/lsa,
                     isa, -drawdown_isa,
@@ -707,7 +719,8 @@ def model(
 
         rs = ResState(
             year=yr,
-            income_state=income_state_1 + income_state_2,
+            ann_1=ann_income_1,
+            ann_2=ann_income_2,
             sipp_uf_1=normalize(sipp_uf_1, 2),
             sipp_uf_2=normalize(sipp_uf_2, 2),
             sipp_df_1=normalize(sipp_df_1, 2),
@@ -750,7 +763,8 @@ def model(
 column_headers = {
     'year': 'Year',
 
-    'income_state': 'SP',
+    'ann_1': 'A1',
+    'ann_2': 'A2',
 
     'sipp_uf_1': 'UF1',
     'contrib_1': '(+\u0394)',

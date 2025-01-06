@@ -51,6 +51,10 @@ default_state = {
     "sipp_contrib_1": 0,
     "sipp_contrib_2": uiaa,
     "sipp_extra_contrib": False,
+    "db_payments_1": "",
+    "db_payments_2": "",
+    "db_ages_1": "",
+    "db_ages_2": "",
     "lsa_ratio_1": 100.0,
     "lsa_ratio_2": 100.0,
     "isa": 250000,
@@ -157,12 +161,20 @@ with st.form(key='form'):
 If pension funds have been accessed as tax-free-allowance or moved into flexi-access drawdown then the appropriate fields in the _Post-retirement_ tab should be filled in.
 """
 
+        db_payments_help = """Yearly payment made by Defined Benefit pension schemes(s).  Payments from multiple pension schemes can be entered seperated by semi-colons (;).
+
+Payments are assumed to increase in line with inflation.
+"""
+        db_ages_help = "Age(s) the DB pension scheme(s) start paying.  Ages of multiple pension schemes can be entered seperated by semi-colons (;)."
+
         with col1:
             st.subheader('You')
             st.number_input('Year of birth:', min_value=1920, max_value=2080, step=1, key='dob_1')
             st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, key='state_pension_years_1', help=state_pension_years_help)
             st.number_input('DC pensions value:', min_value=0, step=1, key='sipp_1', help=sipp_help)
             st.number_input('DC pensions yearly _gross_ contribution:', min_value=0, max_value=aa, step=1, key='sipp_contrib_1', help="Until retirement")
+            st.text_input('DB pension yearly benefit(s):', key='db_payments_1', help=db_payments_help)
+            st.text_input('DB pension age(s):', key='db_ages_1', help=db_ages_help)
             st.select_slider("Marginal income tax rate:", options=(0.00, 0.20, 0.40, 0.45), format_func='{:.0%}'.format, key="marginal_income_tax_1", help=marginal_income_tax_help)
 
         single = not st.session_state.joint
@@ -172,6 +184,8 @@ If pension funds have been accessed as tax-free-allowance or moved into flexi-ac
             st.number_input('State pension qualifying years at retirement:', min_value=0, max_value=35, step=1, key='state_pension_years_2', disabled=single, help=state_pension_years_help)
             st.number_input('DC pensions value:', min_value=0, step=1, key='sipp_2', help=sipp_help, disabled=single)
             st.number_input('DC pensions yearly _gross_ contribution:', min_value=0, max_value=aa, step=1, key='sipp_contrib_2', help="Until retirement", disabled=single)
+            st.text_input('DB pension yearly benefit(s):', key='db_payments_2', help=db_payments_help)
+            st.text_input('DB pension age(s):', key='db_ages_2', help=db_ages_help)
             st.select_slider("Marginal income tax rate:", options=(0.00, 0.20, 0.40, 0.45), format_func='{:.0%}'.format, key="marginal_income_tax_2", disabled=single, help=marginal_income_tax_help)
 
         with col3:
@@ -259,6 +273,7 @@ This is equivalent to the old Lifetime Allowance percentage.
 
     submitted = st.form_submit_button(label='Update', type='primary')
 
+
 state = {key: value for key, value in st.session_state.items() if key in default_state}
 state['version'] = version
 data = json.dumps(state, sort_keys=True, indent=2)
@@ -277,6 +292,12 @@ params = {key: value for key, value in st.session_state.items() if key in defaul
 def perc_xform(x):
     return x*.01
 
+def number_list_xform(s):
+    if s:
+        return [float(n) for n in s.split(';')]
+    else:
+        return []
+
 state_xforms =  {
     'inflation_rate': perc_xform,
     'sipp_growth_rate_1': perc_xform,
@@ -285,6 +306,10 @@ state_xforms =  {
     'gia_growth_rate': perc_xform,
     'lsa_ratio_1': perc_xform,
     'lsa_ratio_2': perc_xform,
+    'db_payments_1': number_list_xform,
+    'db_payments_2': number_list_xform,
+    'db_ages_1': number_list_xform,
+    'db_ages_2': number_list_xform,
 }
 for key, xform in state_xforms.items():
     params[key] = xform(st.session_state[key])
@@ -295,6 +320,10 @@ params['country'] = params.pop('retirement_country')
 if devel:
     with st.expander("Parameters"):
         st.write(params)
+
+if params['db_payments_1'] or params['db_payments_2']:
+    st.warning('Defined Benefit Pension Schemes support is work in progress.  Please analyze results carefully and report any issues.', icon="🚧")
+
 
 # https://docs.streamlit.io/library/advanced-features/caching
 #@st.cache_data(ttl=3600, max_entries=1024)
@@ -476,7 +505,7 @@ with st.expander("Abbreviations..."):
     st.markdown('''
 * **1**: You
 * **2**: Your partner
-* **SP**: State Pension
+* **A**: Annuities, including State Pension and Defined Benefit Pension Schemes.
 * **UF**: Uncrystalized Funds
 * **DF**: Drawdown Funds (for example, _flexi-access drawdown_)
 * **LSA**: [Lump Sum Allowance](https://www.gov.uk/tax-on-your-private-pension/lump-sum-allowance) (25% of the old LTA)

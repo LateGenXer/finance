@@ -19,6 +19,7 @@ I initially wrote this for my own personal use, after running against limitation
 
 ## Recent changes
 
+* Rudimentary Defined Benefit Pension Scheme support.
 * Reflect frozen ISA allowance until 2030.
 * Update CGT rates to those announced on Autumn Budget 2024.
 * Allow to change the 100 years old age limit.
@@ -48,10 +49,10 @@ This tool makes the following simplifying assumptions:
 ## Limitations
 
 * Income tax after the 45% additional rate threshold is overestimated.  This is because the marginal income tax rate drops from 60% back to 45%, which can't be accurately modeled as a linear programming problem.
-* It cannot model defined benefits pension pots or annuities yet.
+* It cannot model non-index-linked defined benefits pension pots or annuities yet.
 * It doesn't model mortality or the impact of different asset allocations on IHT.
 * It ignores dividend allowance and dividend tax.
-* It does not consider cash, or tax advantaged products such as NS&I Premium Bonds or individual gilts.
+* It does not consider cash interest, or tax advantaged products such as NS&I Premium Bonds or individual gilts.
 
 ## Known issues
 
