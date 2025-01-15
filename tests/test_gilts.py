@@ -83,7 +83,7 @@ def test_yield_curve(issued, prices, index_linked, show_plots):
 @pytest.fixture
 def tradeweb_issued(scope='module'):
     entries = {}
-    for entry in csv.DictReader(open(os.path.join(data_dir, 'dmo_issued.csv'), 'rt')):
+    for entry in csv.DictReader(open(os.path.join(data_dir, '..', '..', 'data', 'dmo_issued.csv'), 'rt')):
         isin = entry['ISIN_CODE']
         entries[isin] = entry
     return entries

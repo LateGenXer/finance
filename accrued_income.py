@@ -27,10 +27,8 @@ from cgtcalc import TaxYear, TextReport
 
 # XXX Should auto update
 
-data_dir = os.path.join(os.path.dirname(__file__), 'tests', 'data')
-issued = gilts.Issued(csv_filename=os.path.join(data_dir, 'dmo_issued.csv'))
-
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
+issued = gilts.Issued(csv_filename=os.path.join(data_dir, 'dmo_issued.csv'))
 tidm_to_isin = {}
 for isin, tidm in csv.reader(open(os.path.join(data_dir, 'tidm.csv'), 'rt')):
     tidm_to_isin[tidm] = isin

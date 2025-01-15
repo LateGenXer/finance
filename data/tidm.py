@@ -28,7 +28,7 @@ def main():
 
     today = datetime.datetime.now(datetime.timezone.utc).date()
 
-    for entry in csv.DictReader(open('tests/data/dmo_issued.csv', 'rt')):
+    for entry in csv.DictReader(open('data/dmo_issued.csv', 'rt')):
         isin = entry['ISIN_CODE']
         assert lse.is_isin(isin)
         if isin in tidms:
