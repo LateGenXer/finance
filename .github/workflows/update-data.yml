@@ -1,0 +1,43 @@
+name: update-data
+
+on:
+
+  # Schedule after new data is available.
+  # Times are in UTC, which match GMT.  During BST schedules will run one hour behind.
+  # See also https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
+  schedule:
+    # BoE's issued gilts report are available early hours after midnight.
+    - cron: '0 5 * * TUE-SAT'
+
+  # When dependencies change
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/update-data.yml
+      - .github/scripts/update-data.sh
+      - download.py
+      - data/lse.py
+      - data/boe.py
+
+  # Manually
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "update-data"
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install --upgrade pipenv wheel
+      - run: pipenv install --dev
+      - run: pipenv run pip list
+      - run: pipenv run .github/scripts/update-data.sh
