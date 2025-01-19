@@ -569,14 +569,22 @@ class GiltPrices:
         return prices
 
     @classmethod
-    def from_latest(cls):
+    def from_latest(cls, kind='midPrice'):
+        assert kind in ['bid', 'offer', 'midPrice', 'lastprice', 'lastclose']
         prices = cls()
         dt, content = lse.get_latest_gilt_prices()
+
+        # LSE prices are delayed 15min
+        dt -= datetime.timedelta(minutes=15)
 
         for item in content:
             isin = item['isin']
             tidm = item['tidm']
-            price = item['lastprice']
+            data = lse.get_instrument_data(tidm)
+            assert data['tidm'] == tidm
+            assert data['isin'] == isin
+            assert data['currency'] == 'GBP'
+            price = data[kind]
             prices.add_price(dt, isin, tidm, price)
         return prices
 

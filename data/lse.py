@@ -184,10 +184,9 @@ def main():
         data = get_instrument_data(tidm)
 
         try:
-            assert data['currency'] == 'GBP'
-
             assert data['tidm'] == tidm
             assert data['isin'] == isin
+            assert data['currency'] == 'GBP'
 
             lastclose = data['lastclose']
             if lastclose is None:
