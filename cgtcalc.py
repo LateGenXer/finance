@@ -792,7 +792,8 @@ def calculate(stream, rounding=True):
 
                 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57707
                 # Add notional distribution to the Section 104 pool cost
-                assert pool.shares
+                if not pool.shares:
+                    raise ValueError(f'DIVIDEND {tr.date:%d/%m/%Y} {security}: no shares held on-ex-dividend date')
                 income = dround(income, places, ROUND_CEILING)
 
                 update_pool(pool_updates, pool, tr,
@@ -807,7 +808,8 @@ def calculate(stream, rounding=True):
 
                 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57705
                 # Allocate equalisation payments to Group 2 acquisitions in proportion to the remaining holdings
-                assert pool.shares
+                if not pool.shares:
+                    raise ValueError(f'CAPRETURN {tr.date:%d/%m/%Y} {security}: no shares held on-ex-dividend date')
                 assert pool.cost >= equalisation
 
                 equalisation = dround(equalisation, places, ROUND_FLOOR)

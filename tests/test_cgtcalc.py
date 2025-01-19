@@ -213,6 +213,8 @@ def read_test_annotations(filename):
             raises = NotImplementedError
         if line == '# ASSERTION_ERROR':
             raises = AssertionError
+        if line == '# VALUE_ERROR':
+            raises = ValueError
         if line == '# NO_ROUNDING':
             rounding = False
 

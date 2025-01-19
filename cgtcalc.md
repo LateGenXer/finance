@@ -2,7 +2,7 @@
 
 `cgtcalc.py` is a UK Capital Gains calculator written in Python.
 
-It is inspired by [other](#Alternative) free CGT calculators, but unlike most
+It was inspired by [other](#Alternative) free CGT calculators, but unlike most
 of them it handles notional distributions and equalisation payments in a consistent manner.
 
 ## Disclaimer
@@ -16,13 +16,13 @@ of them it handles notional distributions and equalisation payments in a consist
 
 ## Behavior
 
-- Followings [share identification rules](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg51560)
+- Follows [share identification rules](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg51560)
 - Rounding done as per HMRC example calculations and Community Forums clarifications:
   - proceeds and gains always rounded down to whole pound
   - individual costs (charges, acquisition costs, Section 104 pool cost) and losses always rounded up to whole pound, _before_ addition
 - Number of shares and unit share price kept at full precision
 - Notional income (i.e., reinvested dividends from UK shares, and _Excess Reportable Income_ from offshore reporting funds)
-and equalisation payments by adjusting Section 104 pool cost accordingly.
+and equalisation payments is handled by adjusting Section 104 pool cost accordingly.
 
 ## Known limitations
 
@@ -43,7 +43,7 @@ python cgtcalc.py trades.txt
 [CGTCalculator](http://cgtcalculator.com/instructions.htm#tradeformat) and
 [cgtcalc](https://github.com/mattjgalloway/cgtcalc?tab=readme-ov-file#input-data) formats.
 
-The input consists is a text file, with a line per transaction, each comprised by space separated fields in the form:
+The input consists of a text file, with a line per transaction, each comprised by space separated fields in the form:
 
 ```
 kind date security parameter*
@@ -55,13 +55,14 @@ The number and meaning of the fields varies with the kind of transaction:
 | ---- | ----------- | ------ |
 | `B`/`BUY` | Buy transaction | _date_ _security_ _shares_ _price_ _expenses_ [_tax¹_]
 | `S`/`SELL` | Sell transaction | _date_ _security_ _shares_ _price_ _expenses_ [_tax¹_]
-| `DIVIDEND` | Notional distribution² | _ex-dividend-date_ _security_ _holding³_ _income_
-| `CAPRETURN` | Equalisation payment | _ex-dividend-date_ _security_ _group2-holding³_ _equalisation_
+| `DIVIDEND` | Notional distribution² | _ex-dividend-date⁴_ _security_ _holding³_ _income_
+| `CAPRETURN` | Equalisation payment | _ex-dividend-date⁴_ _security_ _group2-holding³_ _equalisation_
 
 Notes:
 1. _tax_ fields of `BUY`/`SELL` transactions are optional, are supported for CGTCalculator compatibility, and will be added to the expenses
 2. notional distribution is, for example, reinvested dividends in accumulation class of UK Authorized Investments Funds, or Excess Reportable Income in Offshore Funds
 3. _holding_ and _group2-holding_ fields are used for consistency check  and have no bearing on calculated gains/losses.
+4. To ensure notional dividends and equalization payments are assigned to the right disposals, it is imperative that the _ex-dividend-date_ is used for these transactions, and not the distribution date.
 
 Empty lines or lines starting with `#` are ignored.
 
