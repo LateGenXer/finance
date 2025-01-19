@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 LateGenXer
+# Copyright (c) 2023-2025 LateGenXer
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
@@ -22,6 +22,8 @@ import pandas as pd
 import nsandi_premium_bonds
 import ukcalendar
 
+from data.rpi import RPI
+from data.boe import YieldCurve
 from gilts.gilts import Issued, IndexLinkedGilt, GiltPrices
 from xirr import xirr
 
@@ -123,7 +125,7 @@ data = []
 
 gross_yield_footnote = f'_{"Real" if index_linked else "Nominal"}_ gross/net yields shown.'
 if index_linked is None:
-    gross_yield_footnote += f'  Assuming {IndexLinkedGilt.inflation_rate:.1%} inflation rate for index-linked gilts.'
+    gross_yield_footnote += f'  Assuming implied inflation from latest BoE yield curves for index-linked gilts.'
 
 premium_bonds_rate, premium_bonds_desc = latest_premium_bonds_rate()
 
@@ -140,7 +142,27 @@ if not index_linked:
         data.append(('Mortgage Overpayment', '', '', mortgage_rate, mortgage_rate))
 
 
-issued = Issued()
+rpi_series = RPI()
+inflation_curve = YieldCurve('Inflation')
+
+# Extend RPI series using impled inflation curve
+if index_linked is None:
+    # TODO: Move this as a factory method of the RPI class
+    n0 = len(rpi_series.series) -1
+    date0 = datetime.date(year=rpi_series.ref_year + n0 // 12, month=0 % 12 + 1, day=1)
+    rpi0 = rpi_series.series[-1]
+    while True:
+        n1 = len(rpi_series.series)
+        date1 = datetime.date(year=rpi_series.ref_year + n1 // 12, month=n1 % 12 + 1, day=1)
+        years_exact = (n1 - n0) / 12
+        years_round = ((n1 - n0) + 5) // 6 * 0.5
+        if years_round > 40.0:
+            break
+        rpi1 = rpi0 * (1 + inflation_curve(years_round)) ** years_exact
+        rpi_series.series.append(rpi1)
+
+issued = Issued(rpi_series=rpi_series)
+
 
 @st.cache_data(ttl=5*60, show_spinner='Getting latest gilt offer prices.')
 def get_latest_gilt_offer_prices():
