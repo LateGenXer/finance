@@ -33,13 +33,10 @@ def test_run(at):
     assert not at.exception
 
 
-def test_index_linked(at):
+@pytest.mark.parametrize("value", ['Conventional', 'Index-linked', 'Both'])
+def test_gilts_type(at, value):
     gilts_type = at.radio(key="gilts_type")
-    gilts_type.set_value('Index-linked')
-    at.run()
-    assert not at.exception
-
-    gilts_type.set_value('Both')
+    gilts_type.set_value(value)
     at.run()
     assert not at.exception
 
