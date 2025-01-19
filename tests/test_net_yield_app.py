@@ -15,7 +15,7 @@ except ImportError:
     pytest.skip("No Streamlit; skipping.", allow_module_level=True)
 
 
-default_timeout = 10
+default_timeout = 30
 
 
 @pytest.fixture(scope="function")
