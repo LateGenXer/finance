@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 LateGenXer
+# Copyright (c) 2024-2025 LateGenXer
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
@@ -44,5 +44,11 @@ def test_gilts_type(at, value):
 def test_mortgage(at):
     mortgage_rate = at.number_input(key="mortgage_rate")
     mortgage_rate.set_value(5.0)
+    at.run()
+    assert not at.exception
+
+
+def test_latest_gilt_prices(at):
+    at.query_params['latest'] = '1'
     at.run()
     assert not at.exception
