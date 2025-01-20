@@ -5,8 +5,6 @@
 #
 
 
-import datetime
-
 import pytest
 
 try:

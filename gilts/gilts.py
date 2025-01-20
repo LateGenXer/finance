@@ -16,7 +16,6 @@ import re
 import operator
 import os.path
 import typing
-import sys
 
 import xml.etree.ElementTree
 

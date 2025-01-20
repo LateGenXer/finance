@@ -6,7 +6,6 @@
 
 
 import json
-import os
 import runpy
 
 import pytest
