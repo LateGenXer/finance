@@ -411,9 +411,9 @@ class Result:
                 allowance = allowances[tax_year]
             except KeyError:
                 allowance = 0
-                self.warnings.append(f'capital gains allowance for {tax_year[0]}/{tax_year[1]} tax year unknown')
+                self.warnings.append(f'capital gains allowance for {tax_year} tax year unknown')
 
-            tax_year_result = TaxYearResult(f'{tax_year[0]}/{tax_year[1]}', allowance=allowance)
+            tax_year_result = TaxYearResult(str(tax_year), allowance=allowance)
             self.tax_years[tax_year] = tax_year_result
 
         tax_year_result.disposals.append(disposal)
