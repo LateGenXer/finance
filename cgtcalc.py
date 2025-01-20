@@ -589,6 +589,9 @@ def calculate(stream, rounding=True):
 
         date = datetime.datetime.strptime(date, "%d/%m/%Y").date()
 
+        # Case-insensitive
+        trade = trade.upper()
+
         if trade in ('B', 'BUY'):
             kind = Kind.BUY
             if len(params) == 4:
