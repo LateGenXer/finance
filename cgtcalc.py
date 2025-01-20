@@ -20,8 +20,8 @@ import html
 import math
 import operator
 import sys
+import typing
 
-from collections import namedtuple
 from enum import IntEnum, Enum
 from decimal import Decimal, ROUND_HALF_EVEN, ROUND_CEILING, ROUND_FLOOR
 from abc import ABC, abstractmethod
@@ -38,7 +38,11 @@ assert Kind.CAPRETURN < Kind.BUY
 assert Kind.BUY < Kind.SELL
 
 
-Trade = namedtuple('Trade', ['date', 'kind', 'params'])
+@dataclasses.dataclass
+class Trade:
+    date: datetime.date
+    kind: Kind
+    params: list[typing.Any]
 
 
 # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg51560
@@ -94,7 +98,10 @@ class DisposalResult:
     table: list
 
 
-class TaxYear(namedtuple('TaxYear', ['year1', 'year2'])):
+class TaxYear(typing.NamedTuple):
+
+    year1: int
+    year2: int
 
     def __str__(self):
         return f'{self.year1}/{self.year2}'
@@ -632,7 +639,7 @@ def calculate(stream, rounding=True):
                 shares = shares0 + shares1
                 price = (shares0*price0 + shares1*price1) / shares
                 charges = charges0 + charges1
-                params0 = (shares, price, charges)
+                params0 = [shares, price, charges]
                 trades[i] = Trade(tr0.date, tr0.kind, params0)
                 trades.pop(i + 1)
             else:
