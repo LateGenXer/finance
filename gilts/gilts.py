@@ -580,11 +580,21 @@ class GiltPrices:
             isin = item['isin']
             tidm = item['tidm']
             data = lse.get_instrument_data(tidm)
-            assert data['tidm'] == tidm
-            assert data['isin'] == isin
-            assert data['currency'] == 'GBP'
-            price = data[kind]
-            prices.add_price(dt, isin, tidm, price)
+            try:
+                assert data['tidm'] == tidm
+                assert data['isin'] == isin
+                assert data['currency'] == 'GBP'
+                price = data[kind]
+                if price is None:
+                    # Gilts with low trading volume
+                    price = data['lastprice']
+                    if price is None:
+                        # Gilts after last ex-dividend
+                        continue
+                prices.add_price(dt, isin, tidm, price)
+            except:
+                pp(data, stream=sys.stderr)
+                raise
         return prices
 
     @staticmethod
