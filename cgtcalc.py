@@ -222,6 +222,12 @@ class TextReport(Report):
     def write_heading(self, heading, level=1):
         if level <= 1:
             heading = heading.upper()
+        if sys.platform != 'win32' and self.stream.isatty():
+            # Ansi escape
+            _csi = '\33['
+            normal = _csi + '0m'
+            bold = _csi + '1m'
+            heading = bold + heading + normal
         self.stream.write(self.heading_sep + heading + '\n\n')
         self.heading_sep = ''
 
@@ -249,7 +255,6 @@ class TextReport(Report):
                 'r': str.rjust,
             }
             just = [m[j] for j in just]
-
 
         widths = []
         for c in range(len(columns)):
