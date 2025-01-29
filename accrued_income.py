@@ -66,9 +66,9 @@ class Calculator:
 
         today = datetime.datetime.now(datetime.timezone.utc).date()
         if today < today.replace(today.year, 4, 6):
-            self.tax_year_end = today.replace(today.year, 4, 5)
+            self.tax_year_end = datetime.date(today.year, 4, 5)
         else:
-            self.tax_year_end = today.replace(today.year + 1, 4, 5)
+            self.tax_year_end = datetime.date(today.year + 1, 4, 5)
 
         self.provisional = False
 
@@ -136,7 +136,7 @@ class Calculator:
     def process_events(self):
         accrued_incomes = []
         for ev in self.events:
-            if ev.date >= self.tax_year_end:
+            if ev.date > self.tax_year_end:
                 continue
 
             gilt_state = self.gilt_states[ev.isin]
