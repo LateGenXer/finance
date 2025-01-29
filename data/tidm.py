@@ -10,10 +10,14 @@ import csv
 import datetime
 import logging
 import operator
-import os
+import os.path
 
 from gilts.gilts import Issued
 from data import lse
+
+
+data_dir = os.path.dirname(__file__)
+tidm_csv = os.path.join(data_dir, 'tidm.csv')
 
 
 def main():
@@ -21,14 +25,14 @@ def main():
 
     tidms = {}
 
-    for isin, tidm in csv.reader(open('data/tidm.csv', 'rt')):
+    for isin, tidm in csv.reader(open(tidm_csv, 'rt')):
         assert lse.is_isin(isin)
         assert lse.is_tidm(tidm)
         tidms[isin] = tidm
 
     today = datetime.datetime.now(datetime.timezone.utc).date()
 
-    for entry in csv.DictReader(open('data/dmo_issued.csv', 'rt')):
+    for entry in csv.DictReader(open(os.path.join(data_dir, 'dmo_issued.csv'), 'rt')):
         isin = entry['ISIN_CODE']
         assert lse.is_isin(isin)
         if isin in tidms:
@@ -46,11 +50,13 @@ def main():
     # https://realpython.com/sort-python-dictionary/
     tidms = dict(sorted(tidms.items(), key=operator.itemgetter(0)))
 
-    with open('data/.tidm.csv', 'wt') as stream:
+    _tidm_csv = os.path.join(data_dir, '.tidm.csv')
+
+    with open(_tidm_csv, 'wt') as stream:
         for isin, tidm in tidms.items():
             stream.write(f'{isin},{tidm}\n')
 
-    os.replace('data/.tidm.csv', 'data/tidm.csv')
+    os.replace(_tidm_csv, tidm_csv)
 
 
 if __name__ == '__main__':
