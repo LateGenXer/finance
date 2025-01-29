@@ -7,8 +7,6 @@ import sys
 
 from decimal import Decimal
 
-sys.path.insert(0, os.getcwd())
-
 from gilts.gilts import Issued
 
 
