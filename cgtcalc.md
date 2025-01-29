@@ -123,7 +123,7 @@ LOBSTER
   2024-02-01  Sold 400 shares                          400  -1675          400       1674
 ```
 
-## Vanguard UK Reporting Fund FAQ guide example
+### Vanguard UK Reporting Fund FAQ guide example
 
 This is the [Excess Reportable Income example calculation from Vanguard UK Reporting Fund FAQ guide](https://fund-docs.vanguard.com/uk-reporting-fund-faq.pdf#page=8).
 
