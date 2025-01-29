@@ -12,14 +12,16 @@ import enum
 import logging
 import math
 import numbers
-import re
 import operator
 import os.path
+import re
+import sys
 import typing
 
 import xml.etree.ElementTree
 
 from zoneinfo import ZoneInfo
+from pprint import pp
 
 from download import download
 
@@ -311,10 +313,10 @@ class IndexLinkedGilt(Gilt):
     # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf
     # Annex B: Method of indexation for index-linked gilts with a 3-month indexation lag
     # When does the redemption payment become known?
-    def redemption_fixed(self):
-        d = self.maturity.replace(day = 1)
+    def fixed_date(self, date):
+        d = date.replace(day = 1)
         if self.lag == 3:
-            if self.maturity.day > 1:
+            if date.day > 1:
                 d = shift_month(d, -2)
             else:
                 d = shift_month(d, -3)
@@ -323,8 +325,14 @@ class IndexLinkedGilt(Gilt):
             d = shift_month(d, -8)
         return d
 
+    def redemption_fixed(self):
+        return self.fixed_date(self.maturity)
+
+    def is_fixed(self, date):
+        return self.rpi_series.last_date() >= self.fixed_date(date)
+
     def is_redemption_fixed(self):
-        return self.rpi_series.last_date() >= self.redemption_fixed()
+        return self.is_fixed(self.maturity)
 
     def index_ratio(self, settlement_date, inflation_rate=None):
         if inflation_rate is None:

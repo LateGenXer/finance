@@ -25,8 +25,6 @@ from gilts import gilts
 from cgtcalc import TaxYear, TextReport
 
 
-# XXX Should auto update
-
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
 issued = gilts.Issued(csv_filename=os.path.join(data_dir, 'dmo_issued.csv'))
 tidm_to_isin = {}
@@ -57,6 +55,9 @@ class Event(typing.NamedTuple):
     interest: Decimal = Decimal('NaN')
 
 
+footnote_mark = '†'
+
+
 class Calculator:
 
     def __init__(self):
@@ -68,6 +69,8 @@ class Calculator:
             self.tax_year_end = today.replace(today.year, 4, 5)
         else:
             self.tax_year_end = today.replace(today.year + 1, 4, 5)
+
+        self.provisional = False
 
     def parse(self, stream):
         for entry in csv.DictReader(stream):
@@ -121,7 +124,8 @@ class Calculator:
         for isin, gilt_state in self.gilt_states.items():
             settlement_date = gilt_state.first_acquisition_date
             gilt = gilt_state.gilt
-            for date, cash in gilt.cash_flows(settlement_date)[:-1]:
+            cash_flows = list(gilt.cash_flows(settlement_date))
+            for date, cash in cash_flows[:-1]:
                 interest = Decimal(cash) * Decimal('.01')
                 self.events.append(Event(date, isin, Kind.INTEREST, interest=interest))
 
@@ -157,6 +161,10 @@ class Calculator:
                 if gilt_state.holding > Decimal(0):
                     interest = round(gilt_state.holding * Decimal(ev.interest), 2)
                     description = f'Interest of nominal £{gilt_state.holding}'
+                    if isinstance(gilt, gilts.IndexLinkedGilt):
+                        if not gilt.is_fixed(ev.date):
+                            self.provisional = True
+                            description += footnote_mark
                     accrued_incomes.append((ev.date, ev.date, gilt, description, interest))
             else:
                 assert ev.kind == Kind.REDEMPTION
@@ -194,6 +202,11 @@ class Calculator:
             gilt = gilt_state.gilt
             rows.append((gilt.short_name(), gilt_state.holding))
         report.write_table(rows, header=header, just='lr', indent='  ')
+
+        # https://www.gov.uk/hmrc-internal-manuals/self-assessment-manual/sam121190
+        if self.provisional:
+            report.write_heading('Footnotes')
+            report.write_paragraph(footnote_mark + ' Provisional figures')
 
 
 def main():
