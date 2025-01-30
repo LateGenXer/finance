@@ -83,10 +83,10 @@ class RPI:
         release_date = None
         for row in csv.reader(stream):
             assert len(row) == 2
-            date, value = row
-            if date == "Release date":
+            label, value = row
+            if label == "Release date":
                 release_date = datetime.datetime.strptime(value, '%d-%m-%Y').date()
-            elif date == "Next release":
+            elif label == "Next release":
                 mo = _next_release_re.match(value)
                 assert mo
                 year = int(mo.group('year'))
@@ -97,16 +97,16 @@ class RPI:
                     logger.warning(f'{filename} has been superseded on {next_release}')
                     raise OutOfDateError
             else:
-                mo = _monthly_re.match(date)
+                mo = _monthly_re.match(label)
                 if not mo:
                     continue
                 year = int(mo.group('year'))
                 month = _months.index(mo.group('month')) + 1
                 date = datetime.date(year, month, 1)
-                value = float(value)
+                rpi = float(value)
                 assert year == next_year
                 assert month == next_month
-                series.append(value)
+                series.append(rpi)
                 next_year += next_month // 12
                 next_month = next_month % 12 + 1
         return series, release_date

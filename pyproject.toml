@@ -16,3 +16,11 @@ omit = [
 [tool.coverage.report]
 # Ignore "No source for code: '.../site-packages/streamlit/static/index_html.generated.py'"
 ignore_errors = true
+
+[tool.mypy]
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+# https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-library-stubs-or-py-typed-marker
+module = ["untyped_package.*"]
+follow_untyped_imports = true

@@ -239,7 +239,7 @@ class LpProblem:
 
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html
 
-        variables = {}
+        variables: dict[LpVariable, int] = {}
         n_ub = 0
         n_eq = 0
 

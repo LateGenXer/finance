@@ -125,7 +125,7 @@ data = []
 
 gross_yield_footnote = f'_{"Real" if index_linked else "Nominal"}_ gross/net yields shown.'
 if index_linked is None:
-    gross_yield_footnote += f'  Assuming implied inflation from latest BoE yield curves for index-linked gilts.'
+    gross_yield_footnote += '  Assuming implied inflation from latest BoE yield curves for index-linked gilts.'
 
 premium_bonds_rate, premium_bonds_desc = latest_premium_bonds_rate()
 

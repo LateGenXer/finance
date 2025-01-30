@@ -48,7 +48,7 @@ def combine(dist0, dist1):
 
 class Calculator:
 
-    def __init__(self, odds:int, prizes:list[tuple[int, int]], desc:str):
+    def __init__(self, odds:float, prizes:list[tuple[int, int]], desc:str):
         self.odds = odds
         self.prizes = prizes.copy()
         self.prizes.sort(key=operator.itemgetter(0))
@@ -131,7 +131,7 @@ class Calculator:
         return cls(odds, prizes, desc)
 
     def mean(self):
-        mean = 0
+        mean = 0.0
         for value, volume in self.prizes:
             p = volume / self.total_volume * self.odds * 12
             mean += value * p

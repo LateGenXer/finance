@@ -53,7 +53,7 @@ class Gilt:
 
     type_ = 'Conventional'
 
-    def __init__(self, name, isin, coupon, maturity, issue_date):
+    def __init__(self, name, isin:str, coupon:float, maturity:datetime.date, issue_date:datetime.date):
         self.name = name
         assert isinstance(isin, str) and len(isin) == 12
         self.isin = isin
@@ -111,7 +111,7 @@ class Gilt:
     def accrued_interest(self, settlement_date):
         prev_coupon_date, next_coupon_date = self.prev_next_coupon_date(settlement_date)
 
-        dividend = self.coupon / 2
+        dividend = self.coupon / 2.0
 
         full_coupon_days = (next_coupon_date - prev_coupon_date).days
 
@@ -182,12 +182,12 @@ class Gilt:
                     prev_prev_coupon_date = shift_month(prev_coupon_date, -6)
                     r = (prev_coupon_date - self.issue_date).days / (prev_coupon_date - prev_prev_coupon_date).days + 1
 
-                transactions.append((next_coupon_date, r*self.coupon/2))
+                transactions.append((next_coupon_date, r*self.coupon/2.0))
 
         for next_coupon_date in next_coupon_dates:
-            transactions.append((next_coupon_date, self.coupon/2))
+            transactions.append((next_coupon_date, self.coupon/2.0))
 
-        transactions.append((self.maturity, 100))
+        transactions.append((self.maturity, 100.0))
 
         return transactions
 
@@ -202,7 +202,7 @@ class Gilt:
         n = len(next_coupon_dates) - 1
 
         c = self.coupon
-        f = 2
+        f = 2.0
         d1 = c/f
         d2 = c/f
 
@@ -544,7 +544,7 @@ class GiltPrices:
         self.tidms = {}
         self.prices = {}
 
-    def add_price(self, dt:datetime, isin:str, tidm:str, price:float):
+    def add_price(self, dt:datetime.datetime, isin:str, tidm:str, price:float):
         assert isinstance(dt, datetime.datetime)
         assert lse.is_isin(isin)
         assert lse.is_tidm(tidm)

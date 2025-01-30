@@ -205,7 +205,7 @@ class Calculator:
             else:
                 rows.append((gilt.short_name(), gilt_state.holding))
         if not rows:
-            rows.append(['None', Decimal('NaN')])
+            rows.append(('None', Decimal('NaN')))
         report.write_table(rows, header=header, just='lr', indent='  ')
 
         # https://www.gov.uk/hmrc-internal-manuals/self-assessment-manual/sam121190
