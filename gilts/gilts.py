@@ -35,7 +35,6 @@ import lp
 
 from xirr import *
 from ukcalendar import *
-from data.rpi import RPI
 from data import lse
 
 
@@ -399,8 +398,7 @@ class Issued:
         else:
             entries = self._parse_xml(filename)
 
-        if rpi_series is None:
-            rpi_series = RPI()
+        assert rpi_series is not None
         self.rpi_series = rpi_series
 
         self.all = []

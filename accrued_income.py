@@ -21,12 +21,14 @@ from enum import IntEnum
 import ukcalendar
 
 from data.lse import is_tidm, is_isin
+from data.rpi import RPI
 from gilts import gilts
 from cgtcalc import TaxYear, TextReport
 
 
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
-issued = gilts.Issued(csv_filename=os.path.join(data_dir, 'dmo_issued.csv'))
+rpi_series = RPI()
+issued = gilts.Issued(csv_filename=os.path.join(data_dir, 'dmo_issued.csv'), rpi_series=rpi_series)
 tidm_to_isin = {}
 for isin, tidm in csv.reader(open(os.path.join(data_dir, 'tidm.csv'), 'rt')):
     tidm_to_isin[tidm] = isin
@@ -96,7 +98,7 @@ class Calculator:
                 gilt_state = GiltState(gilt)
                 self.gilt_states[isin] = gilt_state
 
-            if units > 0:
+            if units > Decimal(0):
                 gilt_state.first_acquisition_date = min(gilt_state.first_acquisition_date, settlement_date)
 
             expected_accrued_interest = round(abs(units) * Decimal(gilt.accrued_interest(settlement_date)) * Decimal('.01'), 2)

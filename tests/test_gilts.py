@@ -514,7 +514,8 @@ def test_il_estimated_redemption(issued, entry):
 
 
 def test_issued_latest():
-    Issued()
+    rpi_series = RPI()
+    Issued(rpi_series=rpi_series)
 
 
 @pytest.mark.parametrize("lag", [0, 2])
