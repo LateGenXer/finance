@@ -13,8 +13,6 @@ import re
 
 from download import download
 
-import caching
-
 
 
 logger = logging.getLogger('rpi')
@@ -63,7 +61,6 @@ class RPI:
     _filename = os.path.join(os.path.dirname(__file__), 'rpi-series.csv')
 
     @classmethod
-    @caching.cache_data(ttl=15*60)
     def _load(cls):
         download(RPI._url, cls._filename)
         return cls.parse(cls._filename)

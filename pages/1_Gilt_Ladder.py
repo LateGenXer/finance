@@ -17,8 +17,6 @@ import pandas as pd
 
 import common
 
-from data.rpi import RPI
-
 from gilts.gilts import Issued, GiltPrices, BondLadder, schedule, yield_curve, IndexLinkedGilt
 from ukcalendar import next_business_day, shift_year, shift_month
 
@@ -131,8 +129,8 @@ else:
     s = list(schedule_df.itertuples(index=False))
 
 
+rpi_series = common.get_latest_rpi()
 with st.spinner('Downloading data...'):
-    rpi_series = RPI()
     issued = Issued(rpi_series=rpi_series)
     prices = GiltPrices.from_last_close()
 bl = BondLadder(issued, prices, s)

@@ -22,7 +22,6 @@ import pandas as pd
 import nsandi_premium_bonds
 import ukcalendar
 
-from data.rpi import RPI
 from data.boe import YieldCurve
 from gilts.gilts import Issued, IndexLinkedGilt, GiltPrices
 from xirr import xirr
@@ -142,7 +141,7 @@ if not index_linked:
         data.append(('Mortgage Overpayment', '', '', mortgage_rate, mortgage_rate))
 
 
-rpi_series = RPI()
+rpi_series = common.get_latest_rpi()
 inflation_curve = YieldCurve('Inflation')
 
 # Extend RPI series using impled inflation curve

@@ -9,6 +9,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 import environ
+import data.rpi
 
 
 # https://docs.streamlit.io/library/api-reference/utilities/st.set_page_config
@@ -59,3 +60,8 @@ def analytics_html():
     )
 
     components.html(html)
+
+
+@st.cache_data(ttl=1*60*60, show_spinner='Getting latest RPI data.')
+def get_latest_rpi():
+    return data.rpi.RPI()
