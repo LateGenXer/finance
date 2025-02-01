@@ -9,7 +9,6 @@ import csv
 import datetime
 import io
 import math
-import operator
 import logging
 
 from zoneinfo import ZoneInfo
@@ -131,14 +130,14 @@ premium_bonds_rate, premium_bonds_desc = latest_premium_bonds_rate()
 sonia_rate, sonia_date = latest_sonia_rate()
 
 if not index_linked:
-    data.append(("Premium bonds⁴", '', '', premium_bonds_rate, premium_bonds_rate))
+    data.append(("Premium bonds⁴", '', '', premium_bonds_rate, premium_bonds_rate, 1.0/12.0))
 
-    data.append(('GBP MMF - Income⁵', '', '', sonia_rate, sonia_rate * (1 - marginal_income_tax)))
-    data.append(('GBP MMF - Capital Gain⁶', '', '', sonia_rate, sonia_rate * (1 - cgt_rate)))
+    data.append(('GBP MMF - Income⁵', '', '', sonia_rate, sonia_rate * (1 - marginal_income_tax), 1.5/12.0))
+    data.append(('GBP MMF - Capital Gain⁶', '', '', sonia_rate, sonia_rate * (1 - cgt_rate), 1.5/12.0))
 
     if mortgage_rate:
         mortgage_rate = float(mortgage_rate) / 100.0
-        data.append(('Mortgage Overpayment', '', '', mortgage_rate, mortgage_rate))
+        data.append(('Mortgage Overpayment', '', '', mortgage_rate, mortgage_rate, 0.0))
 
 
 rpi_series = common.get_latest_rpi()
@@ -208,9 +207,11 @@ for g in issued.filter(index_linked=index_linked, settlement_date=settlement_dat
     dates, values = zip(*transactions)
     net_yield = xirr(values, dates)
 
+    maturity_ = (g.maturity - issued.close_date).days / 365.25
+
     url = f'https://www.londonstockexchange.com/stock/{tidm}/united-kingdom'
 
-    data.append((g.short_name() + ' Gilt⁷', tidm, url, gross_yield, net_yield))
+    data.append((g.short_name() + ' Gilt⁷', tidm, url, gross_yield, net_yield, maturity_))
 
 
 prices_date = prices.get_prices_date()
@@ -226,14 +227,15 @@ if index_linked is not False:
 #
 
 
+st.divider()
+
 data = [
-    (instrument, url, gross_yield*100.0, net_yield*100.0, net_yield*100.0/(1.0 - marginal_income_tax))
-    for instrument, tidm, url, gross_yield, net_yield in data
+    (instrument, tidm, url, gross_yield*100.0, net_yield*100.0, net_yield*100.0/(1.0 - marginal_income_tax), maturity_)
+    for instrument, tidm, url, gross_yield, net_yield, maturity_ in data
 ]
 
-data.sort(key=operator.itemgetter(-1), reverse=True)
-
-df = pd.DataFrame(data, columns=['Instrument', 'TIDM', 'GrossYield', 'NetYield', 'EquivalentGrossYield'])
+df = pd.DataFrame(data, columns=['Instrument', 'TIDM', 'URL', 'GrossYield', 'NetYield', 'EquivalentGrossYield', 'Maturity'])
+df.sort_values(by='NetYield', ascending=False, inplace=True, ignore_index=True)
 
 st.dataframe(
     df,
@@ -242,15 +244,17 @@ st.dataframe(
     hide_index=True,
     column_config={
         "Instrument": st.column_config.TextColumn(width="medium"),
-        "TIDM": st.column_config.LinkColumn(display_text=r'https://www\.londonstockexchange\.com/stock/([^/]*).*', width='small'),
+        "TIDM": None,
+        "URL": st.column_config.LinkColumn(label='TIDM', display_text=r'https://www\.londonstockexchange\.com/stock/([^/]*).*', width='small'),
         "GrossYield": st.column_config.NumberColumn(label="Gross Yield¹", format="%.2f%%"),
         "NetYield": st.column_config.NumberColumn(label="Net Yield²", format="%.2f%%"),
         "EquivalentGrossYield": st.column_config.NumberColumn(label="Equivalent Gross³", format="%.2f%%"),
+        "Maturity": None,
     },
 )
 
-st.markdown(f"""
-Notes:
+with st.expander('Notes'):
+    st.markdown(f"""
 1. {gross_yield_footnote}
 2. Net yield deducts tax but ignores the [Personal Savings Allowance](https://www.gov.uk/apply-tax-free-interest-on-savings#personal-savings-allowance) and the [Capital Gains Tax allowance](https://www.gov.uk/capital-gains-tax/allowances).
 3. Equivalent gross yield is the standard cash savings account interest necessary to yield the same net yield.
@@ -259,6 +263,12 @@ Notes:
 6. GBP MMF _Capital Gain_ figure assumes funds are held for a short time, without overlapping income distribution or [Excess Reportable Income (ERI)](https://www.gov.uk/government/publications/offshore-funds-self-assessment-helpsheet-hs265/hs265-offshore-funds), therefore being only liable for Capital Gains Tax.
 7. {gilts_footnote}
 """)
+
+
+st.divider()
+st.subheader('Yield Curves')
+common.plot_yield_curve(df, yTitle='Gross Yield (%)', ySeries='GrossYield', cSeries='Instrument')
+common.plot_yield_curve(df, yTitle='Net Yield (%)', ySeries='NetYield', cSeries='Instrument')
 
 
 #

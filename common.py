@@ -5,6 +5,8 @@
 #
 
 
+import math
+
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -89,3 +91,35 @@ def get_latest_gilt_close_prices():
 def get_latest_gilt_offer_prices():
     from gilts.gilts import GiltPrices
     return GiltPrices.from_latest(kind='offer')
+
+
+def plot_yield_curve(df, yTitle, ySeries='Yield', cSeries='TIDM'):
+    import altair as alt
+
+    xAxisValues = [0, 1, 2, 3, 5, 10, 15, 30, 50]
+
+    maxMaturity = int(math.ceil(df['Maturity'].max()))
+    for v in xAxisValues[1:]:
+        xDomainMax = v
+        if v >= maxMaturity:
+            break
+
+    xAxisValues = [v for v in xAxisValues if v <= xDomainMax]
+
+    xScale = alt.Scale(zero=True, domain=[0, xDomainMax])
+    xAxis = alt.Axis(format=".2~f", values=xAxisValues, title="Maturity (years)")
+    yDomainMin = min(int(math.floor(df[ySeries].min())), 0)
+    yDomainMax = int(math.ceil(df[ySeries].max() + 0.25))
+    yScale = alt.Scale(zero=True, domain=[yDomainMin, yDomainMax])
+    yAxis = alt.Axis(format=".2~f", values=list(range(yDomainMin, yDomainMax + 1)), title=yTitle)
+
+    chart = (
+        alt.Chart(df)
+        .mark_point()
+        .encode(
+            alt.X("Maturity:Q", scale=xScale, axis=xAxis),
+            alt.Y(ySeries + ":Q", scale=yScale, axis=yAxis),
+            alt.Color(cSeries + ":N", legend=None),
+        )
+    )
+    st.altair_chart(chart, use_container_width=True)

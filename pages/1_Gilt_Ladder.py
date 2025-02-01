@@ -7,7 +7,6 @@
 
 import datetime
 import io
-import math
 import os
 
 from zoneinfo import ZoneInfo
@@ -256,31 +255,11 @@ with tab1:
 
     df1 = df
 
-    if True:
-        st.divider()
-        st.subheader('Yield Curve')
-        import altair as alt
-
-        df = yield_curve(issued, prices, index_linked=index_linked)
-
-        xScale = alt.Scale(zero=True, domain=[0, 50])
-        xAxis = alt.Axis(format=".2~f", values=[0, 1, 2, 3, 5, 10, 15, 30, 50], title="Maturity (years)")
-        yDomainMin = min(int(math.floor(df['Yield'].min())), 0)
-        yDomainMax = int(math.ceil(df['Yield'].max() + 0.25))
-        yScale = alt.Scale(zero=True, domain=[yDomainMin, yDomainMax])
-        yTitle = 'Real yield (%)' if index_linked else 'Yield (%)'
-        yAxis = alt.Axis(format=".2~f", values=list(range(yDomainMin, yDomainMax + 1)), title=yTitle)
-
-        chart = (
-            alt.Chart(df)
-            .mark_point()
-            .encode(
-                alt.X("Maturity:Q", scale=xScale, axis=xAxis),
-                alt.Y("Yield:Q", scale=yScale, axis=yAxis),
-                alt.Color("TIDM:N", legend=None),
-            )
-        )
-        st.altair_chart(chart, use_container_width=True)
+    st.divider()
+    st.subheader('Yield Curve')
+    df = yield_curve(issued, prices, index_linked=index_linked)
+    yTitle = 'Real yield (%)' if index_linked else 'Yield (%)'
+    common.plot_yield_curve(df, yTitle=yTitle)
 
 
 with tab2:
