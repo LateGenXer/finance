@@ -9,7 +9,6 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 import environ
-import data.rpi
 
 
 # https://docs.streamlit.io/library/api-reference/utilities/st.set_page_config
@@ -62,6 +61,19 @@ def analytics_html():
     components.html(html)
 
 
-@st.cache_data(ttl=1*60*60, show_spinner='Getting latest RPI data.')
+@st.cache_data(ttl=1*60*60, show_spinner='Getting latest RPI data...')
 def get_latest_rpi():
-    return data.rpi.RPI()
+    from data.rpi import RPI
+    return RPI()
+
+
+@st.cache_data(ttl=30*60, show_spinner='Getting latest gilt close prices...')
+def get_latest_gilt_close_prices():
+    from gilts.gilts import GiltPrices
+    return GiltPrices.from_last_close()
+
+
+@st.cache_data(ttl=5*60, show_spinner='Getting latest gilt offer prices...')
+def get_latest_gilt_offer_prices():
+    from gilts.gilts import GiltPrices
+    return GiltPrices.from_latest(kind='offer')

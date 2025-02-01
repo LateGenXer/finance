@@ -130,9 +130,9 @@ else:
 
 
 rpi_series = common.get_latest_rpi()
+prices = common.get_latest_gilt_offer_prices()
 with st.spinner('Downloading data...'):
     issued = Issued(rpi_series=rpi_series)
-    prices = GiltPrices.from_last_close()
 bl = BondLadder(issued, prices, s)
 bl.index_linked = index_linked
 bl.marginal_income_tax = st.session_state.marginal_income_tax

@@ -160,17 +160,15 @@ if index_linked is None:
         rpi1 = rpi0 * (1 + inflation_curve(years_round)) ** years_exact
         rpi_series.series.append(rpi1)
 
+
 issued = Issued(rpi_series=rpi_series)
 
 
-@st.cache_data(ttl=5*60, show_spinner='Getting latest gilt offer prices.')
-def get_latest_gilt_offer_prices():
-    return GiltPrices.from_latest(kind='offer')
-
 if int(st.query_params.get("latest", "0")):
-    prices = get_latest_gilt_offer_prices()
+    prices = common.get_latest_gilt_offer_prices()
 else:
-    prices = GiltPrices.from_last_close()
+    prices = common.get_latest_gilt_close_prices()
+
 
 maturity_limit = ukcalendar.shift_year(today, maturity)
 for g in issued.filter(index_linked=index_linked, settlement_date=settlement_date):

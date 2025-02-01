@@ -604,7 +604,6 @@ class GiltPrices:
         return prices
 
     @staticmethod
-    @caching.cache_data(ttl=15*60)
     def _download():
         filename = os.path.join(os.path.dirname(__file__), 'gilts-closing-prices.csv')
         download('https://lategenxer.github.io/finance/gilts-closing-prices.csv', filename)
