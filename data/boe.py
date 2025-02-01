@@ -94,7 +94,7 @@ def load():
     df.to_csv(_filename, float_format='{:.6f}'.format)
 
     if __name__ == '__main__' and 'plot' in sys.argv[1:]:
-        df.plot()
+        df.plot(xlim=(0.0, 40.0), grid=True)
         import matplotlib.pyplot as plt
         plt.show()
 
