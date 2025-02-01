@@ -161,7 +161,7 @@ if index_linked is None:
         rpi_series.series.append(rpi1)
 
 
-issued = Issued(rpi_series=rpi_series)
+issued = common.get_issued_gilts(rpi_series)
 
 
 if int(st.query_params.get("latest", "0")):

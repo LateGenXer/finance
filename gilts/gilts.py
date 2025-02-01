@@ -29,8 +29,6 @@ import scipy.optimize as optimize
 
 import pandas as pd
 
-import caching
-
 import lp
 
 from xirr import *
@@ -447,7 +445,6 @@ class Issued:
         self.isin = {gilt.isin: gilt for gilt in self.all}
 
     @staticmethod
-    @caching.cache_data(ttl=15*60)
     def _download():
         # Cache of https://www.dmo.gov.uk/data/XmlDataReport?reportCode=D1A
         # updated daily by .github/workflows/gh-pages.yml to avoid Captchas on

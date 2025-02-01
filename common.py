@@ -10,6 +10,8 @@ import streamlit.components.v1 as components
 
 import environ
 
+from data.rpi import RPI
+
 
 # https://docs.streamlit.io/library/api-reference/utilities/st.set_page_config
 def set_page_config(page_title, page_icon=":material/savings:", layout="centered", initial_sidebar_state="auto"):
@@ -63,8 +65,18 @@ def analytics_html():
 
 @st.cache_data(ttl=1*60*60, show_spinner='Getting latest RPI data...')
 def get_latest_rpi():
-    from data.rpi import RPI
     return RPI()
+
+
+def rpi_hash(rpi_series: RPI):
+    assert rpi_series.ref_year == RPI.ref_year
+    return hash(tuple(rpi_series.series))
+
+
+@st.cache_data(ttl=30*60, hash_funcs={RPI: rpi_hash}, show_spinner='Getting issued gilts...')
+def get_issued_gilts(rpi_series):
+    from gilts.gilts import Issued
+    return Issued(rpi_series=rpi_series)
 
 
 @st.cache_data(ttl=30*60, show_spinner='Getting latest gilt close prices...')
