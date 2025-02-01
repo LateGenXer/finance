@@ -12,6 +12,8 @@ try:
 except ImportError:
     pytest.skip("No Streamlit; skipping.", allow_module_level=True)
 
+import environ
+
 
 default_timeout = 30
 
@@ -46,7 +48,8 @@ def test_mortgage(at):
     assert not at.exception
 
 
+@pytest.mark.skipif(environ.ci, reason="frequent timeouts")
 def test_latest_gilt_prices(at):
     at.query_params['latest'] = '1'
-    at.run()
+    at.run(timeout=60)
     assert not at.exception
