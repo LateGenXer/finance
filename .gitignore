@@ -141,3 +141,5 @@ dmypy.json
 
 rpi-series-latest.csv
 selenium.png
+
+test_download_*.bin
