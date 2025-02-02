@@ -12,7 +12,6 @@ import logging
 import operator
 import os.path
 
-from gilts.gilts import Issued
 from data import lse
 
 
@@ -20,9 +19,7 @@ data_dir = os.path.dirname(__file__)
 tidm_csv = os.path.join(data_dir, 'tidm.csv')
 
 
-def main():
-    logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s %(message)s', level=logging.INFO)
-
+def load():
     tidms = {}
 
     for isin, tidm in csv.reader(open(tidm_csv, 'rt')):
@@ -30,7 +27,17 @@ def main():
         assert lse.is_tidm(tidm)
         tidms[isin] = tidm
 
+    return tidms
+
+
+def main():
+    logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s %(message)s', level=logging.INFO)
+
+    tidms = load()
+
     today = datetime.datetime.now(datetime.timezone.utc).date()
+
+    from gilts.gilts import Issued
 
     for entry in csv.DictReader(open(os.path.join(data_dir, 'dmo_issued.csv'), 'rt')):
         isin = entry['ISIN_CODE']

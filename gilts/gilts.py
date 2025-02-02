@@ -34,6 +34,7 @@ import lp
 from xirr import *
 from ukcalendar import *
 from data import lse
+from data.tidm import load as load_tidms
 
 
 logger = logging.getLogger('gilts')
@@ -536,7 +537,7 @@ class GiltPrices:
 
     def __init__(self):
         self.datetime = datetime.datetime(year=datetime.MINYEAR, month=1, day=1, tzinfo=tzinfo)
-        self.tidms = {}
+        self.tidms = load_tidms()
         self.prices = {}
 
     def add_price(self, dt:datetime.datetime, isin:str, tidm:str, price:float):

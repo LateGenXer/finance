@@ -19,6 +19,8 @@ import matplotlib.pyplot as plt
 from data.rpi import RPI
 from gilts.gilts import *
 
+import data.tradeweb
+
 
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -117,10 +119,10 @@ def tradeweb_parse():
     isins = {}
     for tradeweb_csv in tradeweb_csvs:
         filename = os.path.join(data_dir, tradeweb_csv)
-        for row in csv.DictReader(open(filename, 'rt', encoding='utf-8-sig')):
-            if row['Type'] in ('Conventional', 'Index-linked'):
-                params.append(pytest.param([row], id=f"{row['Gilt Name'].replace(' ', '_')}@{row['Close of Business Date']}"))
-                isins.setdefault(row['ISIN'], []).append(row)
+        for row in data.tradeweb.parse(filename):
+            assert row['Type'] in ('Conventional', 'Index-linked')
+            params.append(pytest.param([row], id=f"{row['Gilt Name'].replace(' ', '_')}@{row['Close of Business Date']}"))
+            isins.setdefault(row['ISIN'], []).append(row)
 
     # Group params by gilt
     if not int(os.environ.get('TRADEWEB_SPLIT', '0')):
