@@ -99,7 +99,6 @@ class RPI:
                     continue
                 year = int(mo.group('year'))
                 month = _months.index(mo.group('month')) + 1
-                date = datetime.date(year, month, 1)
                 rpi = float(value)
                 assert year == next_year
                 assert month == next_month

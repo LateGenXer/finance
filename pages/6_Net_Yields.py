@@ -22,7 +22,7 @@ import nsandi_premium_bonds
 import ukcalendar
 
 from data.boe import YieldCurve
-from gilts.gilts import Issued, IndexLinkedGilt, GiltPrices
+from gilts.gilts import IndexLinkedGilt
 from xirr import xirr
 
 from rtp.uk import cgt_rates

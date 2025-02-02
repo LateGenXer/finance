@@ -8,7 +8,6 @@
 
 import csv
 import datetime
-import os.path
 import sys
 
 

@@ -91,7 +91,7 @@ class Calculator:
         soup = bs4.BeautifulSoup(r.text, features='html.parser')
 
         table = soup.find('table')
-        table_head = table.find('thead')
+        _ = table.find('thead')
         table_row = table.find('tr')
         cells = table_row.find_all('th')
         head = [cell.text for cell in cells]

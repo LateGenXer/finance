@@ -16,7 +16,7 @@ import pandas as pd
 
 import common
 
-from gilts.gilts import Issued, GiltPrices, BondLadder, schedule, yield_curve, IndexLinkedGilt
+from gilts.gilts import BondLadder, schedule, yield_curve, IndexLinkedGilt
 from ukcalendar import next_business_day, shift_year, shift_month
 
 
