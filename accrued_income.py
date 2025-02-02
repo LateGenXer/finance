@@ -23,7 +23,8 @@ import ukcalendar
 from data.lse import is_tidm, is_isin
 from data.rpi import RPI
 from gilts import gilts
-from cgtcalc import TaxYear, TextReport
+from cgtcalc import TaxYear
+from report import TextReport
 
 
 data_dir = os.path.join(os.path.dirname(__file__), 'data')

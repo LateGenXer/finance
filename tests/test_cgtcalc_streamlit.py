@@ -10,7 +10,8 @@ import os.path
 
 import pytest
 
-from cgtcalc import calculate, TextReport, TaxYear
+from cgtcalc import calculate, TaxYear
+from report import TextReport
 
 try:
     from streamlit.testing.v1 import AppTest

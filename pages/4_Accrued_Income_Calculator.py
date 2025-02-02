@@ -19,7 +19,7 @@ common.set_page_config(
 )
 
 from accrued_income import Calculator
-from cgtcalc import TextReport
+from report import TextReport
 
 st.title('Accrued Income Calculator')
 

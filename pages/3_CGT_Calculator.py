@@ -13,7 +13,8 @@ import streamlit as st
 
 import common
 
-from cgtcalc import calculate, TaxYear, HtmlReport, TextReport
+from cgtcalc import calculate, TaxYear
+from report import HtmlReport, TextReport
 
 
 common.set_page_config(
