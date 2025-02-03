@@ -98,6 +98,8 @@ class Calculator:
                 gilt = issued.isin[isin]
                 gilt_state = GiltState(gilt)
                 self.gilt_states[isin] = gilt_state
+            else:
+                gilt = gilt_state.gilt
 
             if units > Decimal(0):
                 gilt_state.first_acquisition_date = min(gilt_state.first_acquisition_date, settlement_date)
