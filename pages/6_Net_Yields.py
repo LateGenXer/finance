@@ -121,9 +121,15 @@ def latest_premium_bonds_rate(show_spinner='Getting latest NS&I Premium Bonds pr
 data = []
 
 
+implied_inflation = int(st.query_params.get("implied_inflation", "0")) != 0
+
+
 gross_yield_footnote = f'_{"Real" if index_linked else "Nominal"}_ gross/net yields shown.'
 if index_linked is None:
-    gross_yield_footnote += '  Assuming implied inflation from latest BoE yield curves for index-linked gilts.'
+    if implied_inflation:
+        gross_yield_footnote += '  Assuming implied inflation from latest BoE yield curves for index-linked gilts.'
+    else:
+        gross_yield_footnote += f'  Assuming {IndexLinkedGilt.inflation_rate:.1%} inflation rate for index-linked gilts.'
 
 premium_bonds_rate, premium_bonds_desc = latest_premium_bonds_rate()
 
@@ -144,7 +150,7 @@ rpi_series = common.get_latest_rpi()
 inflation_curve = YieldCurve('Inflation')
 
 # Extend RPI series using impled inflation curve
-if index_linked is None:
+if index_linked is None and implied_inflation:
     # TODO: Move this as a factory method of the RPI class
     n0 = len(rpi_series.series) -1
     date0 = datetime.date(year=rpi_series.ref_year + n0 // 12, month=0 % 12 + 1, day=1)
@@ -163,7 +169,7 @@ if index_linked is None:
 issued = common.get_issued_gilts(rpi_series)
 
 
-if int(st.query_params.get("latest", "0")):
+if int(st.query_params.get("latest", "0")) != 0:
     prices = common.get_latest_gilt_offer_prices()
 else:
     prices = common.get_latest_gilt_close_prices()

@@ -53,3 +53,11 @@ def test_latest_gilt_prices(at):
     at.query_params['latest'] = '1'
     at.run(timeout=60)
     assert not at.exception
+
+
+def test_latest_gilt_prices(at):
+    at.query_params['implied_inflation'] = '1'
+    gilts_type = at.radio(key="gilts_type")
+    gilts_type.set_value('Both')
+    at.run()
+    assert not at.exception
