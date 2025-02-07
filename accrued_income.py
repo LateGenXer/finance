@@ -68,10 +68,10 @@ class Calculator:
         self.events: list[Event] = []
 
         today = datetime.datetime.now(datetime.timezone.utc).date()
-        if today < today.replace(today.year, 4, 6):
-            self.tax_year_end = datetime.date(today.year, 4, 5)
-        else:
+        if today < datetime.date(today.year, 4, 6):
             self.tax_year_end = datetime.date(today.year + 1, 4, 5)
+        else:
+            self.tax_year_end = datetime.date(today.year + 2, 4, 5)
 
         self.provisional = False
 
@@ -205,7 +205,7 @@ class Calculator:
         rows = []
         for gilt_state in self.gilt_states.values():
             gilt = gilt_state.gilt
-            if gilt.maturity < self.tax_year_end:
+            if gilt.maturity <= self.tax_year_end:
                 assert not gilt_state.holding
             else:
                 rows.append((gilt.short_name(), gilt_state.holding))
