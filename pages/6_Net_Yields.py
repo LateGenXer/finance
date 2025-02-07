@@ -79,7 +79,7 @@ cgt_rate = cgt_rates[0] if marginal_income_tax <= 0.20 else cgt_rates[1]
 
 
 # https://www.bankofengland.co.uk/boeapps/database/help.asp?Back=Y&Highlight=CSV#CSV
-@st.cache_data(ttl=24*60*60, show_spinner='Getting latest SONIA rate.')
+@st.cache_data(ttl=8*60*60, show_spinner='Getting latest SONIA rate.')
 def latest_sonia_rate():
     logger.info('Getting latest SONIA rate.')
 
