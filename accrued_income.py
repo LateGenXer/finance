@@ -220,7 +220,7 @@ class Calculator:
         # https://www.gov.uk/hmrc-internal-manuals/self-assessment-manual/sam121190
         if self.provisional:
             report.write_heading('Footnotes')
-            report.write_paragraph(footnote_mark + ' Provisional figures')
+            report.write_paragraph(f'{footnote_mark} Provisional figures, assuming an RPI rate of {gilts.IndexLinkedGilt.inflation_rate:.1%}')
 
 
 def main():
