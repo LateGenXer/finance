@@ -38,8 +38,12 @@ for isin, tidm in csv.reader(open(os.path.join(data_dir, 'tidm.csv'), 'rt')):
 @dataclasses.dataclass
 class GiltState:
     gilt: gilts.Gilt
+    security: str
     first_acquisition_date: datetime.date = datetime.date.max
     holding: Decimal = Decimal(0)
+
+    def name(self):
+        return f'{self.gilt.short_name()} ({self.security})'
 
 
 Kind = IntEnum('Kind', ['TRADE', 'ACCRUED_INTEREST', 'INTEREST', 'REDEMPTION'])
@@ -96,7 +100,7 @@ class Calculator:
                 gilt_state = self.gilt_states[isin]
             except KeyError:
                 gilt = issued.isin[isin]
-                gilt_state = GiltState(gilt)
+                gilt_state = GiltState(gilt, security)
                 self.gilt_states[isin] = gilt_state
             else:
                 gilt = gilt_state.gilt
@@ -161,7 +165,7 @@ class Calculator:
                 description = f'{verb} nominal £{abs(ev.units)}'
 
                 _, next_coupon_date = gilt.prev_next_coupon_date(ev.date)
-                accrued_incomes.append((next_coupon_date, ev.date, gilt, description, accrued_income))
+                accrued_incomes.append((next_coupon_date, ev.date, gilt_state, description, accrued_income))
             elif ev.kind == Kind.INTEREST:
                 if gilt_state.holding > Decimal(0):
                     interest = round(gilt_state.holding * Decimal(ev.interest), 2)
@@ -170,18 +174,18 @@ class Calculator:
                         if not gilt.is_fixed(ev.date):
                             self.provisional = True
                             description += footnote_mark
-                    accrued_incomes.append((ev.date, ev.date, gilt, description, interest))
+                    accrued_incomes.append((ev.date, ev.date, gilt_state, description, interest))
             else:
                 assert ev.kind == Kind.REDEMPTION
                 gilt_state.holding = Decimal(0)
 
         accrued_incomes.sort(key=operator.itemgetter(0, 1))
 
-        self.yearly_acrued_income: dict[TaxYear, list[tuple[datetime.date, datetime.date, gilts.Gilt, str, Decimal]]] = {}
-        for interest_date, date, gilt, description, income in accrued_incomes:
+        self.yearly_acrued_income: dict[TaxYear, list[tuple[datetime.date, datetime.date, GiltState, str, Decimal]]] = {}
+        for interest_date, date, gilt_state, description, income in accrued_incomes:
             tax_year = TaxYear.from_date(interest_date)
             year_acrued_income = self.yearly_acrued_income.setdefault(tax_year, [])
-            year_acrued_income.append((interest_date, date, gilt, description, income))
+            year_acrued_income.append((interest_date, date, gilt_state, description, income))
 
     def report(self, report):
         tax_years = list(self.yearly_acrued_income.keys())
@@ -193,8 +197,8 @@ class Calculator:
             header = ['Interest date', 'Gilt', 'Transaction date', 'Description', 'Income']
             rows: list[tuple[typing.Any, ...]] = []
             total = Decimal(0)
-            for interest_date, date, gilt, description, income in self.yearly_acrued_income[tax_year]:
-                rows.append((interest_date, gilt.short_name(), date, description, income))
+            for interest_date, date, gilt_state, description, income in self.yearly_acrued_income[tax_year]:
+                rows.append((interest_date, gilt_state.name(), date, description, income))
                 total += income
             footer = ['Total', '', '', ' '*32, total]
             report.write_table(rows, header=header, footer=footer, just='llllr', indent='  ')
@@ -208,7 +212,7 @@ class Calculator:
             if gilt.maturity <= self.tax_year_end:
                 assert not gilt_state.holding
             else:
-                rows.append((gilt.short_name(), gilt_state.holding))
+                rows.append((gilt_state.name(), gilt_state.holding))
         if not rows:
             rows.append(('None', Decimal('NaN')))
         report.write_table(rows, header=header, just='lr', indent='  ')
