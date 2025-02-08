@@ -13,7 +13,7 @@ from typing import Any
 
 import lp
 
-from rtp import hmrc
+from data import hmrc
 
 import rtp.uk as UK
 import rtp.pt as PT
