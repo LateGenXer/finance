@@ -13,9 +13,9 @@ import sys
 import streamlit as st
 import pandas as pd
 
-from rtp import uk
+from tax import uk
 
-from rtp.uk import aa, uiaa
+from tax.uk import aa, uiaa
 from rtp.model import model, column_headers, dataframe
 
 import common

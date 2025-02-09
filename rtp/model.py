@@ -15,11 +15,11 @@ import lp
 
 from data import hmrc
 
-import rtp.uk as UK
-import rtp.pt as PT
-import rtp.jp as JP
+import tax.uk as UK
+import tax.pt as PT
+import tax.jp as JP
 
-from rtp.uk import *
+from tax.uk import *
 
 
 verbosity = 0

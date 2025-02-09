@@ -9,7 +9,7 @@ import streamlit as st
 
 import common
 
-from rtp.uk import state_pension_full
+from tax.uk import state_pension_full
 
 from data import mortality, boe
 import annuities

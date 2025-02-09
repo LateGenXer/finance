@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 
-from rtp import uk
+from tax import uk
 from rtp import model
 
 import test_tax_uk

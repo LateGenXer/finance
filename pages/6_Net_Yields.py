@@ -25,7 +25,7 @@ from data.boe import YieldCurve
 from gilts.gilts import IndexLinkedGilt
 from xirr import xirr
 
-from rtp.uk import cgt_rates
+from tax.uk import cgt_rates
 
 import common
 

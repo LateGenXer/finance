@@ -1,6 +1,6 @@
 import pytest
 
-from rtp.uk import *
+from tax.uk import *
 
 
 basic_rate_allowance  = income_tax_threshold_40 - income_tax_threshold_20
