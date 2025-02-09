@@ -1,13 +1,19 @@
 #
-# Copyright (c) 2023 LateGenXer
+# Copyright (c) 2023-2025 LateGenXer
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 
 
 import copy
+import csv
 import datetime
+import logging
+import math
 import operator
+import os.path
+import subprocess
+import sys
 
 import pytest
 
@@ -17,7 +23,9 @@ from glob import glob
 import matplotlib.pyplot as plt
 
 from data.rpi import RPI
-from gilts.gilts import *
+from gilts.gilts import logger, Gilt, IndexLinkedGilt, Issued, GiltPrices, yield_curve
+from gilts.ladder import BondLadder, schedule
+from ukcalendar import is_business_day, next_business_day, shift_month, shift_year
 
 import data.tradeweb
 
@@ -556,3 +564,13 @@ def test_bond_ladder(issued, prices, count, amount, shift, index_linked, margina
     incoming = df['In'].loc[income_loc].sum()
     income = df['Tax. Inc.'].loc[income_loc].sum()
     assert income <= incoming + .005
+
+
+def test_ladder_main():
+    cmd = [
+        sys.executable, '-m',
+        'gilts.ladder',
+        os.path.join(data_dir, 'test_schedule.csv')
+    ]
+    output = subprocess.check_output(cmd, text=True)
+    assert output

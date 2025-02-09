@@ -16,7 +16,8 @@ import pandas as pd
 
 import common
 
-from gilts.gilts import BondLadder, schedule, yield_curve, IndexLinkedGilt
+from gilts.gilts import IndexLinkedGilt, yield_curve
+from gilts.ladder import BondLadder, schedule, schedule_from_csv
 from ukcalendar import next_business_day, shift_year, shift_month
 
 
@@ -108,9 +109,7 @@ else:
     # To convert to a string based IO:
     buffer = io.TextIOWrapper(schedule_file, encoding="utf-8")
 
-    schedule_df = pd.read_csv(buffer, header=0, names=['Date', 'Value'], parse_dates=['Date'])
-    schedule_df['Date'] = schedule_df['Date'].dt.date
-    schedule_df.sort_values(by=['Date'], inplace=True)
+    schedule_df = schedule_from_csv(buffer)
 
     with st.expander("Uploaded data", expanded=False):
         st.dataframe(
