@@ -35,24 +35,17 @@ def main():
 
     tidms = load()
 
-    today = datetime.datetime.now(datetime.timezone.utc).date()
-
-    from gilts.gilts import Issued
-
-    for entry in csv.DictReader(open(os.path.join(data_dir, 'dmo_issued.csv'), 'rt')):
-        isin = entry['ISIN_CODE']
+    _, content = lse.get_latest_gilt_prices()
+    for item in content:
+        isin = item['isin']
+        tidm = item['tidm']
         assert lse.is_isin(isin)
-        if isin in tidms:
-            continue
-        maturity = Issued._parse_date(entry['REDEMPTION_DATE'])
-        if maturity < today:
-            continue
-        try:
-            tidm = lse.lookup_tidm(isin)
-        except (IndexError, KeyError):
-            continue
         assert lse.is_tidm(tidm)
-        tidms[isin] = tidm
+
+        try:
+            assert tidms[isin] == tidm
+        except KeyError:
+            tidms[isin] = tidm
 
     # https://realpython.com/sort-python-dictionary/
     tidms = dict(sorted(tidms.items(), key=operator.itemgetter(0)))
