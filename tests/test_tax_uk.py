@@ -1,3 +1,10 @@
+#
+# Copyright (c) 2023 LateGenXer
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+
+
 import pytest
 
 from tax.uk import *

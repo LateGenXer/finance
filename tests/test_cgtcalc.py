@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 LateGenXer
+# Copyright (c) 2024-2025 LateGenXer
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
@@ -24,7 +24,8 @@ from glob import glob
 from pprint import pp
 
 from environ import ci
-from cgtcalc import *
+from cgtcalc import calculate, DisposalResult, TaxYear
+from report import TextReport, HtmlReport
 
 
 data_dir = os.path.join(os.path.dirname(__file__), 'data')

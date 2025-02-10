@@ -20,8 +20,8 @@ import pandas as pd
 
 import lp
 
-from xirr import *
-from ukcalendar import *
+from xirr import xirr
+from ukcalendar import next_business_day, shift_year
 from .gilts import Gilt, IndexLinkedGilt, Issued, GiltPrices
 from data.rpi import RPI
 

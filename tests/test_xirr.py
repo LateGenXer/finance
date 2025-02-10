@@ -11,7 +11,7 @@ import pytest
 
 from pytest import approx
 
-from xirr import *
+from xirr import xnpv, xirr
 
 
 def test_xnpv():

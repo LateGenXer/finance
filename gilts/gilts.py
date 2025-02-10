@@ -25,8 +25,8 @@ import scipy.optimize as optimize
 
 import pandas as pd
 
-from xirr import *
-from ukcalendar import *
+from xirr import xnpv, xirr
+from ukcalendar import prev_business_day, next_business_day, days_in_month, shift_month
 from data import lse
 from data.tidm import load as load_tidms
 
