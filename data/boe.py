@@ -21,7 +21,6 @@ from download import download
 
 def read(sh, name):
     # Find the last row
-    row = sh.max_row
     for row in range(6, sh.max_row + 1):
         if sh.cell(row + 1, 1).value is None:
             break
@@ -32,7 +31,6 @@ def read(sh, name):
 
     assert sh.cell(years_row, 1).value == 'years:'
 
-    col = 2
     data = []
     for col in range(2, sh.max_column):
         years = sh.cell(years_row,   col).value
@@ -78,7 +76,7 @@ def load():
     for measure, name in _measures.items():
         filename = f'{name} daily data current month.xlsx'
         stream = archive.open(filename, 'r')
-        wb = openpyxl.load_workbook(stream, read_only=True)
+        wb = openpyxl.load_workbook(stream, read_only=True, data_only=True)
 
         # Spot curve, long end
         sh = wb['4. spot curve']

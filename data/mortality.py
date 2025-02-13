@@ -91,7 +91,7 @@ def get_ons_table(basis:str, gender:str) -> Table:
     except FileNotFoundError:
         if wb is None:
             download(url, filename, ttl=sys.maxsize, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            wb = openpyxl.load_workbook(filename, read_only=True)
+            wb = openpyxl.load_workbook(filename, read_only=True, data_only=True)
 
         sh = wb[f'{gender}s {basis} qx']
 
@@ -143,7 +143,7 @@ def get_cmi_table() -> Table:
     except FileNotFoundError:
         download(url, filename, ttl=sys.maxsize, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-        wb = openpyxl.load_workbook(filename, read_only=True)
+        wb = openpyxl.load_workbook(filename, read_only=True, data_only=True)
         sh = wb['2024-25']
 
         header_cells, = sh.iter_rows(min_row=4, max_row=4)
