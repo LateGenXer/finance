@@ -528,7 +528,7 @@ def test_issued_latest():
     Issued(rpi_series=rpi_series)
 
 
-@pytest.mark.parametrize("lag", [0, 2])
+@pytest.mark.parametrize("lag", [0, 24])
 @pytest.mark.parametrize("interest_rate", [0.0, 0.02])
 @pytest.mark.parametrize("marginal_income_tax", [0.0, 0.40])
 @pytest.mark.parametrize("index_linked", [False, True])

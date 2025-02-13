@@ -21,7 +21,7 @@ import pandas as pd
 import lp
 
 from xirr import xirr
-from ukcalendar import next_business_day, shift_year
+from ukcalendar import next_business_day, shift_month, shift_year
 from .gilts import Gilt, IndexLinkedGilt, Issued, GiltPrices
 from data.rpi import RPI
 
@@ -142,7 +142,7 @@ class BondLadder:
             maturity = g.maturity
             assert maturity > settlement_date
             # XXX handle this better
-            if maturity > shift_year(last_consuption, self.lag):
+            if maturity > shift_month(last_consuption, self.lag):
                 continue
             isin = g.isin
             tidm = self.prices.lookup_tidm(isin)
@@ -168,7 +168,7 @@ class BondLadder:
                 if self.lag:
                     while consumption_dates and consumption_dates[0] <= d:
                         cd = consumption_dates.pop(0)
-                        if maturity < shift_year(cd, self.lag) and cd <= g.ex_dividend_date(maturity):
+                        if maturity < shift_month(cd, self.lag) and cd <= g.ex_dividend_date(maturity):
                             sell = lp.LpVariable(f'Sell_{tidm}_{cd:%Y%m%d}', 0)
                             quantity = quantity - sell
                             prob += quantity >= 0
@@ -431,7 +431,7 @@ def main():
     argparser.add_argument('-I', '--index-linked', action='store_true')
     argparser.add_argument('-L', '--live', action='store_true')
     argparser.add_argument('-i', '--interest-rate', metavar='PERCENTAGE', type=float, default=0.0)
-    argparser.add_argument('-l', '--lag', metavar='YEARS', type=int, default=0)
+    argparser.add_argument('-l', '--lag', metavar='MONTHS', type=int, default=0)
     argparser.add_argument('-t', '--marginal-income-tax-rate', metavar='PERCENTAGE', type=float, default=0.0)
     argparser.add_argument('schedule', metavar="SCHEDULE_CSV")
     args = argparser.parse_args()

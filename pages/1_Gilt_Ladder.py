@@ -135,7 +135,7 @@ bl.index_linked = index_linked
 bl.marginal_income_tax = st.session_state.marginal_income_tax
 bl.interest_rate = st.session_state.interest_rate * .01
 if experimental:
-    bl.lag = st.session_state.window
+    bl.lag = st.session_state.window * 12
 with st.spinner('Solving...'):
     bl.solve()
 
