@@ -7,6 +7,8 @@ repos:
   - id: check-toml
   - id: check-yaml
   - id: check-xml
+  - id: check-json
+  - id: check-merge-conflict
   - id: check-executables-have-shebangs
   - id: check-shebang-scripts-are-executable
   - id: trailing-whitespace
