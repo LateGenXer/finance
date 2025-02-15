@@ -6,6 +6,7 @@
 #
 
 
+import logging
 import math
 import os
 import posixpath
@@ -20,7 +21,7 @@ import pandas as pd
 from download import download
 
 
-def read(sh, name):
+def read(sh, data):
     # Find the last row
     for row in range(6, sh.max_row + 1):
         if sh.cell(row + 1, 1).value is None:
@@ -32,26 +33,24 @@ def read(sh, name):
 
     assert sh.cell(years_row, 1).value == 'years:'
 
-    data = []
     for col in range(2, sh.max_column):
-        years = sh.cell(years_row,   col).value
+        years = sh.cell(years_row, col).value
         if years is None:
             break
-        assert years - math.floor(years) in (0.0, 0.5)
+
+        months = round(years*12)
+        assert math.isclose(years*12, months, rel_tol=1e-5)
+        years = months / 12.0
+
         value = sh.cell(row, col).value
         try:
             rate = float(value)
         except (ValueError, TypeError):
             rate = math.nan
-        data.append((years, rate))
 
-    df = pd.DataFrame(data, columns=['Years', name])
-    df.set_index('Years', inplace=True)
+        data[years] = rate
 
-    assert df.index.is_monotonic_increasing
-    assert df.index.is_unique
-
-    return date, df
+    return date
 
 
 _data_dir = os.path.dirname(__file__)
@@ -79,22 +78,33 @@ def load():
         stream = archive.open(filename, 'r')
         wb = openpyxl.load_workbook(stream, read_only=True, data_only=True)
 
-        # Spot curve, long end
-        sh = wb['4. spot curve']
+        data: dict[float, float] = {}
+        for sheet_name in ['3. spot, short end', '4. spot curve']:
+            sh = wb[sheet_name]
 
-        date, df = read(sh, f'{measure}_Spot')
+            # TODO: Include date
+            _ = read(sh, data)
+
+        df = pd.DataFrame(data.items(), columns=['Years', f'{measure}_Spot'])
+        df.set_index('Years', inplace=True)
+
+        assert df.index.is_monotonic_increasing
+        assert df.index.is_unique
 
         dfs.append(df)
 
     df = pd.concat(dfs, axis=1)
+
+    assert df.index.is_monotonic_increasing
+    assert df.index.is_unique
 
     df.interpolate(method='cubicspline', axis=0, limit_direction='both', inplace=True)
 
     df.to_csv(_filename, float_format='{:.6f}'.format)
 
     if __name__ == '__main__' and 'plot' in sys.argv[1:]:
-        df.plot(xlim=(0.0, 40.0), grid=True)
         import matplotlib.pyplot as plt
+        df.plot(xlim=(0.0, None), grid=True)  # type: ignore[arg-type]
         plt.show()
 
 
@@ -122,4 +132,5 @@ def YieldCurve(measure:str) -> Curve:
 
 
 if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s %(message)s', level=logging.INFO)
     load()
