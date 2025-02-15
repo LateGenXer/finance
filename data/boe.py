@@ -117,8 +117,8 @@ class Curve:
         self.xp = xp
         self.yp = yp
 
-    def __call__(self, x:np.ndarray):
-        return np.interp(x, self.xp, self.yp)
+    def __call__(self, x:float) -> float:
+        return float(np.interp(x, self.xp, self.yp))
 
 
 def YieldCurve(measure:str) -> Curve:
