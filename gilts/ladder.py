@@ -14,8 +14,6 @@ import math
 import operator
 import typing
 
-from pprint import pp
-
 import pandas as pd
 
 import lp

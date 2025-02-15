@@ -9,9 +9,6 @@ import math
 
 import pytest
 
-import numpy as pd
-import pandas as pd
-
 from data import boe
 
 
