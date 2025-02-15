@@ -14,6 +14,7 @@ import zipfile
 
 import openpyxl
 
+import numpy as np
 import pandas as pd
 
 from download import download
@@ -97,17 +98,27 @@ def load():
         plt.show()
 
 
-class YieldCurve:
+class Curve:
 
-    def __init__(self, measure:str):
-        assert measure in _measures
-        download('https://lategenxer.github.io/finance/boe-yield-curves.csv', _filename)
-        df = pd.read_csv(_filename, header=0, index_col=0)
-        self.series = df[f'{measure}_Spot'].multiply(.01)
+    def __init__(self, xp:np.ndarray, yp:np.ndarray):
+        assert np.all(np.diff(xp) > 0.0)
+        assert not np.any(np.isnan(xp))
+        assert not np.any(np.isnan(yp))
+        self.xp = xp
+        self.yp = yp
 
-    def __call__(self, years):
-        assert years * 2 == round(years * 2)
-        return self.series[years]
+    def __call__(self, x:np.ndarray):
+        return np.interp(x, self.xp, self.yp)
+
+
+def YieldCurve(measure:str) -> Curve:
+    assert measure in _measures
+    download('https://lategenxer.github.io/finance/boe-yield-curves.csv', _filename)
+    df = pd.read_csv(_filename, header=0, index_col=0)
+    series = df[f'{measure}_Spot']
+    xp = series.index.to_numpy()
+    yp = series.to_numpy() / 100.0
+    return Curve(xp, yp)
 
 
 if __name__ == '__main__':

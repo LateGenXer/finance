@@ -5,8 +5,11 @@
 #
 
 
+import math
+
 import pytest
 
+import numpy as pd
 import pandas as pd
 
 from data import boe
@@ -19,11 +22,7 @@ def test_load():
 @pytest.mark.parametrize('measure', ('Nominal', 'Real', 'Inflation'))
 def test_yield_curves(measure):
     yield_curve = boe.YieldCurve(measure)
+    assert isinstance(yield_curve, boe.Curve)
 
-    ds = yield_curve.series
-    assert isinstance(ds, pd.Series)
-
-    for i in range(len(ds.index)):
-        assert ds.index[i] == 0.5 * (i + 1)
-
-    assert not ds.isna().any()
+    assert not math.isnan(yield_curve(0.0))
+    assert not math.isnan(yield_curve(100.0))
