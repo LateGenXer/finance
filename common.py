@@ -93,7 +93,7 @@ def get_latest_gilt_offer_prices():
     return GiltPrices.from_latest(kind='offer')
 
 
-def plot_yield_curve(df, yTitle, ySeries='Yield', cSeries='TIDM'):
+def plot_yield_curve(df, yTitle, ySeries='Yield', cSeries='TIDM', ois=None):
     import altair as alt
 
     xAxisValues = [0, 1, 2, 3, 5, 10, 15, 30, 50]
@@ -122,4 +122,16 @@ def plot_yield_curve(df, yTitle, ySeries='Yield', cSeries='TIDM'):
             alt.Color(cSeries + ":N", legend=None),
         )
     )
+    if ois is not None:
+        import pandas as pd
+        df = pd.DataFrame({'x': ois.xp, 'y': ois.yp * 100.0})
+        chart = chart + (
+            alt.Chart(df)
+            .mark_line(strokeDash=[12, 4], size=1, tooltip='Overnight Index Swaps (OIS) curve', clip=True)
+            .encode(
+                x=alt.X("x", scale=xScale, axis=xAxis),
+                y=alt.Y("y", scale=yScale, axis=yAxis),
+                color=alt.value("#333333")
+            )
+        )
     st.altair_chart(chart, use_container_width=True)

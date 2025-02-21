@@ -21,7 +21,7 @@ import pandas as pd
 import nsandi_premium_bonds
 import ukcalendar
 
-from data.boe import YieldCurve
+from data.boe import Curve, YieldCurve
 from gilts.gilts import IndexLinkedGilt
 from xirr import xirr
 
@@ -273,8 +273,12 @@ with st.expander('Notes'):
 
 st.divider()
 st.subheader('Yield Curves')
-common.plot_yield_curve(df, yTitle='Gross Yield (%)', ySeries='GrossYield', cSeries='Instrument')
-common.plot_yield_curve(df, yTitle='Net Yield (%)', ySeries='NetYield', cSeries='Instrument')
+
+ois_curve = YieldCurve('OIS')
+ois_net_curve = Curve(ois_curve.xp, ois_curve.yp * (1.0 - marginal_income_tax))
+
+common.plot_yield_curve(df, yTitle='Gross Yield (%)', ySeries='GrossYield', cSeries='Instrument', ois=ois_curve)
+common.plot_yield_curve(df, yTitle='Net Yield (%)', ySeries='NetYield', cSeries='Instrument', ois=ois_net_curve)
 
 
 #
