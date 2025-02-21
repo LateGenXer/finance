@@ -17,7 +17,7 @@ import operator
 import re
 import sys
 
-import xlrd
+import xlrd  # type: ignore[import-untyped]
 
 from gilts.gilts import Issued
 

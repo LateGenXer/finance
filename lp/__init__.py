@@ -7,8 +7,9 @@
 
 import os
 
+
 if int(os.environ.get('PULP', '0')) != 0:
-    from pulp import *
+    from pulp import *  # type: ignore[import-untyped]
 else:
     from .lp import *
 

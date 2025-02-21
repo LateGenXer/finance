@@ -17,8 +17,8 @@ import time
 
 import numpy as np
 
-from scipy.sparse import csr_array
-from scipy.optimize import linprog
+from scipy.sparse import csr_array  # type: ignore[import-untyped]
+from scipy.optimize import linprog  # type: ignore[import-untyped]
 
 
 class LpVariable:

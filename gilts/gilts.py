@@ -21,7 +21,7 @@ from pprint import pp
 
 from download import download
 
-import scipy.optimize as optimize
+import scipy.optimize as optimize  # type: ignore[import-untyped]
 
 import pandas as pd
 

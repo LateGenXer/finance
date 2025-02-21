@@ -96,7 +96,7 @@ ukbankholidays = _read()
 def main():
     """Generate ukbankholidays.csv."""
 
-    import xlrd
+    import xlrd  # type: ignore[import-untyped]
     from download import download
 
     # https://www.dmo.gov.uk/publications/gilt-market/formulae-and-examples/
