@@ -25,6 +25,7 @@ def exchange_rates(year, month):
     url = f'https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/files/monthly_xml_{year}-{month}.xml'
     headers = {'user-agent': 'Mozilla/5.0'}
     r = _session.get(url, headers=headers, stream=False)
+    assert r.ok
     stream = io.BytesIO(r.content)
     tree = xml.etree.ElementTree.parse(stream)
     root = tree.getroot()
