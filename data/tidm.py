@@ -7,7 +7,6 @@
 
 
 import csv
-import datetime
 import logging
 import operator
 import os.path
