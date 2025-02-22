@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 LateGenXer
+# Copyright (c) 2023-2025 LateGenXer
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
@@ -23,12 +23,12 @@ from ukcalendar import *
     (2110, 12, 26, True),
     (2023, 11, 17, False),
 ])
-def test_isukbankholiday(year,month,day,result):
+def test_isukbankholiday(year:int, month:int, day:int, result:bool) -> None:
     assert isukbankholiday(date(year, month, day)) == result
 
 
 @pytest.mark.skipif(ci, reason='CI')
-def test_isukbankholiday_gov_api():
+def test_isukbankholiday_gov_api() -> None:
     download('https://www.gov.uk/bank-holidays.json', content_type='application/json')
     obj = json.load(open('bank-holidays.json', 'rt'))
     bank_holidays = set()
@@ -60,11 +60,10 @@ dates = [
     ((2004,  9,  3), (2004,  9,  6), (2004,  9,  7), True),
     ((2004,  9,  6), (2004,  9,  7), (2004,  9,  8), True),
 ]
-dates = [pytest.param(date(*dp), date(*d0), date(*dn), b, id=str(date(*d0))) for dp, d0, dn, b in dates]
 
 
-@pytest.mark.parametrize("dp,d0,dn,b", dates)
-def test_business_days(dp, d0, dn, b):
+@pytest.mark.parametrize("dp,d0,dn,b", [pytest.param(date(*dp), date(*d0), date(*dn), b, id=str(date(*d0))) for dp, d0, dn, b in dates])
+def test_business_days(dp:date, d0:date, dn:date, b:bool) -> None:
     assert prev_business_day(d0) == dp
     assert next_business_day(d0) == dn
     assert is_business_day(d0) is b
@@ -75,7 +74,7 @@ def test_business_days(dp, d0, dn, b):
     ((2024, 2, 29),  0, (2024, 2, 29)),
     ((2024, 2, 29), -1, (2023, 2, 28)),
 ], ids=repr)
-def test_shift_year(d0, n, d1):
+def test_shift_year(d0:tuple[int, int, int], n:int, d1:tuple[int, int, int]) -> None:
     assert shift_year(date(*d0), n) == date(*d1)
 
 
@@ -97,11 +96,11 @@ def test_shift_year(d0, n, d1):
     ((2024, 1, 31), 12, (2025,  1, 31)),
     ((2024, 1, 31), 13, (2025,  2, 28)),
 ], ids=repr)
-def test_shift_month(d0, n, d1):
+def test_shift_month(d0:tuple[int, int, int], n:int, d1:tuple[int, int, int]) -> None:
     assert shift_month(date(*d0), n) == date(*d1)
 
 
-def test_main():
+def test_main() -> None:
     from ukcalendar import __file__ as path
     try:
         runpy.run_path(path, run_name='__main__')

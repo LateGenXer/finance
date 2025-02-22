@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 LateGenXer
+# Copyright (c) 2023-2025 LateGenXer
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
@@ -21,11 +21,11 @@ __all__ = [
 ]
 
 
-def is_business_day(date):
+def is_business_day(date:datetime.date) -> bool:
     return date.weekday() < 5 and not isukbankholiday(date)
 
 
-def next_business_day(date):
+def next_business_day(date:datetime.date) -> datetime.date:
     delta = [1, 1, 1, 1, 3, 2, 1]
     while True:
         days = delta[date.weekday()]
@@ -34,7 +34,7 @@ def next_business_day(date):
             return date
 
 
-def prev_business_day(date):
+def prev_business_day(date:datetime.date) -> datetime.date:
     delta = [3, 1, 1, 1, 1, 1, 2]
     while True:
         days = delta[date.weekday()]
@@ -45,14 +45,14 @@ def prev_business_day(date):
 
 _days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
-def days_in_month(year, month):
+def days_in_month(year:int, month:int) -> int:
     if month == 2:
         return 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28
     else:
         return _days_in_month[month - 1]
 
 
-def shift_year(date, years=1):
+def shift_year(date:datetime.date, years:int=1) -> datetime.date:
     assert isinstance(date, datetime.date)
     year = date.year + years
     month = date.month
@@ -60,7 +60,7 @@ def shift_year(date, years=1):
     return date.replace(year=year, month=month, day=day)
 
 
-def shift_month(date, months=1):
+def shift_month(date:datetime.date, months:int=1) -> datetime.date:
     assert isinstance(date, datetime.date)
     year_month = date.year*12 + date.month - 1 + months
     year = year_month // 12
@@ -69,7 +69,7 @@ def shift_month(date, months=1):
     return date.replace(year=year, month=month, day=day)
 
 
-def isukbankholiday(date):
+def isukbankholiday(date:datetime.date) -> bool:
     assert isinstance(date, datetime.date)
     return (date.year, date.month, date.day) in ukbankholidays
 
@@ -80,7 +80,7 @@ def isukbankholiday(date):
 # with corrections from
 # - https://www.api.gov.uk/gds/bank-holidays/
 #     curl -s https://www.gov.uk/bank-holidays.json | jq -r '.["england-and-wales"].events[].date'
-def _read():
+def _read() -> set[tuple[int, int, int]]:
     dates = set()
     filename = os.path.join(os.path.dirname(__file__), 'ukbankholidays.csv')
     with open(filename, 'rt') as stream:
@@ -93,7 +93,7 @@ def _read():
 ukbankholidays = _read()
 
 
-def main():
+def main() -> None:
     """Generate ukbankholidays.csv."""
 
     import xlrd  # type: ignore[import-untyped]
