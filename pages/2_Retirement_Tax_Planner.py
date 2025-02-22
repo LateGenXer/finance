@@ -135,7 +135,7 @@ st.session_state.setdefault('uploaded_hashes', set())
 with st.expander("Upload..."):
     uploaded_file = st.file_uploader("Upload parameters", type=['json'], help='Upload all parameters from JSON file.', label_visibility='collapsed')
     if uploaded_file is not None:
-        data = uploaded_file.getvalue()
+        data = str(uploaded_file.getvalue())
         # Avoid reprocessing the uploaded file on re-runs
         data_hash = hash(data)
         if data_hash not in st.session_state.uploaded_hashes:

@@ -5,14 +5,19 @@
 #
 
 
+from __future__ import annotations
+
 import datetime
 import io
+import typing
 import os
 
 from zoneinfo import ZoneInfo
 
 import streamlit as st
 import pandas as pd
+
+import xlsxwriter.workbook  # type: ignore[import-untyped]
 
 import common
 
@@ -95,6 +100,7 @@ Overestimating the cash interest rate might adversely impact the realized return
 # Withdrawal schedule
 advanced = schedule_file is not None
 if not advanced:
+    shift:typing.Callable[[datetime.date], datetime.date]
     if frequency == 'Yearly':
         shift = shift_year
         amount = st.session_state.year_amount
@@ -107,6 +113,7 @@ if not advanced:
     s = schedule(count, amount, shift, start_date)
 else:
     # To convert to a string based IO:
+    assert schedule_file is not None
     buffer = io.TextIOWrapper(schedule_file, encoding="utf-8")
 
     schedule_df = schedule_from_csv(buffer)
@@ -205,6 +212,7 @@ with tab1:
     st.info(msg, icon="ℹ️")
 
     df = bl.buy_df
+    assert df is not None
 
     # https://pandas.pydata.org/docs/user_guide/style.html#1.-Remove-UUID-and-cell_ids
     from pandas.io.formats.style import Styler
@@ -299,27 +307,26 @@ with tab3:
     @st.cache_data
     def to_excel(df1, df2):
         stream = io.BytesIO()
-        engine = 'xlsxwriter'
-        writer = pd.ExcelWriter(stream, engine=engine)
-        df1.to_excel(writer, index=False, float_format='%.4f', sheet_name='Implementation')
-        df2.to_excel(writer, index=False, float_format='%.2f', sheet_name='CashFlow')
+        with pd.ExcelWriter(stream, engine='xlsxwriter') as writer:
+            df1.to_excel(writer, index=False, float_format='%.4f', sheet_name='Implementation')
+            df2.to_excel(writer, index=False, float_format='%.2f', sheet_name='CashFlow')
 
-        workbook = writer.book
-        sheet1 = writer.sheets["Implementation"]
+            workbook = writer.book
+            assert isinstance(workbook, xlsxwriter.workbook.Workbook)
+            sheet1 = writer.sheets["Implementation"]
 
-        currency_format = workbook.add_format({"num_format": "0.00"})
-        percent_format = workbook.add_format({"num_format": "0.00%"})
+            currency_format = workbook.add_format({"num_format": "0.00"})
+            percent_format = workbook.add_format({"num_format": "0.00%"})
 
-        def apply_format(df, sheet, columns, format):
-            names = list(df1.columns)
-            for name in columns:
-                col = names.index(name)
-                sheet1.set_column(col, col, None, format)
+            def apply_format(df, sheet, columns, format):
+                names = list(df1.columns)
+                for name in columns:
+                    col = names.index(name)
+                    sheet1.set_column(col, col, None, format)
 
-        apply_format(df1, sheet1, ["Clean Price", "Dirty Price", "Quantity", "Cost"], currency_format)
-        apply_format(df1, sheet1, ["GRY"], percent_format)
+            apply_format(df1, sheet1, ["Clean Price", "Dirty Price", "Quantity", "Cost"], currency_format)
+            apply_format(df1, sheet1, ["GRY"], percent_format)
 
-        writer.close()
         return stream.getvalue()
 
     xlsx = to_excel(df1, df2)

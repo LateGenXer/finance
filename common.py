@@ -12,6 +12,7 @@ import streamlit.components.v1 as components
 
 import environ
 
+from typing import Any
 from data.rpi import RPI
 
 
@@ -24,7 +25,7 @@ def set_page_config(page_title, page_icon=":material/savings:", layout="centered
         initial_sidebar_state=initial_sidebar_state,
         menu_items={
             "Get help": "https://github.com/LateGenXer/finance/discussions",
-            "Report a Bug": "https://github.com/LateGenXer/finance/issues",
+            "Report a bug": "https://github.com/LateGenXer/finance/issues",
             "About": """LateGenXer's financial tools.
 
 https://lategenxer.streamlit.app/
@@ -113,7 +114,7 @@ def plot_yield_curve(df, yTitle, ySeries='Yield', cSeries='TIDM', ois=None):
     yScale = alt.Scale(zero=True, domain=[yDomainMin, yDomainMax])
     yAxis = alt.Axis(format=".2~f", values=list(range(yDomainMin, yDomainMax + 1)), title=yTitle)
 
-    chart = (
+    chart:Any = (
         alt.Chart(df)
         .mark_point()
         .encode(

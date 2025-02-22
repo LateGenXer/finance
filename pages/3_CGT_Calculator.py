@@ -13,8 +13,9 @@ import streamlit as st
 
 import common
 
+from typing import TextIO
 from cgtcalc import calculate, TaxYear
-from report import HtmlReport, TextReport
+from report import Report, HtmlReport, TextReport
 
 
 common.set_page_config(
@@ -69,6 +70,7 @@ transactions = st.text_area(
 # Calculation
 #
 
+stream:TextIO
 if transactions:
     stream = io.StringIO(transactions)
 else:
@@ -81,6 +83,7 @@ for warning in result.warnings:
 if tax_year != 'All':
     result.filter_tax_year(TaxYear.from_string(tax_year))
 
+report:Report
 with st.container(border=True):
     if format_ == 'HTML':
         html = io.StringIO()

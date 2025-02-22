@@ -13,6 +13,8 @@ import streamlit as st
 
 import common
 
+from typing import TextIO
+
 common.set_page_config(
     page_title="Accrued Income Calculator",
     layout="wide",
@@ -48,6 +50,7 @@ transactions = st.text_area(
 # Calculation
 #
 
+stream:TextIO
 if transactions:
     stream = io.StringIO(transactions)
 else:

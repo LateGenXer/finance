@@ -235,12 +235,12 @@ if index_linked is not False:
 
 st.divider()
 
-data = [
+rows = [
     (instrument, tidm, url, gross_yield*100.0, net_yield*100.0, net_yield*100.0/(1.0 - marginal_income_tax), maturity_)
     for instrument, tidm, url, gross_yield, net_yield, maturity_ in data
 ]
 
-df = pd.DataFrame(data, columns=['Instrument', 'TIDM', 'URL', 'GrossYield', 'NetYield', 'EquivalentGrossYield', 'Maturity'])
+df = pd.DataFrame(rows, columns=['Instrument', 'TIDM', 'URL', 'GrossYield', 'NetYield', 'EquivalentGrossYield', 'Maturity'])
 df.sort_values(by='NetYield', ascending=False, inplace=True, ignore_index=True)
 
 st.dataframe(
