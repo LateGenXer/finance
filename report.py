@@ -9,45 +9,45 @@ import html
 import sys
 
 
+from typing import Sequence, Any, TextIO
 from abc import ABC, abstractmethod
-
 
 
 class Report(ABC):
 
-    def start(self):
+    def start(self) ->None:
         pass
 
     @abstractmethod
-    def write_heading(self, heading, level=1):  # pragma: no cover
+    def write_heading(self, heading:str, level:int=1) -> None:  # pragma: no cover
         raise NotImplementedError
 
     @abstractmethod
-    def write_paragraph(self, paragraph):  # pragma: no cover
+    def write_paragraph(self, paragraph:str) -> None:  # pragma: no cover
         raise NotImplementedError
 
     @abstractmethod
-    def write_table(self, rows, header=None, footer=None, just=None, indent=''):  # pragma: no cover
+    def write_table(self, rows:list[list], header:Sequence[Any]|None=None, footer:Sequence[Any]|None=None, just:Sequence[Any]|None=None, indent:str='') -> None:  # pragma: no cover
         raise NotImplementedError
 
     @staticmethod
-    def format(field):
+    def format(field:Any) -> str:
         if field is None or field != field:
             return ''
         else:
             return str(field)
 
-    def end(self):
+    def end(self) -> None:
         pass
 
 
 class TextReport(Report):
 
-    def __init__(self, stream):
+    def __init__(self, stream:TextIO):
         self.stream = stream
         self.heading_sep = ''
 
-    def write_heading(self, heading, level=1):
+    def write_heading(self, heading:str, level:int=1) -> None:
         if level <= 1:
             heading = heading.upper()
         if sys.platform != 'win32' and self.stream.isatty():
@@ -59,11 +59,11 @@ class TextReport(Report):
         self.stream.write(self.heading_sep + heading + '\n\n')
         self.heading_sep = ''
 
-    def write_paragraph(self, paragraph):
+    def write_paragraph(self, paragraph:str) -> None:
         self.stream.write(paragraph + '\n\n')
         self.heading_sep = '\n'
 
-    def write_table(self, rows, header=None, footer=None, just=None, indent=''):
+    def write_table(self, rows:list[list], header:Sequence[Any]|None=None, footer:Sequence[Any]|None=None, just:Sequence[Any]|None=None, indent:str='') -> None:  # pragma: no cover
         stream = self.stream
 
         columns = [list(col) for col in zip(*rows)]
@@ -128,10 +128,10 @@ class TextReport(Report):
 
 class HtmlReport(Report):
 
-    def __init__(self, stream):
+    def __init__(self, stream:TextIO):
         self.stream = stream
 
-    def start(self):
+    def start(self) -> None:
         # https://getbootstrap.com/docs/3.4/getting-started/#template
         self.stream.write('''<!doctype html>
 <html lang="en">
@@ -159,22 +159,22 @@ class HtmlReport(Report):
 <h1 class="visible-print-block">Capital Gains Calculation</h1>
 ''')
 
-    def write_heading(self, heading, level=1):
+    def write_heading(self, heading:str, level:int=1) -> None:
         level += 1
         heading = html.escape(heading)
         self.stream.write(f'\n<h{level}>{heading}</h{level}>\n\n')
 
-    def write_paragraph(self, paragraph):
+    def write_paragraph(self, paragraph:str) -> None:
         paragraph = html.escape(paragraph)
         self.stream.write(f'<p>{paragraph}</p>\n\n')
 
     @staticmethod
-    def format_and_escape(field):
+    def format_and_escape(field:Any) -> str:
         field = Report.format(field)
         field = html.escape(field)
         return field
 
-    def write_table(self, rows, header=None, footer=None, just=None, indent=''):
+    def write_table(self, rows:list[list], header:Sequence[Any]|None=None, footer:Sequence[Any]|None=None, just:Sequence[Any]|None=None, indent:str='') -> None:  # pragma: no cover
         fmt = self.format_and_escape
 
         if just is None:
@@ -204,7 +204,7 @@ class HtmlReport(Report):
         self.stream.write('</table>\n')
         self.stream.write('</div>\n')
 
-    def end(self):
+    def end(self) -> None:
         self.stream.write('\n')
         self.stream.write('</div>\n')
         self.stream.write('</body>\n')
