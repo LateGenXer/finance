@@ -28,7 +28,7 @@ __all__ = [
 logger = logging.getLogger('download')
 
 
-def download(url:str, filename:str|None=None, ttl:int=0, content_type:str|None=None, verbose:bool=False):
+def download(url:str, filename:str|None=None, ttl:int=0, content_type:str|None=None, verbose:bool=False) -> None:
     if filename is None:
         filename = posixpath.basename(url)
 

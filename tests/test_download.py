@@ -17,7 +17,7 @@ import urllib.error
 from download import download
 
 
-def test_static():
+def test_static() -> None:
     url = 'https://httpbun.org/cache'
     filename = 'test_download_static.bin'
 
@@ -35,7 +35,7 @@ def test_static():
     os.unlink(filename)
 
 
-def test_dynamic():
+def test_dynamic() -> None:
     url = 'https://httpbun.org/bytes/128'
     filename = 'test_download_dynamic.bin'
 
@@ -53,7 +53,7 @@ def test_dynamic():
     os.unlink(filename)
 
 
-def test_ttl():
+def test_ttl() -> None:
     url = 'https://httpbun.org/bytes/128'
     filename = 'test_download_ttl.bin'
 
@@ -78,7 +78,7 @@ def test_ttl():
     os.unlink(filename)
 
 
-def test_content_type():
+def test_content_type() -> None:
     filename = 'test_download_content_type.bin'
 
     # Download
@@ -93,7 +93,7 @@ def test_content_type():
     assert not os.path.isfile(filename)
 
 
-def test_content_length():
+def test_content_length() -> None:
     last_modfiied = 'Fri, 08 Dec 2023 20:03:24 GMT'
     url = 'https://httpbun.org/response-headers?Last-modified=' + urllib.parse.quote_plus(last_modfiied)
     filename = 'test_download_content_length.bin'
@@ -110,7 +110,7 @@ def test_content_length():
     os.unlink(filename)
 
 
-def test_404():
+def test_404() -> None:
     url = 'https://httpbun.org/status/404'
     filename = 'test_download_404.bin'
 
@@ -120,7 +120,7 @@ def test_404():
     assert not os.path.isfile(filename)
 
 
-def test_filename():
+def test_filename() -> None:
     filename = 'test_download_filename.bin'
     url = f'https://httpbun.org/anything/{filename}'
 
@@ -131,7 +131,7 @@ def test_filename():
     os.unlink(filename)
 
 
-def test_main():
+def test_main() -> None:
     url = 'https://httpbun.org/bytes/128'
     filename = 'test_download_main.bin'
 
