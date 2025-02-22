@@ -14,26 +14,26 @@ from data import mortality
 
 @pytest.mark.parametrize('gender', ['male', 'female'])
 @pytest.mark.parametrize('basis', ['period', 'cohort'])
-def test_get_ons_table(basis, gender):
+def test_get_ons_table(basis:str, gender:str) -> None:
     table = mortality.get_ons_table(basis, gender)
     assert isinstance(table, mortality.Table)
 
 
-def test_get_cmi_table():
+def test_get_cmi_table() -> None:
     table = mortality.get_cmi_table()
     assert isinstance(table, mortality.Table)
 
 
 @pytest.fixture(scope='module')
-def cmi_table():
+def cmi_table() -> mortality.Table:
     return mortality.get_cmi_table()
 
 
-def test_mortality_max_age(cmi_table):
+def test_mortality_max_age(cmi_table:mortality.Table) -> None:
     assert cmi_table.mortality(2024, 999) == 1.0
 
 
-def test_life_expectancy(cmi_table):
+def test_life_expectancy(cmi_table:mortality.Table) -> None:
     mp = mortality.get_ons_table('period', 'male')
     fp = mortality.get_ons_table('period', 'female')
 

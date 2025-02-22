@@ -51,7 +51,7 @@ class Table(typing.NamedTuple):
         return le
 
 
-def row_values(row:tuple[openpyxl.cell.cell.Cell, ...]) -> list:
+def row_values(row:tuple[openpyxl.cell.cell.Cell|openpyxl.cell.cell.MergedCell,...]) -> list:
     return [field.value for field in row]
 
 
