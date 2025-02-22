@@ -48,7 +48,7 @@ combined_test_cases = [
 
 
 @pytest.mark.parametrize("income,income_tax,cg,cgt,ma", combined_test_cases)
-def test_tax(income, cg, income_tax, cgt, ma):
+def test_tax(income:int, cg:int, income_tax:float, cgt:float, ma:int) -> None:
     income_tax_, cgt_ = tax(income, cg, marriage_allowance=ma)
     assert income_tax_ == pytest.approx(income_tax, abs=1e-2)
     assert cgt_ == pytest.approx(cgt, abs=1e-2)

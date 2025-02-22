@@ -35,7 +35,7 @@ state_pension_full = 230.25 * weeks_per_year
 
 # https://www.gov.uk/government/publications/increasing-normal-minimum-pension-age/increasing-normal-minimum-pension-age
 # https://adviser.royallondon.com/technical-central/pensions/benefit-options/increase-in-normal-minimum-pension-age-in-2028/
-def nmpa(dob):
+def nmpa(dob:int) -> int:
     if dob + 55 <= 2028:
         return 55
     elif dob + 57 < 2044:
@@ -47,7 +47,7 @@ def nmpa(dob):
 
 # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/310231/spa-timetable.pdf
 # XXX rough approximation
-def state_pension_age(dob):
+def state_pension_age(dob:int) -> int:
     if dob + 66 <= 2028:
         return 66
     elif dob + 67 < 2044:
@@ -68,21 +68,21 @@ lsa = 268275
 isa_allowance = 20000
 
 
-def _split(allowance, income):
+def _split(allowance:float|int, income:float|int) -> tuple[float|int, float|int, float|int]:
     used = min(allowance, income)
     allowance -= used
     income -= used
     return allowance, income, used
 
 
-def tax(income, capital_gains = 0, marriage_allowance = 0):
+def tax(income:float|int, capital_gains:float|int = 0, marriage_allowance:float|int = 0) -> tuple[float, float]:
 
     assert income_tax_threshold_45 >= pa_limit + 2*income_tax_threshold_20
 
     # https://www.gov.uk/income-tax-rates/income-over-100000
-    personal_allowance    = max(income_tax_threshold_20 + marriage_allowance - max(income - pa_limit, 0)*0.5, 0)
-    basic_rate_allowance  = income_tax_threshold_40 - income_tax_threshold_20
-    higher_rate_allowance = income_tax_threshold_45 - personal_allowance - basic_rate_allowance
+    personal_allowance   :float = max(income_tax_threshold_20 + marriage_allowance - max(income - pa_limit, 0)*0.5, 0)
+    basic_rate_allowance :float = income_tax_threshold_40 - income_tax_threshold_20
+    higher_rate_allowance:float = income_tax_threshold_45 - personal_allowance - basic_rate_allowance
 
     personal_allowance,    income,                 _                  = _split(personal_allowance,    income)
     basic_rate_allowance,  income,                 basic_rate_income  = _split(basic_rate_allowance,  income)
