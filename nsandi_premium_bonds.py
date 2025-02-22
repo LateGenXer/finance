@@ -10,6 +10,8 @@
 #
 
 
+from __future__ import annotations
+
 import logging
 import multiprocessing.dummy
 import operator
@@ -28,7 +30,7 @@ logger = logging.getLogger('nsandi')
 
 # Binomial PDF
 # https://en.wikipedia.org/wiki/Binomial_distribution
-def binomial(k, n, p):
+def binomial(k:int, n:int, p:float) -> float:
     assert k <= n
     if n > 22:
         return exp(lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1) + log(p)*k + log(1 - p)*(n - k))
@@ -36,7 +38,7 @@ def binomial(k, n, p):
         return float(factorial(n)) / float(factorial(k) * factorial(n - k)) * p**k * (1 - p)**(n - k)
 
 
-def combine(dist0, dist1):
+def combine(dist0:np.ndarray, dist1:np.ndarray) -> np.ndarray:
     # This is a form of convolution, but it's not easy to coerce numpy.convolve
     # to do exactly what we want.
     N, = dist0.shape
@@ -64,7 +66,7 @@ class Calculator:
 
     # Scrape prizes and odds from nsandi.com
     @classmethod
-    def from_latest(cls):
+    def from_latest(cls) -> Calculator:
         # https://nsandi-corporate.com/news-research/news/new-rates-premium-bonds-direct-saver-and-income-bonds
         odds = 1/22000
         prizes = [
@@ -130,14 +132,14 @@ class Calculator:
 
         return cls(odds, prizes, desc)
 
-    def mean(self):
+    def mean(self) -> float:
         mean = 0.0
         for value, volume in self.prizes:
             p = volume / self.total_volume * self.odds * 12
             mean += value * p
         return mean
 
-    def median(self, n):
+    def median(self, n:int) -> int:
         assert n > 0
         assert n <= 50000
         assert n % 25 == 0
@@ -173,14 +175,14 @@ class Calculator:
 
         # Obtain the median through the Cumulative Mass Function (CMF)
         cmf = np.cumsum(pmf0)
-        median = np.searchsorted(cmf, 0.5, side='right')
+        median = int(np.searchsorted(cmf, 0.5, side='right'))
         median *= 25
         return median
 
     # Divide samples in this number of chunks for efficiency.
     chunk = 1024
 
-    def sample(self, p):
+    def sample(self, p:float) -> np.ndarray:
         prize = np.zeros([self.chunk], dtype=np.int64)
         for value, volume in self.prizes:
             k = np.random.binomial(12*volume, p, size=[self.chunk])
@@ -189,7 +191,7 @@ class Calculator:
 
     # Obtain the median through Monte Carlo simulation using multiple threads.
     # Essentially used to verify the correctness of the median() function above.
-    def median_mc(self, n, N):
+    def median_mc(self, n:int, N:int) -> int:
         assert n > 0
         assert n <= 50000
         assert n % 25 == 0
@@ -209,7 +211,7 @@ class Calculator:
         return median
 
 
-def main():
+def main() -> None:
     logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s %(message)s', level=logging.INFO)
     c = Calculator.from_latest()
     print(f'Mean:   {c.mean():.2%}')
