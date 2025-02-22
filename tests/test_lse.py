@@ -24,7 +24,7 @@ isin_tidm = {
 }
 
 
-def test_is_tidm():
+def test_is_tidm() -> None:
     for tidm in isin_tidm.values():
         assert lse.is_tidm(tidm)
 
@@ -36,7 +36,7 @@ def test_is_tidm():
     assert not lse.is_tidm('X'*5)
 
 
-def test_is_isin():
+def test_is_isin() -> None:
     for isin in isin_tidm.keys():
         assert lse.is_isin(isin)
 
@@ -49,18 +49,18 @@ def test_is_isin():
 
 
 @pytest.mark.parametrize('isin,tidm', isin_tidm.items())
-def test_lookup_tidm(isin, tidm):
+def test_lookup_tidm(isin:str, tidm:str) -> None:
     assert lse.lookup_tidm(isin) == tidm
 
 
 @pytest.mark.parametrize('tidm', isin_tidm.values())
-def test_get_instrument_data(tidm):
+def test_get_instrument_data(tidm:str) -> None:
     data = lse.get_instrument_data(tidm)
     assert isinstance(data['lastprice'], (float, int))
     assert isinstance(data['lastclose'], (float, int))
 
 
-def test_get_latest_gilt_prices():
+def test_get_latest_gilt_prices() -> None:
     dt, content = lse.get_latest_gilt_prices()
     for instrument in content:
         assert 'isin' in instrument
@@ -68,7 +68,7 @@ def test_get_latest_gilt_prices():
         assert isinstance(instrument['lastprice'], (float, int, types.NoneType))
 
 
-def test_main():
+def test_main() -> None:
     output = subprocess.check_output([sys.executable, lse.__file__], text=True)
     found = False
     with io.StringIO(output) as stream:

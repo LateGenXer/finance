@@ -30,7 +30,7 @@ __all__ = [
 logger = logging.getLogger('lse')
 
 
-def is_tidm(tidm):
+def is_tidm(tidm:str) -> bool:
     if len(tidm) not in (3, 4):
         return False
 
@@ -108,7 +108,7 @@ _tidm_re = re.compile(r'^https://www\.londonstockexchange\.com/[^/]+/(?P<tidm>[^
 _session = requests.Session()
 
 
-def lookup_tidm(isin):
+def lookup_tidm(isin:str) -> str:
     logger.info(f'Looking up TIDM of {isin}')
     # https://www.londonstockexchange.com/live-markets/market-data-dashboard/price-explorer?categories=BONDS&subcategories=14
     url = f'https://api.londonstockexchange.com/api/gw/lse/search?worlds=quotes&q={isin}'
@@ -124,7 +124,7 @@ def lookup_tidm(isin):
     return tidm
 
 
-def get_instrument_data(tidm):
+def get_instrument_data(tidm:str) -> dict:
     logger.info(f'Getting {tidm} instrument data')
     url = f'https://api.londonstockexchange.com/api/gw/lse/instruments/alldata/{tidm}'
     r = _session.get(url, headers=_headers, stream=False)
@@ -133,7 +133,7 @@ def get_instrument_data(tidm):
     return obj
 
 
-def get_latest_gilt_prices():
+def get_latest_gilt_prices() -> tuple[datetime.date, dict]:
     '''Get the latest gilt prices with a single request'''
 
     logger.info('Getting gilt prices from LSE')
@@ -167,7 +167,7 @@ def get_latest_gilt_prices():
     raise ValueError  # pragma: no cover
 
 
-def main():
+def main() -> None:
     logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s %(message)s', level=logging.INFO)
 
     dt, content = get_latest_gilt_prices()
