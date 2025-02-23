@@ -115,8 +115,8 @@ def income_tax_lp(prob, gross_income, income_tax_bands, factor=1.0):
             ub = ubound - lbound
         income_tax_band = lp.LpVariable(f'net_{uid}_{int(rate*1000)}', 0, ub)
         uid += 1
-        total += income_tax_band
-        tax += income_tax_band * rate
+        total = total + income_tax_band
+        tax = tax + income_tax_band * rate
         lbound = ubound
     prob += total == gross_income
     return tax
@@ -224,7 +224,7 @@ class DCP:
         self.nmpa = nmpa
 
     def contrib(self, contrib):
-        self.uf += contrib
+        self.uf = self.uf + contrib
 
     def drawdown(self, drawdown, age):
         # Flexible-Access Drawdown
@@ -233,7 +233,7 @@ class DCP:
         else:
             tfc = 0
 
-        self.df -= drawdown
+        self.df = self.df - drawdown
         self.prob += self.df >= 0
 
         self.uf *= 1.0 + self.growth_rate_real
@@ -250,11 +250,11 @@ class DCP:
         crystalized_inc = lp.LpVariable(f'crystalized_inc_{uid}', 0)
         uid += 1
         self.prob += 3*crystalized_tfc <= crystalized_inc
-        self.lsa -= crystalized_tfc
+        self.lsa = self.lsa - crystalized_tfc
         self.prob += self.lsa >= 0
-        self.uf -= crystalized_tfc + crystalized_inc
+        self.uf = self.uf - (crystalized_tfc + crystalized_inc)
         self.prob += self.uf >= 0
-        self.df += crystalized_inc
+        self.df = self.df + crystalized_inc
         tfc = crystalized_tfc
         return tfc
 
@@ -283,10 +283,10 @@ class GIA:
 
         for yr in range(1, len(self.assets)):
             proceeds = lp.LpVariable(f'gia_proceeds_{uid}_{yr}', 0)
-            self.assets[yr] -= proceeds
+            self.assets[yr] = self.assets[yr] - proceeds
             self.prob += self.assets[yr] >= 0
-            total += proceeds
-            gains += proceeds * (1.0 - (1.0 + growth_rate) ** -yr)
+            total = total + proceeds
+            gains = gains + proceeds * (1.0 - (1.0 + growth_rate) ** -yr)
 
         for yr in range(0, len(self.assets)):
             self.assets[yr] *= (1.0 + self.growth_rate_real) * (1.0 - eps)
@@ -299,7 +299,7 @@ class GIA:
     def value(self):
         total = 0
         for balance in self.assets:
-            total += balance
+            total = total + balance
         return total
 
 
@@ -436,10 +436,10 @@ def model(
         ls_sipp_gross_2 = ls_sipp_2 * (1.0 / (1.0 - max(marginal_income_tax_2, 0.20)))
         prob += sipp_contrib_1 + ls_sipp_gross_1 <= aa_1
         prob += sipp_contrib_2 + ls_sipp_gross_2 <= aa_2
-        sipp_1 += ls_sipp_gross_1
-        sipp_2 += ls_sipp_gross_2
-        isa    += ls_isa
-        gia    += ls_gia * (1 - eps)
+        sipp_1 = sipp_1 + ls_sipp_gross_1
+        sipp_2 = sipp_2 + ls_sipp_gross_2
+        isa    = isa    + ls_isa
+        gia    = gia    + ls_gia * (1 - eps)
 
     nmpa_1 = nmpa(dob_1)
     nmpa_2 = nmpa(dob_2)
@@ -503,7 +503,7 @@ def model(
         if uk_yr:
             isa_allowance_yr = isa_allowance*N
             drawdown_isa = lp.LpVariable(f'dd_isa@{yr}', -isa_allowance_yr)  # Bed & ISA
-            isa       -= drawdown_isa
+            isa = isa - drawdown_isa
             prob += isa >= 0
             isa *= 1.0 + isa_growth_rate_real
         elif yr == retirement_year:
@@ -550,8 +550,8 @@ def model(
             if yr < retirement_year:
                 tax_1, cgt_1 = uk_tax_lp(prob, base_salary_1 + income_gross_1, cg_1)
                 tax_2, cgt_2 = uk_tax_lp(prob, base_salary_2 + income_gross_2, cg_2)
-                tax_1 -= base_income_tax_1
-                tax_2 -= base_income_tax_2
+                tax_1 = tax_1 - base_income_tax_1
+                tax_2 = tax_2 - base_income_tax_2
             else:
                 if marriage_allowance and ann_income_2 <= UK.income_tax_threshold_20:
                     prob += income_gross_1 <= UK.income_tax_threshold_40
@@ -585,15 +585,15 @@ def model(
 
         incomings = income_gross_1 + income_gross_2 + drawdown_isa + drawdown_gia
         if uk_yr:
-            incomings += tfc_1 + tfc_2
+            incomings = incomings + tfc_1 + tfc_2
         if yr < retirement_year:
-            incomings += misc_contrib
+            incomings = incomings + misc_contrib
         outgoings = tax_1 + tax_2 + cgt
         if yr >= retirement_year:
             income_net = retirement_income_net
-            outgoings += retirement_income_net
-            outgoings += contrib_1*0.80
-            outgoings += contrib_2*0.80
+            outgoings = outgoings + retirement_income_net
+            outgoings = outgoings + contrib_1*0.80
+            outgoings = outgoings + contrib_2*0.80
         else:
             income_net = 0
 
