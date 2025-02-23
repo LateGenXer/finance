@@ -133,7 +133,7 @@ def get_instrument_data(tidm:str) -> dict:
     return obj
 
 
-def get_latest_gilt_prices() -> tuple[datetime.date, dict]:
+def get_latest_gilt_prices() -> tuple[datetime.datetime, dict]:
     '''Get the latest gilt prices with a single request'''
 
     logger.info('Getting gilt prices from LSE')

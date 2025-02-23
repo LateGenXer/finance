@@ -188,6 +188,7 @@ def parse_cgtcalculator_result(filename):
         tyr["gains"] = Decimal(0)
         tyr["losses"] = Decimal(0)
         for disposal in disposals:
+            assert isinstance(disposal['gain'], Decimal)
             gain = disposal['gain']
             if gain >= Decimal(0):
                 tyr["gains"] += gain

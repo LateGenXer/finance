@@ -521,7 +521,11 @@ class Issued:
             # ex-dividend period."
             if settlement_date is not None and settlement_date > g.ex_dividend_date(g.maturity):
                 continue
-            type_ = 'Conventional' if g.type_ == 'Index-linked' and g.is_redemption_fixed() else g.type_
+            type_ = g.type_
+            if g.type_ == 'Index-linked':
+                assert isinstance(g, IndexLinkedGilt)
+                if g.is_redemption_fixed():
+                    type_ = 'Conventional'
             if type_ not in types:
                 continue
             yield g

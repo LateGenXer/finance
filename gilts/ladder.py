@@ -5,6 +5,8 @@
 #
 
 
+from __future__ import annotations
+
 import argparse
 import datetime
 import dataclasses
@@ -17,6 +19,8 @@ import typing
 import pandas as pd
 
 import lp
+
+from typing import Any
 
 from xirr import xirr
 from ukcalendar import next_business_day, shift_month, shift_year
@@ -90,9 +94,9 @@ class BondLadder:
         @dataclasses.dataclass
         class Event:
             date: datetime.date
-            description: str
+            description: str|Description
             kind: EventKind
-            operand: None
+            operand: Any
 
         events = []
         transactions = []
@@ -195,7 +199,7 @@ class BondLadder:
                 assert income == 0
                 operand = quantity * amount, None
                 events.append(Event(maturity, f'Redemption of {tidm}', EventKind.CASH_FLOW, operand))
-                quantity = 0
+                #quantity = 0
 
             holdings.append(holding)
 
@@ -388,6 +392,7 @@ class BondLadder:
         self.yield_ = xirr(values, dates)
 
     def print(self):
+        assert self.buy_df is not None
         print(self.buy_df.to_string(
             justify='center',
             index=False,
@@ -403,6 +408,7 @@ class BondLadder:
         print()
 
         df = self.cash_flow_df
+        assert df is not None
 
         # https://stackoverflow.com/a/25777111
         description_len = df['Description'].str.len().max()

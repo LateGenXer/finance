@@ -79,6 +79,7 @@ def main():
 
         # https://stackoverflow.com/a/72787948
         output = results.get_property('textContent')
+        assert isinstance(output, str)
 
         sys.stdout.write(output)
 

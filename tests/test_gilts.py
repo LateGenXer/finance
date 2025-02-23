@@ -20,6 +20,8 @@ import pytest
 from pytest import approx
 
 from glob import glob
+from typing import cast
+
 import matplotlib.pyplot as plt
 
 from data.rpi import RPI
@@ -124,7 +126,7 @@ else:
 
 def tradeweb_parse():
     params = []
-    isins = {}
+    isins:dict[str, list] = {}
     for tradeweb_csv in tradeweb_csvs:
         filename = os.path.join(data_dir, tradeweb_csv)
         for row in data.tradeweb.parse(filename):
@@ -172,6 +174,8 @@ def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
         'maturity': Issued._parse_date(entry['REDEMPTION_DATE']),
         'issue_date': Issued._parse_date(entry['FIRST_ISSUE_DATE']),
     }
+
+    gilt:Gilt|IndexLinkedGilt
     if conventional:
         gilt = Gilt(**kwargs)
 
@@ -214,9 +218,10 @@ def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
         dirty_price = float(row['Dirty Price'])
 
         # Ensure Tradeweb's clean and dirty prices are consistent
-        if conventional or gilt.lag == 8:
+        if conventional or cast(IndexLinkedGilt, gilt).lag == 8:
             assert clean_price + accrued_interest == approx(dirty_price, abs=1e-6)
         else:
+            assert isinstance(gilt, IndexLinkedGilt)
             index_ratio = gilt.index_ratio(settlement_date)
             assert clean_price * index_ratio + accrued_interest == approx(dirty_price, abs=1e-6)
 
@@ -227,7 +232,7 @@ def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
         if settlement_date >= gilt.maturity:
             continue
 
-        abs_tol = 1e-6 if conventional or gilt.lag == 3 else 1e-4
+        abs_tol = 1e-6 if conventional or cast(IndexLinkedGilt, gilt).lag == 3 else 1e-4
         assert accrued_interest_ == approx(accrued_interest, abs=abs_tol)
         assert dirty_price_ == approx(dirty_price, abs=abs_tol)
 
@@ -549,6 +554,7 @@ def test_bond_ladder(issued, prices, count, amount, shift, index_linked, margina
     bl.print()
 
     df = bl.cash_flow_df
+    assert df is not None
     for cf in df.itertuples():
         assert math.isnan(cf.In) != math.isnan(cf.Out)
         assert not cf.In < 0.005

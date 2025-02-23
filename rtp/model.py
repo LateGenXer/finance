@@ -142,6 +142,8 @@ def uk_tax_lp(prob, gross_income, cg, marriage_allowance=0):
 
     income_pa                = lp.LpVariable(f'income_pa_{uid}', 0, personal_allowance)
     income_basic_rate        = lp.LpVariable(f'income_basic_rate_{uid}', 0, basic_rate_allowance)
+    income_higher_rate  :lp.LpVariable|int
+    income_adjusted_rate:lp.LpVariable|int
     if marriage_allowance == 0:
         income_higher_rate   = lp.LpVariable(f'income_higher_rate_{uid}', 0, higher_rate_allowance)
         income_adjusted_rate = lp.LpVariable(f'income_adjusted_rate_{uid}', 0)
@@ -497,6 +499,7 @@ def model(
         tfc_1 = sipp_1.drawdown(drawdown_1, age=age_1)
         tfc_2 = sipp_2.drawdown(drawdown_2, age=age_2)
 
+        drawdown_isa:lp.LpVariable|int
         if uk_yr:
             isa_allowance_yr = isa_allowance*N
             drawdown_isa = lp.LpVariable(f'dd_isa@{yr}', -isa_allowance_yr)  # Bed & ISA
