@@ -19,6 +19,16 @@ repos:
   - id: ruff
 - repo: local
   hooks:
+  - id: mypy
+    name: mypy
+    language: system
+    entry: sh -c 'git ls-files -z "*.py" | xargs -0 mypy'
+    require_serial: true
+    pass_filenames: false
+    always_run: true
+    verbose: true
+- repo: local
+  hooks:
   - id: pytest
     name: pytest
     language: system
