@@ -253,8 +253,8 @@ class LpProblem:
         A_eq_indices = []
         A_eq_data = []
 
-        b_ub = []
-        b_eq = []
+        b_ub_data = []
+        b_eq_data = []
 
         for constraint in self.constraints:
             if msg:
@@ -280,35 +280,33 @@ class LpProblem:
                 A_eq_indices.extend(indices)
                 A_eq_data.extend(data)
                 A_eq_indptr.append(len(A_eq_indices))
-                b_eq.append(rhs)
+                b_eq_data.append(rhs)
             else:
                 A_ub_indices.extend(indices)
                 A_ub_data.extend(data)
                 A_ub_indptr.append(len(A_ub_indices))
-                b_ub.append(rhs)
+                b_ub_data.append(rhs)
 
         n = len(variables)
 
         A_ub = csr_array((A_ub_data, A_ub_indices, A_ub_indptr), shape=(n_ub, n), dtype=dtype)
         A_eq = csr_array((A_eq_data, A_eq_indices, A_eq_indptr), shape=(n_eq, n), dtype=dtype)
-        b_ub = np.array(b_ub, dtype=dtype)
-        b_eq = np.array(b_eq, dtype=dtype)
+        b_ub = np.array(b_ub_data, dtype=dtype)
+        b_eq = np.array(b_eq_data, dtype=dtype)
 
-        bounds = [None] * n
+        bounds:list[tuple[float|int|None, float|int|None]] = [(None, None)] * n
         for x, i in variables.items():
             if msg:
                 print(f'{x._lbound} <= {x.name} <= {x._ubound}')
             bounds[i] = (x._lbound, x._ubound)
 
+        assert self.objective is not None
         if msg:
             print(f'argmin({self.objective})')
         c = np.zeros(shape=(n,), dtype=dtype)
         for x, a in self.objective.AX.items():
             i = variables[x]
             c[i] = a
-
-        method = 'highs-ds'
-        options = {}
 
         if msg:
             print(variables)
@@ -321,7 +319,7 @@ class LpProblem:
 
         st = time.perf_counter()
         res = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds,
-                      method=method, options=options)
+                      method='highs-ds', options={})
         et = time.perf_counter()
         if msg:
             print(f'{et - st:.3f} seconds')
