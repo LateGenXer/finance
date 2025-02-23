@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 LateGenXer
+# Copyright (c) 2023-2025 LateGenXer
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
@@ -11,9 +11,12 @@ Wrapper around scipy.optimize.linprog with similar interface to PuLP.
 """
 
 
-import numbers
+from __future__ import annotations
+
 import operator
 import time
+import warnings
+import sys
 
 import numpy as np
 
@@ -27,8 +30,8 @@ class LpVariable:
         self.name = name
         self._lbound = lbound
         self._ubound = ubound
-        self._index = None
-        self._value = None
+        self._index:int|None = None
+        self._value:float|None = None
 
     def __str__(self):
         return self.name
@@ -36,57 +39,61 @@ class LpVariable:
     def __repr__(self):
         return self.name
 
+    def _affine(self):
+        return LpAffineExpression({self: 1.0}, 0.0)
+
     def __add__(self, other):
-        return toAffine(self) + other
+        return self._affine() + other
 
     def __radd__(self, other):
-        return toAffine(self) + other
+        return self._affine() + other
 
     def __sub__(self, other):
-        return toAffine(self) - other
+        return self._affine() - other
 
     def __rsub__(self, other):
-        return other - toAffine(self)
+        return other - self._affine()
 
     def __neg__(self):
-        return -toAffine(self)
+        return LpAffineExpression({self: -1.0}, 0.0)
 
     def __mul__(self, other):
-        return toAffine(self) * other
+        return self._affine() * other
 
     def __rmul__(self, other):
-        return other * toAffine(self)
+        return other * self._affine()
 
     def __truediv__(self, other):
-        return toAffine(self) / other
+        return self._affine() / other
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
     def __eq__(self, other):
         if isinstance(other, LpVariable):
             return self is other
         else:
-            return toAffine(self) == other
+            return self._affine() == other
 
     def __le__(self, other):
-        return toAffine(self) <= other
+        return self._affine() <= other
 
     def __ge__(self, other):
-        return toAffine(self) >= other
+        return self._affine() >= other
 
-    def value(self):
+    def value(self) -> float:
+        assert self._value is not None
         return self._value
 
 
-def toAffine(x):
+def toAffine(x) -> LpAffineExpression:
     if isinstance(x, LpAffineExpression):
         return x
     if isinstance(x, LpVariable):
         return LpAffineExpression({x: 1.0}, 0.0)
-    if isinstance(x, numbers.Number):
+    if isinstance(x, (float, int)):
         return LpAffineExpression({}, x)
-    raise ValueError(x)
+    raise TypeError(x)
 
 
 class LpAffineExpression:
@@ -95,8 +102,8 @@ class LpAffineExpression:
         assert isinstance(AX, dict)
         for x, a in AX.items():
             assert isinstance(x, LpVariable)
-            assert isinstance(a, numbers.Number)
-        assert isinstance(b, numbers.Number)
+            assert isinstance(a, (float, int))
+        assert isinstance(b, (float, int))
         self.AX = AX
         self.b = b
 
@@ -116,11 +123,19 @@ class LpAffineExpression:
         b = op(self.b, other.b)
         return LpAffineExpression(AX, b)
 
+    def __iadd__(self, other):
+        warnings.warn('in-place addition is not compatible with PuLP', stacklevel=2)
+        return self + other
+
     def __add__(self, other):
         return self._binary(other, operator.add)
 
     def __radd__(self, other):
         return self + other
+
+    def __isub__(self, other):
+        warnings.warn('in-place subtraction is not compatible with PuLP', stacklevel=2)
+        return self - other
 
     def __sub__(self, other):
         return self._binary(other, operator.sub)
@@ -132,7 +147,7 @@ class LpAffineExpression:
         return toAffine(0.0) - self
 
     def __mul__(self, other):
-        assert isinstance(other, numbers.Number)
+        assert isinstance(other, (float, int))
         if other == 0.0:
             return 0.0
         elif other == 1.0:
@@ -144,7 +159,7 @@ class LpAffineExpression:
         return self * other
 
     def __truediv__(self, other):
-        assert isinstance(other, numbers.Number)
+        assert isinstance(other, (float, int))
         if other == 1.0:
             return self
         else:
@@ -162,6 +177,7 @@ class LpAffineExpression:
     def value(self):
         res = self.b
         for x, a in self.AX.items():
+            assert x._value is not None
             res += a*x._value
         return res
 
@@ -228,11 +244,31 @@ class LpProblem:
         elif isinstance(other, LpAffineExpression):
             self.setObjective(other)
         else:
-            raise ValueError(other)
+            raise TypeError(other)
         return self
 
     def checkDuplicateVars(self):
-        pass
+        variables = set(self._iter_variables())
+        unique = set()
+        duplicates = set()
+        for x in variables:
+            if x.name in unique:
+                duplicates.add(x.name)
+            else:
+                unique.add(x.name)
+        if duplicates:
+            raise ValueError(duplicates)
+
+    def _iter_affines(self):
+        for constraint in self.constraints:
+            yield constraint.lhs
+        assert self.objective is not None
+        yield self.objective
+
+    def _iter_variables(self):
+        for e in self._iter_affines():
+            for x in e.AX:
+                yield x
 
     def solve(self, solver=0):
         msg = solver != 0
@@ -258,7 +294,7 @@ class LpProblem:
 
         for constraint in self.constraints:
             if msg:
-                print(constraint)
+                sys.stderr.write(f'{constraint}\n')
             lhs = constraint.lhs
             if constraint.sense == LpConstraintEQ:
                 n_eq += 1
@@ -287,6 +323,10 @@ class LpProblem:
                 A_ub_indptr.append(len(A_ub_indices))
                 b_ub_data.append(rhs)
 
+        assert self.objective is not None
+        for x, a in self.objective.AX.items():
+            variables.setdefault(x, len(variables))
+
         n = len(variables)
 
         A_ub = csr_array((A_ub_data, A_ub_indices, A_ub_indptr), shape=(n_ub, n), dtype=dtype)
@@ -297,32 +337,31 @@ class LpProblem:
         bounds:list[tuple[float|int|None, float|int|None]] = [(None, None)] * n
         for x, i in variables.items():
             if msg:
-                print(f'{x._lbound} <= {x.name} <= {x._ubound}')
+                sys.stderr.write(f'{x._lbound} <= {x.name} <= {x._ubound}\n')
             bounds[i] = (x._lbound, x._ubound)
 
-        assert self.objective is not None
         if msg:
-            print(f'argmin({self.objective})')
+            sys.stderr.write(f'argmin({self.objective})\n')
         c = np.zeros(shape=(n,), dtype=dtype)
         for x, a in self.objective.AX.items():
             i = variables[x]
             c[i] = a
 
         if msg:
-            print(variables)
-            print(f'A_ub: {A_ub.toarray()}')
-            print(f'b_ub: {b_ub}')
-            print(f'A_eq: {A_eq.toarray()}')
-            print(f'b_eq: {b_eq}')
-            print(f'c: {c}')
-            print(f'bounds: {bounds}')
+            sys.stderr.write(' '.join([str(v) for v in variables]) + '\n')
+            sys.stderr.write(f'A_ub: {A_ub.toarray()}\n')
+            sys.stderr.write(f'b_ub: {b_ub}\n')
+            sys.stderr.write(f'A_eq: {A_eq.toarray()}\n')
+            sys.stderr.write(f'b_eq: {b_eq}\n')
+            sys.stderr.write(f'c: {c}\n')
+            sys.stderr.write(f'bounds: {bounds}\n')
 
         st = time.perf_counter()
         res = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds,
                       method='highs-ds', options={})
         et = time.perf_counter()
         if msg:
-            print(f'{et - st:.3f} seconds')
+            sys.stderr.write(f'{et - st:.3f} seconds\n')
 
         if res.status == 0:
             for x, i in variables.items():
@@ -330,7 +369,7 @@ class LpProblem:
                 assert x.name not in self.vd
                 self.vd[x.name] = x
         else:
-            print(res.message)
+            sys.stderr.write(res.message + '\n')
 
         return _status_map[res.status]
 
@@ -339,7 +378,7 @@ class LpProblem:
 
 
 def value(x):
-    if isinstance(x, numbers.Number):
+    if isinstance(x, (float, int)):
         return x
     else:
         assert isinstance(x, (LpVariable, LpAffineExpression))
@@ -358,5 +397,5 @@ def COIN_CMD(msg=0):
     return msg
 
 
-def listSolvers(onlyAvailable):
+def listSolvers(onlyAvailable=False):
     return ['GLPK_CMD', 'PULP_CBC_CMD', 'COIN_CMD']

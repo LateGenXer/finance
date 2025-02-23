@@ -8,7 +8,7 @@
 import os
 
 
-if int(os.environ.get('PULP', '0')) != 0:
+if int(os.environ.get('PULP', '0')) != 0:  # pragma: no cover
     from pulp import *  # type: ignore[import-untyped]
 else:
     from .lp import *
