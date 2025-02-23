@@ -12,6 +12,11 @@ repos:
   - id: check-executables-have-shebangs
   - id: check-shebang-scripts-are-executable
   - id: trailing-whitespace
+repos:
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.9.7
+  hooks:
+  - id: ruff
 - repo: local
   hooks:
   - id: pytest

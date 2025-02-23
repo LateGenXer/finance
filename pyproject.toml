@@ -17,8 +17,14 @@ omit = [
 # Ignore "No source for code: '.../site-packages/streamlit/static/index_html.generated.py'"
 ignore_errors = true
 
+[tool.ruff]
+target-version = "py312"
+
 [tool.ruff.lint]
 ignore = ["E402", "F403", "F405"]
+
+[tool.ruff.format]
+quote-style = "single"
 
 [tool.mypy]
 check_untyped_defs = true
