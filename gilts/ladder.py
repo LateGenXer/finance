@@ -283,6 +283,8 @@ class BondLadder:
 
             cash_flows.append(cf)
 
+        prob.setObjective(total_cost)
+
         prob.checkDuplicateVars()
 
         solvers = lp.listSolvers(onlyAvailable=True)
@@ -291,8 +293,6 @@ class BondLadder:
         else:
             assert 'COIN_CMD' in solvers
             solver = lp.COIN_CMD(msg=0)
-
-        prob.setObjective(total_cost)
 
         status = prob.solve(solver)
         assert status == lp.LpStatusOptimal
