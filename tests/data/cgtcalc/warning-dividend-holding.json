@@ -1,9 +1,9 @@
 [
   {
-    "tax_year": "2024/2025",
+    "tax_year": "2023/2024",
     "disposals": [
       {
-        "date": "2024-06-01",
+        "date": "2023-06-01",
         "security": "FOO",
         "shares": 10,
         "proceeds": 1050,

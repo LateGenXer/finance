@@ -1,9 +1,9 @@
 [
   {
-    "tax_year": "2022/2023",
+    "tax_year": "2021/2022",
     "disposals": [
       {
-        "date": "2023-03-01",
+        "date": "2022-03-01",
         "security": "FOO",
         "shares": 5,
         "proceeds": 525,
@@ -19,10 +19,10 @@
     "carried_losses": 0
   },
   {
-    "tax_year": "2024/2025",
+    "tax_year": "2023/2024",
     "disposals": [
       {
-        "date": "2024-06-01",
+        "date": "2023-06-01",
         "security": "FOO",
         "shares": 15,
         "proceeds": 1650,
