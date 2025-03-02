@@ -20,17 +20,13 @@ settlement dates and units traded.
 
 ## Disclaimer
 
-> [!WARNING]
-> `accrued_income.py` is still work in progress!
-
-I wrote `accrued_income.py` primarily for helping filing my own Self Assessment.
-It's accurate to the best of my abilities, but I am not an accountant or financial adviser.
+I wrote `accrued_income.py` primarily to assist filing my own Self Assessment.
+It's accurate to the best of my abilities, but I am not an accountant nor a financial adviser.
 Always check carefully its results and engage a tax advisor in any doubt.
 
 ## Known limitations
 
 - Only gilts are supported
-- Index linked gilts are implemented, but not throuhgly tested
 
 
 # Usage
