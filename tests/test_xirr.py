@@ -14,7 +14,7 @@ from pytest import approx
 from xirr import xnpv, xirr
 
 
-def test_xnpv():
+def test_xnpv() -> None:
     # https://support.microsoft.com/en-us/office/xnpv-function-1b42bbf6-370f-4532-a0eb-d67c16b664b7
     transactions = [
         (-10000, date(2008,  1,  1)),
@@ -30,7 +30,7 @@ def test_xnpv():
 
 
 @pytest.mark.parametrize('secant', [False, True])
-def test_xirr(secant):
+def test_xirr(secant: bool) -> None:
     # https://support.microsoft.com/en-us/office/xirr-function-de1242ec-6477-445b-b11b-a303ad9adc9d
     transactions = [
         (-10000, date(2008,  1,  1)),
@@ -45,7 +45,7 @@ def test_xirr(secant):
     assert irr == approx(0.373362535, abs=5e-09)
 
 
-def test_xirr_maxiter():
+def test_xirr_maxiter() -> None:
     # This triggers RunTimeError with secant=False, and bad results with secant=True
     transactions = [
         (date(2024, 3, 19), -155.3170362032967),

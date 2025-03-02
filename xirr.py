@@ -1,11 +1,15 @@
 #
-# Copyright (c) 2023 LateGenXer
+# Copyright (c) 2023-2025 LateGenXer
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 
 
+import datetime
 import math
+
+from collections.abc import Callable, Sequence
+from typing import SupportsFloat
 
 import numpy as np
 
@@ -18,42 +22,43 @@ __all__ = [
 ]
 
 
-def _periods(dates, period):
-    dates = np.array(dates, dtype=np.datetime64)
-    assert (dates[:-1] <= dates[1:]).all()
-    periods = (dates - dates[0]) / np.timedelta64(1, 'D')
+def _periods(dates:Sequence[datetime.date], period:float) -> np.ndarray:
+    dates_array = np.array(dates, dtype=np.datetime64)
+    assert (dates_array[:-1] <= dates_array[1:]).all()
+    periods = (dates_array - dates_array[0]) / np.timedelta64(1, 'D')
     periods /= period
     return periods
 
 
-def xnpv(rate, values, dates, period=365.25):
+def xnpv(rate:float, values:Sequence[SupportsFloat], dates:Sequence[datetime.date], period:float=365.25) -> float:
     '''Equivalent of Excel's XNPV function.'''
-    values = np.asarray(values, dtype=np.float64)
+    values_array = np.asarray(values, dtype=np.float64)
     periods = _periods(dates, period)
     discount_factor = 1.0 / (1.0 + rate)
-    return np.dot(values, discount_factor ** periods)
+    return np.dot(values_array, discount_factor ** periods)
 
 
-def xirr(values, dates, guess=0.1, secant=False, period=365.25):
+def xirr(values:Sequence[SupportsFloat], dates:Sequence[datetime.date], guess:float=0.1, secant:bool=False, period:float=365.25) -> float:
     '''Equivalent of Excel's XIRR function.'''
 
-    assert min(values) <= 0.0
-    assert max(values) >= 0.0
+    values_array = np.asarray(values, dtype=np.float64)
+    assert values_array.min() <= 0.0
+    assert values_array.max() >= 0.0
 
-    values = np.asarray(values, dtype=np.float64)
     periods = _periods(dates, period)
 
-    def fn(df):
+    def fn(df:float) -> float:
         if df <= 0.0:
             return -math.inf
-        return np.dot(values, df ** periods)
+        return np.dot(values_array, df ** periods)
 
+    fn_prime:Callable[[float], float]|None
     if secant:
         fn_prime = None
     else:
-        values_periods = values * periods
+        values_periods = values_array * periods
         periods_minus_one = periods - 1.0
-        def fn_prime(df):
+        def fn_prime(df:float) -> float:
             if df <= 0.0:
                 return math.inf
             return np.dot(values_periods, df ** periods_minus_one)
