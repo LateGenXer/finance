@@ -26,6 +26,7 @@ and equalisation payments is handled by adjusting Section 104 pool cost accordin
 
 ## Known limitations
 
+- Partial support for dealing with 2024/2025 pre- / post- Autumnt budget periods
 - Disposals before 6 April 2008 (when Section 104 rule was introduced) are not supported.
 - Restructurings not yet supported
 

@@ -13,6 +13,8 @@
 #
 
 
+from __future__ import annotations
+
 import argparse
 import dataclasses
 import datetime
@@ -102,17 +104,17 @@ class TaxYear(typing.NamedTuple):
     year1: int
     year2: int
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.year1}/{self.year2}'
 
-    def start_date(self):
+    def start_date(self) -> datetime.date:
         return datetime.date(self.year1, 4, 6)
 
-    def end_date(self):
+    def end_date(self) -> datetime.date:
         return datetime.date(self.year2, 4, 5)
 
     @classmethod
-    def from_date(cls, date:datetime.date):
+    def from_date(cls, date:datetime.date) -> TaxYear:
         if date < date.replace(date.year, 4, 6):
             year1, year2 = date.year - 1, date.year
         else:
@@ -120,7 +122,7 @@ class TaxYear(typing.NamedTuple):
         return cls(year1, year2)
 
     @staticmethod
-    def _str_to_year(s:str):
+    def _str_to_year(s:str) -> int:
         assert isinstance(s, str)
         if not s.isdigit():
             raise ValueError(s)
@@ -132,7 +134,7 @@ class TaxYear(typing.NamedTuple):
         return y
 
     @classmethod
-    def from_string(cls, s:str):
+    def from_string(cls, s:str) -> TaxYear:
         try:
             s1, s2 = s.split('/', maxsplit=1)
         except ValueError:
@@ -144,6 +146,34 @@ class TaxYear(typing.NamedTuple):
             if y1 + 1 != y2:
                 raise ValueError(f'{s1} and {s2} are not consecutive years')
         return cls(y1, y2)
+
+
+class CGTaxYear(typing.NamedTuple):
+
+    tax_year: TaxYear
+    period: int = 0
+
+    @property
+    def year1(self) -> int:
+        return self.tax_year.year1
+
+    @property
+    def year2(self) -> int:
+        return self.tax_year.year2
+
+    def __str__(self) -> str:
+        return str(self.tax_year) + ['', '¹', '²'][self.period]
+
+    def description(self) -> str:
+        return str(self.tax_year) + ['', ' (pre 30 October)', ' (on or after 30 October)'][self.period]
+
+    @classmethod
+    def from_date(cls, date:datetime.date) -> CGTaxYear:
+        tax_year = TaxYear.from_date(date)
+        period = 0
+        if tax_year.year1 == 2024:
+            period = 2 if date >= datetime.date(2024, 10, 30) else 1
+        return cls(tax_year, period)
 
 
 # https://www.gov.uk/guidance/capital-gains-tax-rates-and-allowances
@@ -192,7 +222,7 @@ class TaxYearResult:
     costs: Decimal = Decimal(0)
     gains: Decimal = Decimal(0)
     losses: Decimal = Decimal(0)
-    allowance: int = 0
+    allowance: Decimal = Decimal(0)
     taxable_gain: Decimal = Decimal(0)
     carried_losses: Decimal = Decimal(0)
 
@@ -204,22 +234,17 @@ version = get_version()
 class Result:
     warnings: list[str] = dataclasses.field(default_factory=list)
     section104_tables: dict[str, list] = dataclasses.field(default_factory=dict)
-    tax_years: dict[TaxYear, TaxYearResult] = dataclasses.field(default_factory=dict)
+    tax_years: dict[CGTaxYear, TaxYearResult] = dataclasses.field(default_factory=dict)
 
     def add_disposal(self, disposal):
 
-        tax_year = TaxYear.from_date(disposal.date)
+        tax_year = CGTaxYear.from_date(disposal.date)
 
         try:
             tax_year_result = self.tax_years[tax_year]
         except KeyError:
-            try:
-                allowance = allowances[tax_year]
-            except KeyError:
-                allowance = 0
-                self.warnings.append(f'capital gains allowance for {tax_year} tax year unknown')
 
-            tax_year_result = TaxYearResult(str(tax_year), allowance=allowance)
+            tax_year_result = TaxYearResult(str(tax_year))
             self.tax_years[tax_year] = tax_year_result
 
         tax_year_result.disposals.append(disposal)
@@ -239,11 +264,36 @@ class Result:
         self.tax_years = dict(sorted(self.tax_years.items(), key=operator.itemgetter(0)))
         assert sorted(self.tax_years) == list(self.tax_years)
 
+        tyr1:TaxYearResult|None = None
+        tyr2:TaxYearResult|None = None
+
         for tax_year, tyr in self.tax_years.items():
             tyr.disposals.sort(key=operator.attrgetter('date'))
 
+            try:
+                tyr.allowance = Decimal(allowances[tax_year.tax_year])
+            except KeyError:
+                tyr.allowance = Decimal(0)
+                self.warnings.append(f'capital gains allowance for {tax_year} tax year unknown')
+
             tyr.taxable_gain = max(tyr.proceeds - tyr.costs - tyr.allowance, Decimal(0))
             tyr.carried_losses = max(tyr.costs - tyr.proceeds, Decimal(0))
+
+            if tax_year.period == 1:
+                tyr1 = tyr
+            if tax_year.period == 2:
+                tyr2 = tyr
+
+        # Patch-up 2024/2025 pre-/post- Autumn budget periods
+        if tyr1 is not None and tyr2 is not None:
+            # TODO: Handle this better once SA108 2025 form is release and necessary input fields are clearer.
+            # https://www.quilter.com/help-and-support/technical-insights/technical-insights-articles/capital-gains-in-2024-25-before-and-or-after-30th-october-2024/
+            self.warnings.append('2024/2025 pre- / post- Autumn budget support is still work in progress!')
+            tyr1.allowance = Decimal('NaN')
+            tyr1.taxable_gain = Decimal('NaN')
+            tyr2.taxable_gain = Decimal('NaN')
+            tyr1.carried_losses = Decimal('NaN')
+            tyr2.carried_losses = max(tyr1.costs + tyr2.costs - tyr1.proceeds - tyr2.proceeds, Decimal(0))
 
     def write(self, report):
         report.start()
@@ -266,7 +316,7 @@ class Result:
         for tax_year, tyr in self.tax_years.items():
             assert tyr.disposals
 
-            report.write_heading(f'Tax year {tax_year}')
+            report.write_heading(f'Tax year {tax_year.description()}')
 
             for no, disposal in enumerate(tyr.disposals, start=1):
                 gain = disposal.proceeds - disposal.costs
@@ -300,13 +350,8 @@ class Result:
 
         report.end()
 
-    def filter_tax_year(self, tax_year):
-        try:
-            tyr = self.tax_years[tax_year]
-        except KeyError:
-            self.tax_years = {}
-        else:
-            self.tax_years = {tax_year: tyr}
+    def filter_tax_year(self, tax_year:TaxYear):
+        self.tax_years = {ty:tyr for ty, tyr in self.tax_years.items() if ty.tax_year == tax_year}
 
         assert tax_year.year1 + 1 == tax_year.year2
         start_date = tax_year.start_date()
