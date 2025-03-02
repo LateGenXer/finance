@@ -281,15 +281,29 @@ class Result:
                 tyr1 = tyr
             if tax_year.period == 2:
                 tyr2 = tyr
+            del tyr
 
         # Patch-up 2024/2025 pre-/post- Autumn budget periods
         if tyr1 is not None and tyr2 is not None:
-            # TODO: Handle this better once SA108 2025 form is release and necessary input fields are clearer.
             # https://www.quilter.com/help-and-support/technical-insights/technical-insights-articles/capital-gains-in-2024-25-before-and-or-after-30th-october-2024/
             self.warnings.append('2024/2025 pre- / post- Autumn budget support is still work in progress!')
-            tyr1.allowance = Decimal('NaN')
-            tyr1.taxable_gain = Decimal('NaN')
-            tyr2.taxable_gain = Decimal('NaN')
+
+            # Allocate losses first to post-budget period
+            losses = tyr1.losses + tyr2.losses
+            tyr2.losses = min(losses, tyr2.gains)
+            tyr1.losses = losses - tyr2.losses
+
+            # Allocate allowance first to post-budget period
+            tyr1.taxable_gain = tyr1.gains - tyr1.losses
+            tyr2.taxable_gain = tyr2.gains - tyr2.losses
+            tyr2.allowance = min(max(tyr2.taxable_gain, Decimal(0)), tyr2.allowance)
+            tyr1.allowance = tyr1.allowance - tyr2.allowance
+            assert tyr1.allowance + tyr2.allowance == Decimal(3000)
+
+            tyr1.taxable_gain = max(tyr1.taxable_gain - tyr1.allowance, Decimal(0))
+            tyr2.taxable_gain = max(tyr2.taxable_gain - tyr2.allowance, Decimal(0))
+            assert tyr1.taxable_gain + tyr2.taxable_gain == max(tyr1.proceeds + tyr2.proceeds - tyr1.costs - tyr2.costs - Decimal(3000), Decimal(0))
+
             tyr1.carried_losses = Decimal('NaN')
             tyr2.carried_losses = max(tyr1.costs + tyr2.costs - tyr1.proceeds - tyr2.proceeds, Decimal(0))
 
