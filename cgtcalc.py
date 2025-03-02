@@ -13,8 +13,6 @@
 #
 
 
-from __future__ import annotations
-
 import argparse
 import dataclasses
 import datetime
@@ -114,7 +112,7 @@ class TaxYear(typing.NamedTuple):
         return datetime.date(self.year2, 4, 5)
 
     @classmethod
-    def from_date(cls, date:datetime.date) -> TaxYear:
+    def from_date(cls, date:datetime.date) -> 'TaxYear':
         if date < date.replace(date.year, 4, 6):
             year1, year2 = date.year - 1, date.year
         else:
@@ -134,7 +132,7 @@ class TaxYear(typing.NamedTuple):
         return y
 
     @classmethod
-    def from_string(cls, s:str) -> TaxYear:
+    def from_string(cls, s:str) -> 'TaxYear':
         try:
             s1, s2 = s.split('/', maxsplit=1)
         except ValueError:
@@ -168,7 +166,7 @@ class CGTaxYear(typing.NamedTuple):
         return str(self.tax_year) + ['', ' (pre 30 October)', ' (on or after 30 October)'][self.period]
 
     @classmethod
-    def from_date(cls, date:datetime.date) -> CGTaxYear:
+    def from_date(cls, date:datetime.date) -> 'CGTaxYear':
         tax_year = TaxYear.from_date(date)
         period = 0
         if tax_year.year1 == 2024:
@@ -380,6 +378,7 @@ class Result:
         for field in dataclasses.fields(class_or_instance):
             j = 'l'
             t = field.type
+            assert not isinstance(t, str) # https://bugs.python.org/issue39442
             if t in (int, float, Decimal):
                 j = 'r'
             if t in (datetime.date, datetime.datetime):
