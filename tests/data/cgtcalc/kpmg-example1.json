@@ -1,0 +1,28 @@
+[
+  {
+    "tax_year": "2013/2014",
+    "disposals": [
+      {
+        "date": "2013-10-01",
+        "security": "XYZ",
+        "shares": 75,
+        "proceeds": 30.71,
+        "gain": 0.0
+      },
+      {
+        "date": "2014-01-01",
+        "security": "IE1234567890",
+        "shares": 25,
+        "proceeds": 262.73,
+        "gain": -0.01
+      }
+    ],
+    "proceeds": 293.44,
+    "costs": 293.45,
+    "gains": 0.0,
+    "losses": 0.01,
+    "allowance": 10900,
+    "taxable_gain": 0,
+    "carried_losses": 0.01
+  }
+]

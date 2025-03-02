@@ -1,0 +1,10 @@
+# https://www.kpmgreportingfunds.co.uk/guidance
+# > Q5. What do I do on disposal of my investment in a reporting fund?
+
+# NO_ROUNDING
+
+BUY	01/08/2011	UMBRELLA	100	127.50	0
+DIVIDEND	31/12/2011	UMBRELLA	100	145.25
+DIVIDEND	31/12/2012	UMBRELLA	100	115.90
+DIVIDEND	31/12/2013	UMBRELLA	100	129.15
+SELL	30/04/2014	UMBRELLA	100	145.00	0

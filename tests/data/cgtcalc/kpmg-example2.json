@@ -1,0 +1,21 @@
+[
+  {
+    "tax_year": "2014/2015",
+    "disposals": [
+      {
+        "date": "2014-04-30",
+        "security": "UMBRELLA",
+        "shares": 100,
+        "proceeds": 14500.0,
+        "gain": 1359.7
+      }
+    ],
+    "proceeds": 14500.0,
+    "costs": 13140.3,
+    "gains": 1359.7,
+    "losses": 0,
+    "allowance": 11000,
+    "taxable_gain": 0,
+    "carried_losses": 0
+  }
+]
