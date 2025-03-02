@@ -66,7 +66,7 @@ class Disposal:
     identifications: list[tuple] = dataclasses.field(default_factory=list)
 
 
-def identify(disposal, acquisition, kind, acquisition_date):
+def identify(disposal:Disposal, acquisition:Acquisition, kind:Identification, acquisition_date:datetime.date) -> None:
     assert disposal.unidentified > Decimal(0)
     assert acquisition.unidentified > Decimal(0)
     identified = min(disposal.unidentified, acquisition.unidentified)
@@ -198,7 +198,7 @@ allowances = {
 
 
 # Round if necessary, but don't quantitize if not
-def dround(d:Decimal, places:int=0, rounding=None):
+def dround(d:Decimal, places:int=0, rounding:str|None=None) -> Decimal:
     assert isinstance(d, Decimal)
     _, _, exponent = d.as_tuple()
     assert isinstance(exponent, (int, str))
@@ -234,7 +234,7 @@ class Result:
     section104_tables: dict[str, list] = dataclasses.field(default_factory=dict)
     tax_years: dict[CGTaxYear, TaxYearResult] = dataclasses.field(default_factory=dict)
 
-    def add_disposal(self, disposal):
+    def add_disposal(self, disposal:DisposalResult) -> None:
 
         tax_year = CGTaxYear.from_date(disposal.date)
 
@@ -256,7 +256,7 @@ class Result:
 
         assert tax_year_result.proceeds - tax_year_result.costs == tax_year_result.gains - tax_year_result.losses
 
-    def finalize(self):
+    def finalize(self) -> None:
 
         # https://realpython.com/sort-python-dictionary/
         self.tax_years = dict(sorted(self.tax_years.items(), key=operator.itemgetter(0)))
@@ -307,7 +307,7 @@ class Result:
             tyr1.carried_losses = Decimal('NaN')
             tyr2.carried_losses = max(tyr1.costs + tyr2.costs - tyr1.proceeds - tyr2.proceeds, Decimal(0))
 
-    def write(self, report):
+    def write(self, report:Report) -> None:
         report.start()
 
         report.write_heading('Summary')
@@ -362,7 +362,7 @@ class Result:
 
         report.end()
 
-    def filter_tax_year(self, tax_year:TaxYear):
+    def filter_tax_year(self, tax_year:TaxYear) -> None:
         self.tax_years = {ty:tyr for ty, tyr in self.tax_years.items() if ty.tax_year == tax_year}
 
         assert tax_year.year1 + 1 == tax_year.year2
@@ -382,12 +382,12 @@ class Result:
                 del self.section104_tables[security]
 
     @staticmethod
-    def dataclass_to_header(class_or_instance):
+    def dataclass_to_header(class_or_instance:typing.Any) -> list[str]:
         header = [field.name.replace('_', ' ').title().replace('Delta ', 'Δ') for field in dataclasses.fields(class_or_instance)]
         return header
 
     @staticmethod
-    def dataclass_to_just(class_or_instance):
+    def dataclass_to_just(class_or_instance:typing.Any) -> list[str]:
         just = []
         for field in dataclasses.fields(class_or_instance):
             j = 'l'
@@ -400,20 +400,20 @@ class Result:
             just.append(j)
         return just
 
-    def write_table(self, report, data, indent=''):
+    def write_table(self, report:Report, data:list, indent:str='') -> None:
         assert data
         obj0 = data[0]
         header = self.dataclass_to_header(obj0)
         just = self.dataclass_to_just(obj0)
-        rows = [dataclasses.astuple(obj) for obj in data]
+        rows = [list(dataclasses.astuple(obj)) for obj in data]
         report.write_table(rows, header=header, indent=indent, just=just)
 
 
-def is_close_decimal(a, b, abs_tol=Decimal('.01')):
+def is_close_decimal(a:Decimal, b:Decimal, abs_tol:Decimal=Decimal('.01')) -> bool:
     return abs(a - b) <= abs_tol
 
 
-def update_pool(pool_updates, pool, trade, description, delta_cost=Decimal('NaN'), delta_shares=Decimal('NaN')):
+def update_pool(pool_updates:list[PoolUpdate], pool:Acquisition, trade:Trade, description:str, delta_cost:Decimal=Decimal('NaN'), delta_shares:Decimal=Decimal('NaN')) -> None:
     if not delta_cost.is_nan():
         pool.cost += delta_cost
         if not pool.cost:
@@ -431,7 +431,7 @@ def update_pool(pool_updates, pool, trade, description, delta_cost=Decimal('NaN'
     ))
 
 
-def calculate(stream, rounding=True):
+def calculate(stream:typing.TextIO, rounding:bool=True) -> Result:
 
     places = 0 if rounding else 2
 
@@ -448,10 +448,10 @@ def calculate(stream, rounding=True):
         if not row:
             continue
 
-        trade, date, security = row[:3]
+        trade, date_str, security = row[:3]
         params = [Decimal(field) for field in row[3:]]
 
-        date = datetime.datetime.strptime(date, "%d/%m/%Y").date()
+        date = datetime.datetime.strptime(date_str, "%d/%m/%Y").date()
 
         # Case-insensitive
         trade = trade.upper()
@@ -708,7 +708,7 @@ def calculate(stream, rounding=True):
     return result
 
 
-def main():
+def main() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument('-y', '--tax-year', metavar='TAX_YEAR', default=None, help='tax year in XXXX/YYYY, XX/YY, YYYY, or YY format')
     argparser.add_argument('--rounding', action=argparse.BooleanOptionalAction, default=True, help='(dis)enable rounding to whole pounds')

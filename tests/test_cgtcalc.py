@@ -15,6 +15,7 @@ import os.path
 import re
 import subprocess
 import sys
+import typing
 
 import pytest
 
@@ -24,14 +25,14 @@ from glob import glob
 from pprint import pp
 
 from environ import ci
-from cgtcalc import calculate, DisposalResult, TaxYear, CGTaxYear
+from cgtcalc import calculate, DisposalResult, Result, TaxYear, CGTaxYear
 from report import TextReport, HtmlReport
 
 
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
 
 
-def collect_filenames(no_raises=False):
+def collect_filenames(no_raises:bool=False) -> list:
     filenames = []
     for filename in glob(os.path.join(data_dir, 'cgtcalc', '*.tsv')):
         if no_raises:
@@ -44,7 +45,7 @@ def collect_filenames(no_raises=False):
 
 
 class JSONEncoder(json.JSONEncoder):
-    def default(self, obj):
+    def default(self, obj:typing.Any) -> typing.Any:
         if isinstance(obj, datetime.date):
             return str(obj)
         if isinstance(obj, Decimal):
@@ -67,14 +68,14 @@ class JSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def encode_json_result(result, filename):
+def encode_json_result(result:Result, filename:str) -> None:
     obj = list(result.tax_years.values())
     stream = open(filename, 'wt')
     json.dump(obj, stream, indent=2, cls=JSONEncoder)
     stream.write('\n')
 
 
-def object_hook(obj):
+def object_hook(obj:dict) -> dict:
     try:
         date = obj['date']
     except KeyError:
@@ -84,7 +85,7 @@ def object_hook(obj):
     return obj
 
 
-def parse_json_result(filename):
+def parse_json_result(filename:str) -> dict:
     result = {}
     for tyr in json.load(open(filename, 'rt'), parse_float=Decimal, object_hook=object_hook):
         s = tyr['tax_year']
@@ -102,8 +103,9 @@ disposal_re = re.compile(r'^\d+\. SELL: (?P<shares>[0-9]+)\S* (shares of\s+\S+ )
 tax_return_1_re = re.compile(r'^(?P<year1>\d\d)-(?P<year2>\d\d): Disposal Proceeds = £(?P<proceeds>\S+) , Allowable Costs = £(?P<costs>\S+) , Disposals = (\d+)$')
 tax_return_2_re = re.compile(r'^(?P<year1>\d\d)-(?P<year2>\d\d): Year Gains = £(?P<gains>\S+) ,? Year Losses = £(?P<losses>\S+)$')
 
-def parse_cgtcalculator_result(filename):
-    result:dict[tuple,dict] = {}
+
+def parse_cgtcalculator_result(filename:str) -> dict[CGTaxYear,dict]:
+    result:dict[CGTaxYear,dict] = {}
 
     tax_year = None
     for line in open(filename, 'rt'):
@@ -203,7 +205,7 @@ def parse_cgtcalculator_result(filename):
     return result
 
 
-def read_test_annotations(filename):
+def read_test_annotations(filename:str) -> tuple[set[str], type[BaseException]|None, bool]:
     raises:type[BaseException]|None = None
     expected_warnings = {
         'cgtcalc.py is still work in progress!',
@@ -229,7 +231,7 @@ def read_test_annotations(filename):
 
 
 @pytest.mark.parametrize("filename", collect_filenames())
-def test_calculate(filename):
+def test_calculate(filename:str) -> None:
     expected_warnings, raises, rounding = read_test_annotations(filename)
 
     with open(filename, 'rt') as istream:
@@ -302,13 +304,13 @@ str_to_tax_year_params = [
 ]
 
 @pytest.mark.parametrize("s,eyc", [pytest.param(s, eyc, id=s) for s, eyc in str_to_tax_year_params])
-def test_str_to_tax_year(s, eyc):
+def test_str_to_tax_year(s:str, eyc:typing.ContextManager) -> None:
     with eyc as ey:
         assert TaxYear.from_string(s) == ey
 
 
 @pytest.mark.parametrize("filename", collect_filenames(no_raises=True))
-def test_filter_tax_year(filename):
+def test_filter_tax_year(filename:str) -> None:
     _, _, rounding = read_test_annotations(filename)
 
     result = calculate(open(filename, 'rt'), rounding=rounding)
@@ -340,7 +342,7 @@ def test_filter_tax_year(filename):
 
 
 @pytest.mark.parametrize("filename", collect_filenames(no_raises=True))
-def test_report_html(filename):
+def test_report_html(filename:str) -> None:
     _, _, rounding = read_test_annotations(filename)
 
     result = calculate(open(filename, 'rt'), rounding=rounding)
@@ -368,7 +370,7 @@ def test_report_html(filename):
         assert p.returncode == 0
 
 
-def test_main():
+def test_main() -> None:
     filename = os.path.join(data_dir, 'cgtcalc', 'cgtcalculator-example1.tsv')
 
     from cgtcalc import __file__ as cgtcalc_path
