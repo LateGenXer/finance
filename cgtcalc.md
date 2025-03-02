@@ -40,7 +40,7 @@ python cgtcalc.py trades.txt
 ## Format
 
 `cgtcalc.py` input format is compatible both with
-[CGTCalculator](http://cgtcalculator.com/instructions.htm#tradeformat) and
+[CGTCalculator](https://www.cgtcalculator.com/instructions.htm#tradeformat) and
 [cgtcalc](https://github.com/mattjgalloway/cgtcalc?tab=readme-ov-file#input-data) formats.
 
 The input consists of a text file, with a line per transaction, each comprised by space separated fields in the form:
@@ -194,5 +194,5 @@ IE00B3X1LS57
 
 # Alternatives
 
-- [CGTCalculator](http://cgtcalculator.com/instructions.htm#tradeformat)
+- [CGTCalculator](https://www.cgtcalculator.com/instructions.htm#tradeformat)
 - [cgtcalc](https://github.com/mattjgalloway/cgtcalc)

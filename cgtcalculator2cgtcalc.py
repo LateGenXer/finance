@@ -4,7 +4,7 @@
 #
 
 #
-# Converts from http://cgtcalculator.com/instructions.htm#tradeformat
+# Converts from https://www.cgtcalculator.com/instructions.htm#tradeformat
 # to https://github.com/mattjgalloway/cgtcalc?tab=readme-ov-file#input-data
 #
 # It avoids decimal <-> floating point conversions and rounding.

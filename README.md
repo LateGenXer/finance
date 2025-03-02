@@ -21,5 +21,5 @@ Please consult appropriate professional advice when in any doubt.
 * [Gilt Ladder Builder](gilts/README.md)
 * [NS&I Premium Bond calculator](nsandi_premium_bonds.py), as [MoneySavingExpert's](https://www.moneysavingexpert.com/savings/premium-bonds-calculator/) is broken, but an even better calculator can be found on https://premiumbondsprizes.com/
 * [Capital Gains calculator](cgtcalc.md)
-  * [Converter](cgtcalculator2cgtcalc.py) from [CGTCalculator](http://cgtcalculator.com/instructions.htm#tradeformat) to [cgtcalc](https://github.com/mattjgalloway/cgtcalc?tab=readme-ov-file#input-data) format
+  * [Converter](cgtcalculator2cgtcalc.py) from [CGTCalculator](https://www.cgtcalculator.com/instructions.htm#tradeformat) to [cgtcalc](https://github.com/mattjgalloway/cgtcalc?tab=readme-ov-file#input-data) format
 * [Accrued Income calculator](accrued_income.md)

@@ -43,7 +43,7 @@ def main():
 
     driver = webdriver.Chrome(service=service, options=options)
 
-    driver.get('http://www.cgtcalculator.com/calculator.aspx')
+    driver.get('https://www.cgtcalculator.com/calculator.aspx')
 
     driver.implicitly_wait(20)
 

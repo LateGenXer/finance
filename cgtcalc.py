@@ -6,7 +6,7 @@
 #
 
 #
-# Python capital gains calculator, inspired by http://cgtcalculator.com/ and
+# Python capital gains calculator, inspired by https://www.cgtcalculator.com/ and
 # https://github.com/mattjgalloway/cgtcalc
 #
 # See cgtcalc.md for usage instructions.
