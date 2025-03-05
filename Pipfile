@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-streamlit = "~=1.42"
+streamlit = "~=1.43"
 matplotlib = "~=3.9"
 scipy = "~=1.13"
 xlrd = "~=2.0"

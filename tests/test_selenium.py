@@ -153,6 +153,9 @@ def test_gilt_ladder_index_linked(gilt_ladder_page):
 def test_gilt_ladder_file_upload(gilt_ladder_page):
     driver = gilt_ladder_page
 
+    advanced_tab = driver.find_element(By.XPATH, "//p[text()='Advanced']")
+    advanced_tab.click()
+
     driver.implicitly_wait(15)
 
     # https://www.selenium.dev/documentation/webdriver/elements/file_upload/
