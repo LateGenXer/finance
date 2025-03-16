@@ -525,7 +525,6 @@ def calculate(stream:typing.TextIO, rounding:bool=True) -> Result:
         trades.append(tr)
 
     result = Result()
-    result.warnings.append('cgtcalc.py is still work in progress!')
 
     for security, trades in securities.items():
         # Sort

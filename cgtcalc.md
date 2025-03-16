@@ -7,9 +7,6 @@ of them it handles notional distributions and equalisation payments in a consist
 
 ## Disclaimer
 
-> [!WARNING]
-> `cgtcalc.py` is still work in progress!
-
 * I wrote `cgtcalc.py` primarily for filing my own Self Assessment.
 * It's accurate to the best of my abilities, but I am not a tax or financial adviser.
 * Always check carefully its results and engage a tax advisor or HMRC in any doubt.

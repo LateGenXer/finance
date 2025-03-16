@@ -207,9 +207,7 @@ def parse_cgtcalculator_result(filename:str) -> dict[CGTaxYear,dict]:
 
 def read_test_annotations(filename:str) -> tuple[set[str], type[BaseException]|None, bool]:
     raises:type[BaseException]|None = None
-    expected_warnings = {
-        'cgtcalc.py is still work in progress!',
-    }
+    expected_warnings = set()
     rounding = True
 
     warning_prefix = '# WARNING: '
