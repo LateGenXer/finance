@@ -28,7 +28,7 @@ from environ import get_version
 from report import Report, TextReport, HtmlReport
 
 
-Kind = IntEnum('Kind', ['DIVIDEND', 'CAPRETURN', 'BUY', 'SELL'])
+Kind = IntEnum('Kind', ['DIVIDEND', 'CAPRETURN', 'BUY', 'SELL', 'RESTRUCTURING'])
 
 
 # Holding and matching relies upon this ordering
@@ -66,15 +66,22 @@ class Disposal:
     identifications: list[tuple] = dataclasses.field(default_factory=list)
 
 
-def identify(disposal:Disposal, acquisition:Acquisition, kind:Identification, acquisition_date:datetime.date) -> None:
+def identify(disposal:Disposal, acquisition:Acquisition, kind:Identification, acquisition_date:datetime.date, numerator:Decimal=Decimal(1), denominator:Decimal=Decimal(1)) -> None:
     assert disposal.unidentified > Decimal(0)
     assert acquisition.unidentified > Decimal(0)
-    identified = min(disposal.unidentified, acquisition.unidentified)
-    acquisition.unidentified -= identified
+    if disposal.unidentified*numerator >= acquisition.unidentified*denominator:
+        identified = acquisition.unidentified
+        acquisition.unidentified = Decimal(0)
+        disposal.unidentified -= identified*denominator/numerator
+    else:
+        identified = disposal.unidentified*numerator/denominator
+        acquisition.unidentified -= identified
+        disposal.unidentified = Decimal(0)
+    assert identified > Decimal(0)
     assert acquisition.unidentified >= Decimal(0)
-    identification = (identified, kind, acquisition_date)
+    assert disposal.unidentified >= Decimal(0)
+    identification = (identified, kind, acquisition_date, numerator, denominator)
     disposal.identifications.append(identification)
-    disposal.unidentified -= identified
 
 
 @dataclasses.dataclass
@@ -204,8 +211,11 @@ def dround(d:Decimal, places:int=0, rounding:str|None=None) -> Decimal:
     assert isinstance(exponent, (int, str))
     if isinstance(exponent, str):
         return d
+    elif exponent > 0:
+        # Avoid exponential notation for integers
+        q = Decimal((0, (1,), 0))
+        return d.quantize(q, rounding=rounding)
     elif exponent >= -places:
-        assert exponent <= 0
         return d
     else:
         q = Decimal((0, (1,), -places))
@@ -490,8 +500,22 @@ def calculate(stream:typing.TextIO, rounding:bool=True) -> Result:
             kind = Kind.CAPRETURN
         elif trade == 'DIVIDEND':
             kind = Kind.DIVIDEND
-        elif trade in ('R', 'SPLIT', 'UNSPLIT'):
-            raise NotImplementedError(f'line {line_no}: restructurings not yet implemented.\n')
+        elif trade == 'R':
+            kind = Kind.RESTRUCTURING
+            factor = params[0]
+            if factor >= Decimal(1):
+                params = [factor, Decimal(1)]
+            else:
+                factor = dround(Decimal(1) / factor, 6)
+                params = [Decimal(1), factor]
+        elif trade == 'SPLIT':
+            kind = Kind.RESTRUCTURING
+            factor = params[0]
+            params = [factor, Decimal(1)]
+        elif trade == 'UNSPLIT':
+            kind = Kind.RESTRUCTURING
+            factor = params[0]
+            params = [Decimal(1), factor]
         else:
             raise NotImplementedError(trade)
 
@@ -567,16 +591,22 @@ def calculate(stream:typing.TextIO, rounding:bool=True) -> Result:
             if not disposal.unidentified:
                 continue
             j = i + 1
+            numerator = Decimal(1)
+            denominator = Decimal(1)
             for j in range(i, len(trades)):
                 tr2 = trades[j]
                 if (tr2.date - tr.date).days > 30:
                     break
+                if tr2.kind == Kind.RESTRUCTURING:
+                    n, d = tr2.params
+                    numerator *= n
+                    denominator *= d
                 if tr2.kind != Kind.BUY:
                     continue
                 acquisition = acquisitions[tr2.date]
                 if not acquisition.unidentified:
                     continue
-                identify(disposal, acquisition, Identification.BED_AND_BREAKFAST, tr2.date)
+                identify(disposal, acquisition, Identification.BED_AND_BREAKFAST, tr2.date, numerator, denominator)
 
         pool_updates: list[PoolUpdate] = []
 
@@ -610,18 +640,26 @@ def calculate(stream:typing.TextIO, rounding:bool=True) -> Result:
                 if disposal.cost:
                     table.append(('Disposal costs', -disposal.cost, ''))
                 for identification in disposal.identifications:
-                    identified, kind, acquisition_date = identification
+                    identified, kind, acquisition_date, numerator, denominator = identification
                     acquisition = acquisitions[acquisition_date]
                     if kind == Identification.SAME_DAY:
+                        assert numerator == Decimal(1)
+                        assert denominator == Decimal(1)
                         acquisition_date_desc = 'same day'
                     else:
                         assert kind == Identification.BED_AND_BREAKFAST
                         acquisition_date_desc = f'{acquisition_date} (B&B)'
+                    if numerator != Decimal(1) or denominator != Decimal(1):
+                        restructuring_desc = f' ({numerator}-for-{denominator})'
+                    else:
+                        restructuring_desc = ''
+                    assert identified > Decimal(0)
+                    assert identified <= acquisition.shares
                     if identified == acquisition.shares:
-                        description = f'Cost of {acquisition.shares} shares acquired on {acquisition_date_desc} for £{acquisition.cost}'
+                        description = f'Cost of {acquisition.shares}{restructuring_desc} shares acquired on {acquisition_date_desc} for £{acquisition.cost}'
                         table.append((description, -acquisition.cost, ''))
                     else:
-                        description = f'Cost of {identified} shares of {acquisition.shares} acquired on {acquisition_date_desc} for £{acquisition.cost}'
+                        description = f'Cost of {identified}{restructuring_desc} shares of {acquisition.shares} acquired on {acquisition_date_desc} for £{acquisition.cost}'
                         cost = dround(acquisition.cost * identified / acquisition.shares, places, ROUND_CEILING)
                         table.append((description, -cost, f'(-{acquisition.cost} × {identified} / {acquisition.shares})'))
                 if disposal.unidentified:
@@ -709,6 +747,23 @@ def calculate(stream:typing.TextIO, rounding:bool=True) -> Result:
                 # Move Group 2 shares into Group 1
                 group1_holding += group2_holding
                 group2_holding = Decimal(0)
+
+            elif tr.kind == Kind.RESTRUCTURING:
+
+                numerator, denominator = tr.params
+
+                pool.shares    = pool.shares    * numerator / denominator
+                group1_holding = group1_holding * numerator / denominator
+                group2_holding = group2_holding * numerator / denominator
+
+                pool_updates.append(PoolUpdate(
+                    date=tr.date,
+                    description=f"{numerator}-for-{denominator} share restructuring",
+                    identified=Decimal('NaN'),
+                    delta_cost=Decimal('NaN'),
+                    pool_shares=pool.shares,
+                    pool_cost=dround(pool.cost, 2),
+                ))
 
             else:  # pragma: no cover
                 raise NotImplementedError(tr.kind)

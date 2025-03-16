@@ -46,12 +46,11 @@ def translate(istream, ostream):
         elif event == 'R':
             factor, = fields[3:]
             float_factor = Decimal(factor)
-            if float_factor >= 1:
+            if float_factor >= Decimal(1):
                 row = ['UNSPLIT', date, company, factor]
             else:
                 float_factor = Decimal(1) / float_factor
                 int_factor = round(float_factor)
-                print(float_factor, int_factor)
                 assert math.isclose(float_factor, int_factor, abs_tol=.05)
                 factor = str(int_factor)
                 row = ['SPLIT', date, company, factor]

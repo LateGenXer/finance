@@ -1,0 +1,59 @@
+Results generated from www.cgtcalculator.com
+
+SUMMARY INFORMATION
+
+Year    CapitalGain      Exemption    UsePrevLosses   TaperRelief   ChargeableGain      Tax*
+-------------------------------------------------------------------------------------------
+15-16	1389		  11100		0		0		0		0
+17-18	79890		  11300		0		0		68590		0
+
+*Please note that tax values are based on capital gains only and assume zero income.
+
+TRADE MATCHING INFORMATION
+
+TAX_YEAR 15-16
+
+1. SELL: 250000 SKC on 19/01/2016 at £0.05 gives GAIN of £1,389.00
+Matches with: 
+BUY: SECTION 104 HOLDING. 250000 SKC shares of 425000 bought at average price of £0.0444
+CALCULATION: Gain = £1,389.00 = ( 250000 * 0.05 - 11.95 )
+- ( 425000 * 0.0444 ) * ( 250000 / 425000 )
+
+TAX_YEAR 17-18
+
+1. SELL: 10000 SKC on 25/04/2017 at £0.65 gives GAIN of £1,841.00
+Matches with: 
+BUY: SECTION 104 HOLDING. 10000 SKC shares of 28500 bought at average price of £0.46084
+CALCULATION: Gain = £1,841.00 = ( 10000 * 0.65 - 50.00 )
+- ( 28500 * 0.46084 ) * ( 10000 / 28500 )
+
+2. SELL: 10000 IND on 17/05/2017 at £8.52 gives GAIN of £78,049.00
+Matches with: 
+BUY: SECTION 104 HOLDING. 10000 IND shares of 20000 bought at average price of £0.71405
+CALCULATION: Gain = £78,049.00 = ( 10000 * 8.52 - 10.00 )
+- ( 20000 * 0.71405 ) * ( 10000 / 20000 )
+
+
+
+CURRENT PORTFOLIO
+
+IND	 10000		
+SKC	 18500		
+
+
+STATISTICS
+
+Total amount paid in stamp duty    = £191.37
+Total amount paid in broker's fees = £129.40
+
+Total number of trades =  8
+Total number of buys   =  5
+Total number of sells  =  3
+
+INFO FOR TAX RETURN
+
+15-16: Disposal Proceeds = £12,500.00 , Allowable Costs = £11,111.00 , Disposals = 1
+15-16: Year Gains = £1,389.00  Year Losses = £0.00
+17-18: Disposal Proceeds = £91,700.00 , Allowable Costs = £11,810.00 , Disposals = 2
+17-18: Year Gains = £79,890.00  Year Losses = £0.00
+

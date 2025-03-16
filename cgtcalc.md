@@ -26,9 +26,8 @@ and equalisation payments is handled by adjusting Section 104 pool cost accordin
 
 ## Known limitations
 
-- Partial support for dealing with 2024/2025 pre- / post- Autumnt budget periods
+- Partial support for dealing with 2024/2025 pre- / post- Autumnt budget periods.
 - Disposals before 6 April 2008 (when Section 104 rule was introduced) are not supported.
-- Restructurings not yet supported
 
 
 # Usage
@@ -58,12 +57,16 @@ The number and meaning of the fields varies with the kind of transaction:
 | `S`/`SELL` | Sell transaction | _date_ _security_ _shares_ _price_ _expenses_ [_tax¹_]
 | `DIVIDEND` | Notional distribution² | _ex-dividend-date⁴_ _security_ _holding³_ _income_
 | `CAPRETURN` | Equalisation payment | _ex-dividend-date⁴_ _security_ _group2-holding³_ _equalisation_
+| `R` | Restructuring | _date_ _security_ _restructuring-factor⁵_
+| `SPLIT` | Stock split | _date_ _security_ _factor_
+| `UNSPLIT` | Reverse stock split | _date_ _security_ _factor_
 
 Notes:
 1. _tax_ fields of `BUY`/`SELL` transactions are optional, are supported for CGTCalculator compatibility, and will be added to the expenses
 2. notional distribution is, for example, reinvested dividends in accumulation class of UK Authorized Investments Funds, or Excess Reportable Income in Offshore Funds
 3. _holding_ and _group2-holding_ fields are used for consistency check  and have no bearing on calculated gains/losses.
 4. To ensure notional dividends and equalization payments are assigned to the right disposals, it is imperative that the _ex-dividend-date_ is used for these transactions, and not the distribution date.
+5. For example, _10_ for a 10-for-1 stock split, _0.1_ for a 1-for-10 reverse stock split; for [CGTCalculator compatibiliy](https://www.cgtcalculator.com/instructions.htm#restructuring).
 
 Empty lines or lines starting with `#` are ignored.
 
