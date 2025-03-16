@@ -260,7 +260,7 @@ def test_calculate(filename:str) -> None:
 
     assert result.tax_years.keys() == expected_result.keys()
 
-    abs_tol = 2.0 if rounding else 0.02
+    abs_tol = Decimal('2.0') if rounding else Decimal('0.02')
 
     for tax_year in expected_result.keys():
         tyr = result.tax_years[tax_year]
@@ -276,16 +276,16 @@ def test_calculate(filename:str) -> None:
                 assert disposal.proceeds == pytest.approx(expected_disposal['proceeds'], abs=abs_tol)
 
                 gain = disposal.proceeds - disposal.costs
-                assert round(gain) == pytest.approx(round(expected_disposal['gain']), abs=abs_tol)
+                assert gain == pytest.approx(expected_disposal['gain'], abs=abs_tol)
             except:
                 pp(dataclasses.asdict(disposal))
                 pp(expected_disposal)
                 raise
 
-        assert round(tyr.proceeds) == pytest.approx(round(expected_tyr['proceeds']), abs=abs_tol)
-        assert round(tyr.costs) == pytest.approx(round(expected_tyr['costs']), abs=abs_tol)
-        assert round(tyr.gains) == pytest.approx(round(expected_tyr['gains']), abs=abs_tol)
-        assert round(tyr.losses) == pytest.approx(round(expected_tyr['losses']), abs=abs_tol)
+        assert tyr.proceeds == pytest.approx(expected_tyr['proceeds'], abs=abs_tol)
+        assert tyr.costs == pytest.approx(expected_tyr['costs'], abs=abs_tol)
+        assert tyr.gains == pytest.approx(expected_tyr['gains'], abs=abs_tol)
+        assert tyr.losses == pytest.approx(expected_tyr['losses'], abs=abs_tol)
 
 
 str_to_tax_year_params = [
@@ -327,12 +327,14 @@ def test_filter_tax_year(filename:str) -> None:
             pool_cost = Decimal(0)
             pool_shares = Decimal(0)
             for update in table:
-                assert pool_cost + update.delta_cost == pytest.approx(update.pool_cost, abs=1)
+                assert isinstance(pool_cost, Decimal)
+                if not update.delta_cost.is_nan():
+                    assert pool_cost + update.delta_cost == pytest.approx(update.pool_cost, abs=Decimal(1))
                 if not update.identified.is_nan():
                     if update.delta_cost >= Decimal(0):
-                        assert pool_shares + update.identified == pytest.approx(update.pool_shares, abs=1)
+                        assert pool_shares + update.identified == pytest.approx(update.pool_shares, abs=Decimal(1))
                     else:
-                        assert pool_shares - update.identified == pytest.approx(update.pool_shares, abs=1)
+                        assert pool_shares - update.identified == pytest.approx(update.pool_shares, abs=Decimal(1))
                 pool_cost = update.pool_cost
                 pool_shares = update.pool_shares
 
