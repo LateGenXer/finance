@@ -84,15 +84,20 @@ def genereate(gain_1:int|None, loss_1:int|None, gain_2:int|None, loss_2:int|None
 
     # Allocate losses first to post-budget period
     losses = losses_1 + losses_2
-    if gain_1 is not None or loss_1 is not None:
+    if (gain_1 is not None or loss_1 is not None) and (gain_2 is not None or loss_2 is not None):
         losses_2 = min(losses, gains_2)
-        losses_1 = losses - losses_2
+        losses_1 = min(losses - losses_2, gains_1)
+        losses_2 = losses - losses_1
 
     # Allocate allowance first to post-budget period
     taxable_gain_1 = gains_1 - losses_1
     taxable_gain_2 = gains_2 - losses_2
-    allowance_2 = min(max(taxable_gain_2, 0), 3000)
-    allowance_1 = 3000 - allowance_2
+    if gain_1 is not None or loss_1 is not None:
+        allowance_2 = min(max(taxable_gain_2, 0), 3000)
+        allowance_1 = min(max(taxable_gain_1, 0 ), 3000 - allowance_2)
+    else:
+        allowance_1 = 0
+    allowance_2 = 3000 - allowance_1
     assert allowance_1 + allowance_2 == 3000
 
     taxable_gain_1 = max(taxable_gain_1 - allowance_1, 0)

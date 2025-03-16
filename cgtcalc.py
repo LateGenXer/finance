@@ -291,13 +291,17 @@ class Result:
             # Allocate losses first to post-budget period
             losses = tyr1.losses + tyr2.losses
             tyr2.losses = min(losses, tyr2.gains)
-            tyr1.losses = losses - tyr2.losses
+            tyr1.losses = min(losses - tyr2.losses, tyr1.gains)
+            tyr2.losses = losses - tyr1.losses
 
             # Allocate allowance first to post-budget period
             tyr1.taxable_gain = tyr1.gains - tyr1.losses
             tyr2.taxable_gain = tyr2.gains - tyr2.losses
-            tyr2.allowance = min(max(tyr2.taxable_gain, Decimal(0)), tyr2.allowance)
-            tyr1.allowance = tyr1.allowance - tyr2.allowance
+            tyr2.allowance = min(max(tyr2.taxable_gain, Decimal(0)), Decimal(3000))
+            tyr1.allowance = min(max(tyr1.taxable_gain, Decimal(0)), Decimal(3000) - tyr2.allowance)
+            tyr2.allowance = Decimal(3000) - tyr1.allowance
+            assert Decimal(0) <= tyr1.allowance <= Decimal(3000)
+            assert Decimal(0) <= tyr2.allowance <= Decimal(3000)
             assert tyr1.allowance + tyr2.allowance == Decimal(3000)
 
             tyr1.taxable_gain = max(tyr1.taxable_gain - tyr1.allowance, Decimal(0))

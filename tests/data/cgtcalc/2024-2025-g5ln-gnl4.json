@@ -14,7 +14,7 @@
     "costs": 10000,
     "gains": 5000,
     "losses": 4000,
-    "allowance": 3000,
+    "allowance": 1000,
     "taxable_gain": 0,
     "carried_losses": NaN
   },
@@ -33,7 +33,7 @@
     "costs": 10000,
     "gains": 0,
     "losses": 0,
-    "allowance": 0,
+    "allowance": 2000,
     "taxable_gain": 0,
     "carried_losses": 0
   }

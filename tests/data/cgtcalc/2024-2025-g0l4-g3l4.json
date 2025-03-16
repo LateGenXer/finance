@@ -20,8 +20,8 @@
     "proceeds": 16000,
     "costs": 20000,
     "gains": 0,
-    "losses": 5000,
-    "allowance": 3000,
+    "losses": 0,
+    "allowance": 0,
     "taxable_gain": 0,
     "carried_losses": NaN
   },
@@ -46,8 +46,8 @@
     "proceeds": 19000,
     "costs": 20000,
     "gains": 3000,
-    "losses": 3000,
-    "allowance": 0,
+    "losses": 8000,
+    "allowance": 3000,
     "taxable_gain": 0,
     "carried_losses": 5000
   }

@@ -21,7 +21,7 @@
     "costs": 20000,
     "gains": 3000,
     "losses": 2000,
-    "allowance": 1000,
+    "allowance": 3000,
     "taxable_gain": 0,
     "carried_losses": 0
   }
