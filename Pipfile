@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 streamlit = "~=1.43"
 matplotlib = "~=3.9"
-scipy = "~=1.13"
+scipy = "~=1.14.1"
 xlrd = "~=2.0"
 xlsxwriter = "~=3.2"
 numpy = "~=2.2"
