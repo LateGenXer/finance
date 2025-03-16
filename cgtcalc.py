@@ -322,6 +322,15 @@ class Result:
                 row[1] = len(row[1]) # disposals
                 rows.append(row)
             report.write_table(rows, header=header, just=just)
+            notes = []
+            if CGTaxYear(TaxYear(2024, 2025), 1) in self.tax_years:
+                notes.append('¹ — pre 30 October 2024.')
+            if CGTaxYear(TaxYear(2024, 2025), 2) in self.tax_years:
+                notes.append('² — on or after 30 October 2024.')
+            if notes:
+                if len(notes) >= 2:
+                    notes.append('Losses and annual allowance are primarily used against gains on or after 30 October 2024.')
+                report.write_paragraph('  '.join(notes))
         else:
             report.write_paragraph('No disposals in range.')
 
