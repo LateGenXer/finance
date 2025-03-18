@@ -7,6 +7,7 @@
 
 import html
 import sys
+import textwrap
 
 
 from typing import Sequence, Any, TextIO
@@ -60,6 +61,7 @@ class TextReport(Report):
         self.heading_sep = ''
 
     def write_paragraph(self, paragraph:str) -> None:
+        paragraph = '\n'.join(textwrap.wrap(paragraph, width=120))
         self.stream.write(paragraph + '\n\n')
         self.heading_sep = '\n'
 
