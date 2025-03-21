@@ -7,15 +7,12 @@ branch.
 
 ## Getting started
 
-Follow the [Streamlit installation
-guide](https://docs.streamlit.io/library/get-started/installation), using
-`pipenv` as environment management tool.
-
-Serve the calculator locally by running
+Install [uv](https://github.com/astral-sh/uv), then serve the calculator locally by running:
 
 ```shell
-pipenv run streamlit run Home.py
+uv venv
+uv pip install -r requirements-dev.txt
+uv run streamlit run Home.py
 ```
 
 This should start serving the tool locally.
-

@@ -1,0 +1,15 @@
+-r requirements.txt
+coverage ~= 7.4
+pulp ~= 3.0
+pytest ~= 8.1
+pytest-xdist ~= 3.5
+pytest-cov ~= 6.0
+selenium ~= 4.19
+webdriver-manager ~= 4.0
+pre-commit ~= 4.1
+ruff ~= 0.9.7
+mypy ~= 1.15
+pandas-stubs
+types-requests
+types-beautifulsoup4
+types-openpyxl

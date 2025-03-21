@@ -22,7 +22,7 @@ repos:
   - id: mypy
     name: mypy
     language: system
-    entry: sh -c 'git ls-files -z "*.py" | xargs -0 mypy'
+    entry: sh -c 'git ls-files -z "*.py" | xargs -0 uv run mypy'
     require_serial: true
     pass_filenames: false
     always_run: true
@@ -32,7 +32,7 @@ repos:
   - id: pytest
     name: pytest
     language: system
-    entry: pipenv run pytest -n auto
+    entry: uv run pytest -n auto
     require_serial: true
     pass_filenames: false
     always_run: true

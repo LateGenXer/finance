@@ -21,13 +21,16 @@ jobs:
     - run: sudo apt-get update -qq
     - run: sudo apt-get install -qq -y --no-install-recommends coinor-cbc tidy
     - uses: actions/setup-python@v5
-    - run: pip install --upgrade pipenv wheel
-    - run: pipenv install --dev
-    - run: pipenv run pip list
+    - uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        cache-dependency-glob: "requirements**.txt"
+    - run: uv venv
+    - run: uv pip install -r requirements-dev.txt
     - if: ${{ github.event_name == 'pull_request' }}
-      run: pipenv run pre-commit run --show-diff-on-failure --color always --all-files --hook-stage pre-commit
-    - run: pipenv run pytest -n auto --cov=.
-    - run: pipenv run coverage xml
+      run: uv run pre-commit run --show-diff-on-failure --color always --all-files --hook-stage pre-commit
+    - run: uv run pytest -n auto --cov=.
+    - run: uv run coverage xml
     - uses: codecov/codecov-action@v4
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

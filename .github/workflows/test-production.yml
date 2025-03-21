@@ -18,6 +18,10 @@ jobs:
       with:
         fetch-depth: 1
     - uses: actions/setup-python@v5
-    - run: pip install --upgrade pipenv wheel
-    - run: pipenv install --dev
-    - run: pipenv run pytest tests/test_selenium.py --production
+    - uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        cache-dependency-glob: "requirements**.txt"
+    - run: uv venv
+    - run: uv pip install -r requirements-dev.txt
+    - run: uv run pytest tests/test_selenium.py --production

@@ -48,10 +48,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
       - uses: actions/configure-pages@v4
-      - run: pip install --upgrade pipenv wheel
-      - run: pipenv install --dev
-      - run: pipenv run pip list
-      - run: pipenv run .github/scripts/gh-pages.sh
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements**.txt"
+      - run: uv venv
+      - run: uv pip install -r requirements-dev.txt
+      - run: uv run .github/scripts/gh-pages.sh
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

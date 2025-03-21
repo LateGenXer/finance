@@ -38,7 +38,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-      - run: pip install --upgrade pipenv wheel
-      - run: pipenv install --dev
-      - run: pipenv run pip list
-      - run: pipenv run .github/scripts/update-data.sh
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements**.txt"
+      - run: uv venv
+      - run: uv pip install -r requirements-dev.txt
+      - run: uv run .github/scripts/update-data.sh

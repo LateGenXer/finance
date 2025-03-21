@@ -1,3 +1,12 @@
+[project]
+name = "lategenxer"
+version = "0.1.0"
+description = "LateGenXer's financial tools."
+readme = "README.md"
+requires-python = ">=3.12"
+# Use requirements*.txt for now
+#dependencies = []
+
 [tool.pytest.ini_options]
 minversion = "6.0"
 log_format = "%(asctime)s %(name)s %(levelname)s %(message)s"

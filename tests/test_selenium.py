@@ -36,7 +36,6 @@ def server(production, worker_id):
     port = 8501 + (hash(worker_id) % 100)
 
     app = subprocess.Popen([
-        'pipenv', 'run',
         'streamlit', 'run',
         '--server.address', host,
         '--server.port', str(port),
