@@ -23,3 +23,8 @@ Please consult appropriate professional advice when in any doubt.
 * [Capital Gains calculator](cgtcalc.md)
   * [Converter](cgtcalculator2cgtcalc.py) from [CGTCalculator](https://www.cgtcalculator.com/instructions.htm#tradeformat) to [cgtcalc](https://github.com/mattjgalloway/cgtcalc?tab=readme-ov-file#input-data) format
 * [Accrued Income calculator](accrued_income.md)
+
+
+# Contributing
+
+Read [here](CONTRIBUTING.md) for instructions on how to run and develop the code, locally or in the cloud.

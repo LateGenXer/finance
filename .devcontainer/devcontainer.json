@@ -1,0 +1,63 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "LateGenXer",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	//"image": "mcr.microsoft.com/devcontainers/python:1-3.12",
+	"build": { "dockerfile": "Dockerfile" },
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Configure tool-specific properties.
+	"customizations": {
+		"codespaces": {
+			"openFiles": [
+				"README.md"
+			]
+		},
+		// Configure properties specific to VS Code.
+		"vscode": {
+			"settings": {},
+			"extensions": [
+				"ms-python.python",
+				"ms-python.vscode-pylance"
+			]
+		}
+	},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [8509],
+
+	// Use 'portsAttributes' to set default properties for specific forwarded ports.
+	// More info: https://containers.dev/implementors/json_reference/#port-attributes
+	"portsAttributes": {
+		"8509": {
+			"label": "Application",
+			"onAutoForward": "openPreview"
+		}
+	},
+
+	"remoteUser": "vscode",
+
+	// Persist UV cache
+	"remoteEnv": {
+		"UV_CACHE_DIR": "${containerWorkspaceFolder}/.cache/uv",
+		"UV_LINK_MODE": "copy"
+	},
+
+	"updateContentCommand": ["uv", "pip", "install", "-r", "requirements-dev.txt"],
+
+	"postAttachCommand": [
+		"uv",
+			"run",
+		"streamlit",
+			"run",
+			"Home.py",
+			"--server.address", "localhost",
+			"--server.port", "8509",
+			"--server.headless", "true",
+			"--server.enableCORS", "false",
+			"--server.enableXsrfProtection", "false"
+	]
+}
