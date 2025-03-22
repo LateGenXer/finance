@@ -9,16 +9,7 @@ on:
     # BoE's issued gilts report are available early hours after midnight.
     - cron: '0 5 * * TUE-SAT'
 
-  # When dependencies change
   push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/update-data.yml
-      - .github/scripts/update-data.sh
-      - download.py
-      - data/lse.py
-      - data/boe.py
 
   # Manually
   workflow_dispatch:

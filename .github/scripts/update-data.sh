@@ -23,7 +23,7 @@ then
 			git commit -m "Update $file." -- $file
 		fi
 	done
-	if [ "${CI:-false}" = "true" ]
+	if [ "$GITHUB_REF" = 'refs/heads/main' ]
 	then
 		git push
 	else
