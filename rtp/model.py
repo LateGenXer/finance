@@ -515,6 +515,7 @@ def model(
         if yr < 2030:
             isa_allowance /= 1.0 + inflation_rate
 
+        # XXX: PT capital gains are inflation adjusted, but with a 24 month lag, which is currently ignored
         drawdown_gia, cg = gia.flow(not uk_yr and country == 'PT')
 
         sipp_1.uf *= 1.0 + eps

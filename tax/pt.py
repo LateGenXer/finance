@@ -22,5 +22,10 @@ income_tax_bands = [
 
 
 # https://taxsummaries.pwc.com/portugal/individual/income-determination
-# XXX: gains are inflation adjusted
+#
+# Capital gains of assets held more than 24 months can be inflation adjusted.  See:
+# - Código do IRS, Artigo 50.º - Correção monetária
+# - Código do IRS, Artigo 10.º - Mais-valias, alínea b), n.º 5, which explicitly refers investment funds
+# - https://www.pwc.pt/pt/pwcinforfisco/flash/irc/irc-irs-coeficientes-desvalorizacao-moeda-2024.html
+#
 cgt_rate = 0.28
