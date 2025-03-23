@@ -14,6 +14,12 @@ import sys
 def parse(filename):
     for entry in csv.DictReader(open(filename, 'rt', encoding='utf-8-sig')):
         if entry['Type'] in ('Conventional', 'Index-linked'):
+
+            # 1 7/8% Index-linked Treasury Gilt 2049 was erroneously classed as
+            # Conventional for a few days.
+            if entry['ISIN'] == 'GB00BT7J0134':
+                entry['Type'] = 'Index-linked'
+
             yield entry
 
 

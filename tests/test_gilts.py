@@ -141,6 +141,13 @@ def tradeweb_parse():
     return params
 
 
+def tradeweb_str_to_float(s:str, na:float=math.nan) -> float:
+    if s == 'N/A':
+        return na
+    else:
+        return float(s)
+
+
 @pytest.mark.parametrize("entries", tradeweb_parse())
 def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
     caplog.set_level(logging.DEBUG, logger="gilts")
@@ -186,9 +193,6 @@ def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
 
         assert row['ISIN'] == isin
 
-        if row['Clean Price'] == 'N/A':
-            continue
-
         close_date = datetime.datetime.strptime(row['Close of Business Date'], '%d/%m/%Y').date()
 
         if not conventional:
@@ -212,10 +216,13 @@ def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
            settlement_date > gilt.ex_dividend_date(maturity):
             continue
 
-        clean_price = float(row['Clean Price'])
-        accrued_interest = row['Accrued Interest']
-        accrued_interest = 0 if accrued_interest == 'N/A' else float(accrued_interest)
-        dirty_price = float(row['Dirty Price'])
+        clean_price = tradeweb_str_to_float(row['Clean Price'])
+        accrued_interest = tradeweb_str_to_float(row['Accrued Interest'], na=0.0)
+        dirty_price = tradeweb_str_to_float(row['Dirty Price'])
+
+        if math.isnan(dirty_price):
+            continue
+        assert not math.isnan(clean_price)
 
         # Ensure Tradeweb's clean and dirty prices are consistent
         if conventional or cast(IndexLinkedGilt, gilt).lag == 8:
