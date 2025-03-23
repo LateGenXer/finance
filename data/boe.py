@@ -127,6 +127,7 @@ def YieldCurve(measure:str) -> Curve:
     column = f'{measure}_Spot'
     df = pd.read_csv(_filename, header=0, index_col=0, usecols=['Years', column])
     series = df[column]
+    series.dropna(inplace=True)
     xp = series.index.to_numpy()
     yp = series.to_numpy() / 100.0
     return Curve(xp, yp)
