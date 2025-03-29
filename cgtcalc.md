@@ -14,9 +14,9 @@ of them it handles notional distributions and equalisation payments in a consist
 ## Behavior
 
 - Follows [share identification rules](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg51560)
-- Rounding done as per HMRC example calculations and Community Forums clarifications:
+- Rounding done as per HMRC example calculations and HMRC Community Forums clarifications:
   - proceeds and gains always rounded down to whole pound
-  - individual costs (charges, acquisition costs, Section 104 pool cost) and losses always rounded up to whole pound, _before_ addition
+  - individual costs (charges, acquisition costs, Section 104 pool cost) and losses always rounded up to whole pound
 - Number of shares and unit share price kept at full precision
 - Notional income (i.e., reinvested dividends from UK shares, and _Excess Reportable Income_ from offshore reporting funds)
 and equalisation payments is handled by adjusting Section 104 pool cost accordingly.
@@ -36,7 +36,7 @@ python cgtcalc.py trades.txt
 
 ## Format
 
-`cgtcalc.py` input format is compatible both with
+`cgtcalc.py`'s input format is compatible both with
 [CGTCalculator](https://www.cgtcalculator.com/instructions.htm#tradeformat) and
 [cgtcalc](https://github.com/mattjgalloway/cgtcalc?tab=readme-ov-file#input-data) formats.
 

@@ -500,7 +500,7 @@ def calculate(stream:typing.TextIO, rounding:bool=True) -> Result:
         for tr in trades:
             if tr.kind == Kind.BUY:
                 shares, price, charges = tr.params
-                # XXX: We could track acquisition charges sepearately (and
+                # XXX: We could track acquisition charges separately (and
                 # round it separately) but coalescing into a single figure
                 # greatly simplifies things
                 cost = shares*price + charges
