@@ -57,7 +57,7 @@ with st.sidebar:
 
 st.html("<style>textarea { font-family: monospace !important; font-size: 14px !important; }</style>")
 
-placeholder_filename = os.path.join(os.path.dirname(__file__), '..', 'tests', 'data', 'cgtcalc', 'hmrc-hs284-example3.tsv')
+placeholder_filename = os.path.join(os.path.dirname(__file__), '..', 'tests', 'data', 'cgtcalc', '2024-2025.tsv')
 transactions = st.text_area(
     label="Transactions",
     key='transactions',
