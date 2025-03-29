@@ -5,7 +5,11 @@
 #
 
 
+import typing
+
 import pytest
+
+from contextlib import nullcontext
 
 from tax.uk import *
 
@@ -52,3 +56,24 @@ def test_tax(income:int, cg:int, income_tax:float, cgt:float, ma:int) -> None:
     income_tax_, cgt_ = tax(income, cg, marriage_allowance=ma)
     assert income_tax_ == pytest.approx(income_tax, abs=1e-2)
     assert cgt_ == pytest.approx(cgt, abs=1e-2)
+
+
+str_to_tax_year_params = [
+    ("2023/2024", nullcontext(TaxYear(2023, 2024))),
+    ("2023/24",   nullcontext(TaxYear(2023, 2024))),
+    ("23/2024",   nullcontext(TaxYear(2023, 2024))),
+    ("23/24",     nullcontext(TaxYear(2023, 2024))),
+    ("2024",      nullcontext(TaxYear(2023, 2024))),
+    ("24",        nullcontext(TaxYear(2023, 2024))),
+    ("00",        nullcontext(TaxYear(1999, 2000))),
+    ("0",         pytest.raises(ValueError)),
+    ("10000",     pytest.raises(ValueError)),
+    ("XX/YY",     pytest.raises(ValueError)),
+    ("YY",        pytest.raises(ValueError)),
+    ("2023/2025", pytest.raises(ValueError)),
+]
+
+@pytest.mark.parametrize("s,eyc", [pytest.param(s, eyc, id=s) for s, eyc in str_to_tax_year_params])
+def test_str_to_tax_year(s:str, eyc:typing.ContextManager) -> None:
+    with eyc as ey:
+        assert TaxYear.from_string(s) == ey

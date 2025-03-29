@@ -1,6 +1,10 @@
 """UK tax constants and functions."""
 
 
+import datetime
+import typing
+
+
 # https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past
 income_tax_threshold_20 =  12570
 income_tax_threshold_40 =  50270
@@ -105,3 +109,54 @@ def tax(income:float|int, capital_gains:float|int = 0, marriage_allowance:float|
     capital_gains_tax += higher_rate_capital_gains * cgt_rates[1]
 
     return income_tax, capital_gains_tax
+
+
+class TaxYear(typing.NamedTuple):
+
+    year1: int
+    year2: int
+
+    def __str__(self) -> str:
+        return f'{self.year1}/{self.year2}'
+
+    def start_date(self) -> datetime.date:
+        return datetime.date(self.year1, 4, 6)
+
+    def end_date(self) -> datetime.date:
+        return datetime.date(self.year2, 4, 5)
+
+    @classmethod
+    def from_date(cls, date:datetime.date) -> 'TaxYear':
+        if date < date.replace(date.year, 4, 6):
+            year1, year2 = date.year - 1, date.year
+        else:
+            year1, year2 = date.year, date.year + 1
+        return cls(year1, year2)
+
+    @staticmethod
+    def _str_to_year(s:str) -> int:
+        assert isinstance(s, str)
+        if not s.isdigit():
+            raise ValueError(s)
+        y = int(s)
+        if len(s) == 2 and s.isdigit():
+            y += 2000
+        if y < datetime.MINYEAR or y > datetime.MAXYEAR:
+            raise ValueError(f'{s} out of range')
+        return y
+
+    @classmethod
+    def from_string(cls, s:str) -> 'TaxYear':
+        try:
+            s1, s2 = s.split('/', maxsplit=1)
+        except ValueError:
+            y2 = cls._str_to_year(s)
+            y1 = y2 - 1
+        else:
+            y1 = cls._str_to_year(s1)
+            y2 = cls._str_to_year(s2)
+            if y1 + 1 != y2:
+                raise ValueError(f'{s1} and {s2} are not consecutive years')
+        return cls(y1, y2)
+
+

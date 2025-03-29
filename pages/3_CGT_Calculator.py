@@ -14,7 +14,8 @@ import streamlit as st
 import common
 
 from typing import TextIO
-from cgtcalc import calculate, TaxYear
+from tax.uk import TaxYear
+from cgtcalc import calculate
 from report import Report, HtmlReport, TextReport
 
 

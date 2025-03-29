@@ -19,13 +19,13 @@ import typing
 
 import pytest
 
-from contextlib import nullcontext
 from decimal import Decimal
 from glob import glob
 from pprint import pp
 
 from environ import ci
-from cgtcalc import calculate, DisposalResult, Result, TaxYear
+from tax.uk import TaxYear
+from cgtcalc import calculate, DisposalResult, Result
 from report import TextReport, HtmlReport
 
 
@@ -279,27 +279,6 @@ def test_calculate(filename:str) -> None:
         assert tyr.costs == pytest.approx(expected_tyr['costs'], abs=abs_tol)
         assert tyr.gains == pytest.approx(expected_tyr['gains'], abs=abs_tol)
         assert tyr.losses == pytest.approx(expected_tyr['losses'], abs=abs_tol)
-
-
-str_to_tax_year_params = [
-    ("2023/2024", nullcontext(TaxYear(2023, 2024))),
-    ("2023/24",   nullcontext(TaxYear(2023, 2024))),
-    ("23/2024",   nullcontext(TaxYear(2023, 2024))),
-    ("23/24",     nullcontext(TaxYear(2023, 2024))),
-    ("2024",      nullcontext(TaxYear(2023, 2024))),
-    ("24",        nullcontext(TaxYear(2023, 2024))),
-    ("00",        nullcontext(TaxYear(1999, 2000))),
-    ("0",         pytest.raises(ValueError)),
-    ("10000",     pytest.raises(ValueError)),
-    ("XX/YY",     pytest.raises(ValueError)),
-    ("YY",        pytest.raises(ValueError)),
-    ("2023/2025", pytest.raises(ValueError)),
-]
-
-@pytest.mark.parametrize("s,eyc", [pytest.param(s, eyc, id=s) for s, eyc in str_to_tax_year_params])
-def test_str_to_tax_year(s:str, eyc:typing.ContextManager) -> None:
-    with eyc as ey:
-        assert TaxYear.from_string(s) == ey
 
 
 @pytest.mark.parametrize("filename", collect_filenames(no_raises=True))

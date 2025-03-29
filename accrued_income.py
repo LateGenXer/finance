@@ -23,7 +23,7 @@ import ukcalendar
 from data.lse import is_tidm, is_isin
 from data.rpi import RPI
 from gilts import gilts
-from cgtcalc import TaxYear
+from tax.uk import TaxYear
 from report import TextReport
 
 
