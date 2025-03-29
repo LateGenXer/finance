@@ -1,0 +1,42 @@
+[
+  {
+    "tax_year": "2024/2025",
+    "disposals": [
+      {
+        "date": "2024-10-28",
+        "security": "FOO",
+        "shares": 50,
+        "proceeds": 4750,
+        "gain": -250
+      },
+      {
+        "date": "2024-10-29",
+        "security": "FOO",
+        "shares": 150,
+        "proceeds": 17250,
+        "gain": 2250
+      },
+      {
+        "date": "2024-10-30",
+        "security": "FOO",
+        "shares": 150,
+        "proceeds": 18750,
+        "gain": 3750
+      },
+      {
+        "date": "2024-10-31",
+        "security": "FOO",
+        "shares": 50,
+        "proceeds": 4500,
+        "gain": -500
+      }
+    ],
+    "proceeds": 45250,
+    "costs": 40000,
+    "gains": 6000,
+    "losses": 750,
+    "allowance": 3000,
+    "taxable_gain": 2250,
+    "carried_losses": 0
+  }
+]

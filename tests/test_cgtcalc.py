@@ -25,7 +25,7 @@ from glob import glob
 from pprint import pp
 
 from environ import ci
-from cgtcalc import calculate, DisposalResult, Result, TaxYear, CGTaxYear
+from cgtcalc import calculate, DisposalResult, Result, TaxYear
 from report import TextReport, HtmlReport
 
 
@@ -88,12 +88,7 @@ def object_hook(obj:dict) -> dict:
 def parse_json_result(filename:str) -> dict:
     result = {}
     for tyr in json.load(open(filename, 'rt'), parse_float=Decimal, object_hook=object_hook):
-        s = tyr['tax_year']
-        period = 0
-        if s[-1] in '¹²':
-            period = 1 + '¹²'.index(s[-1])
-            s = s[:-1]
-        tax_year = CGTaxYear(TaxYear.from_string(s), period)
+        tax_year = TaxYear.from_string(tyr['tax_year'])
         result[tax_year] = tyr
     return result
 
@@ -104,8 +99,8 @@ tax_return_1_re = re.compile(r'^(?P<year1>\d\d)-(?P<year2>\d\d): Disposal Procee
 tax_return_2_re = re.compile(r'^(?P<year1>\d\d)-(?P<year2>\d\d): Year Gains = £(?P<gains>\S+) ,? Year Losses = £(?P<losses>\S+)$')
 
 
-def parse_cgtcalculator_result(filename:str) -> dict[CGTaxYear,dict]:
-    result:dict[CGTaxYear,dict] = {}
+def parse_cgtcalculator_result(filename:str) -> dict[TaxYear,dict]:
+    result:dict[TaxYear,dict] = {}
 
     tax_year = None
     for line in open(filename, 'rt'):
@@ -116,7 +111,7 @@ def parse_cgtcalculator_result(filename:str) -> dict[CGTaxYear,dict]:
             tax_year1 = int('20' + mo.group(1))
             tax_year2 = int('20' + mo.group(2))
             assert tax_year1 + 1 == tax_year2
-            tax_year = CGTaxYear(TaxYear(tax_year1, tax_year2))
+            tax_year = TaxYear(tax_year1, tax_year2)
 
         mo = disposal_re.match(line)
         if mo is not None:
@@ -158,7 +153,7 @@ def parse_cgtcalculator_result(filename:str) -> dict[CGTaxYear,dict]:
         if mo is not None:
             tax_year1 = int('20' + mo.group('year1'))
             tax_year2 = int('20' + mo.group('year2'))
-            tax_year = CGTaxYear(TaxYear(tax_year1, tax_year2))
+            tax_year = TaxYear(tax_year1, tax_year2)
             tyr = result[tax_year]
             tyr["proceeds"] = Decimal(mo.group('proceeds').replace(',', ''))
             tyr["costs"] = Decimal(mo.group('costs').replace(',', ''))
@@ -166,7 +161,7 @@ def parse_cgtcalculator_result(filename:str) -> dict[CGTaxYear,dict]:
         if mo is not None:
             tax_year1 = int('20' + mo.group('year1'))
             tax_year2 = int('20' + mo.group('year2'))
-            tax_year = CGTaxYear(TaxYear(tax_year1, tax_year2))
+            tax_year = TaxYear(tax_year1, tax_year2)
             tyr = result[tax_year]
             tyr["gains"] = Decimal(mo.group('gains').replace(',', ''))
             tyr["losses"] = Decimal(mo.group('losses').replace(',', ''))
@@ -315,7 +310,7 @@ def test_filter_tax_year(filename:str) -> None:
 
     for tax_year in result.tax_years:
         filtered_result = copy.copy(result)
-        filtered_result.filter_tax_year(tax_year.tax_year)
+        filtered_result.filter_tax_year(tax_year)
 
         assert tax_year in filtered_result.tax_years
         assert filtered_result.tax_years[tax_year] == result.tax_years[tax_year]

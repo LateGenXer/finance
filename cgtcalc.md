@@ -20,10 +20,10 @@ of them it handles notional distributions and equalisation payments in a consist
 - Number of shares and unit share price kept at full precision
 - Notional income (i.e., reinvested dividends from UK shares, and _Excess Reportable Income_ from offshore reporting funds)
 and equalisation payments is handled by adjusting Section 104 pool cost accordingly.
+- Provides the necessary figures to [work out the Capital Gains Tax adjustment for the 2024 to 2025 tax year](https://www.gov.uk/guidance/work-out-your-capital-gains-tax-adjustment-for-the-2024-to-2025-tax-year)
 
 ## Known limitations
 
-- Partial support for dealing with 2024/2025 pre- / post- Autumnt budget periods.
 - Disposals before 6 April 2008 (when Section 104 rule was introduced) are not supported.
 
 

@@ -153,34 +153,6 @@ class TaxYear(typing.NamedTuple):
         return cls(y1, y2)
 
 
-class CGTaxYear(typing.NamedTuple):
-
-    tax_year: TaxYear
-    period: int = 0
-
-    @property
-    def year1(self) -> int:
-        return self.tax_year.year1
-
-    @property
-    def year2(self) -> int:
-        return self.tax_year.year2
-
-    def __str__(self) -> str:
-        return str(self.tax_year) + ['', '¹', '²'][self.period]
-
-    def description(self) -> str:
-        return str(self.tax_year) + ['', ' (pre 30 October)', ' (on or after 30 October)'][self.period]
-
-    @classmethod
-    def from_date(cls, date:datetime.date) -> 'CGTaxYear':
-        tax_year = TaxYear.from_date(date)
-        period = 0
-        if tax_year.year1 == 2024:
-            period = 2 if date >= datetime.date(2024, 10, 30) else 1
-        return cls(tax_year, period)
-
-
 # https://www.gov.uk/guidance/capital-gains-tax-rates-and-allowances
 # https://www.rossmartin.co.uk/capital-gains-tax/110-capital-gains-tax-rates-a-allowances
 allowances = {
@@ -243,11 +215,11 @@ version = get_version()
 class Result:
     warnings: list[str] = dataclasses.field(default_factory=list)
     section104_tables: dict[str, list] = dataclasses.field(default_factory=dict)
-    tax_years: dict[CGTaxYear, TaxYearResult] = dataclasses.field(default_factory=dict)
+    tax_years: dict[TaxYear, TaxYearResult] = dataclasses.field(default_factory=dict)
 
     def add_disposal(self, disposal:DisposalResult) -> None:
 
-        tax_year = CGTaxYear.from_date(disposal.date)
+        tax_year = TaxYear.from_date(disposal.date)
 
         try:
             tax_year_result = self.tax_years[tax_year]
@@ -273,54 +245,17 @@ class Result:
         self.tax_years = dict(sorted(self.tax_years.items(), key=operator.itemgetter(0)))
         assert sorted(self.tax_years) == list(self.tax_years)
 
-        tyr1:TaxYearResult|None = None
-        tyr2:TaxYearResult|None = None
-
         for tax_year, tyr in self.tax_years.items():
             tyr.disposals.sort(key=operator.attrgetter('date'))
 
             try:
-                tyr.allowance = Decimal(allowances[tax_year.tax_year])
+                tyr.allowance = Decimal(allowances[tax_year])
             except KeyError:
                 tyr.allowance = Decimal(0)
                 self.warnings.append(f'capital gains allowance for {tax_year} tax year unknown')
 
             tyr.taxable_gain = max(tyr.proceeds - tyr.costs - tyr.allowance, Decimal(0))
             tyr.carried_losses = max(tyr.costs - tyr.proceeds, Decimal(0))
-
-            if tax_year.period == 1:
-                tyr1 = tyr
-            if tax_year.period == 2:
-                tyr2 = tyr
-            del tyr
-
-        # Patch-up 2024/2025 pre-/post- Autumn budget periods
-        if tyr1 is not None and tyr2 is not None:
-            # https://www.quilter.com/help-and-support/technical-insights/technical-insights-articles/capital-gains-in-2024-25-before-and-or-after-30th-october-2024/
-            self.warnings.append('2024/2025 pre- / post- Autumn budget support is still work in progress!')
-
-            # Allocate losses first to post-budget period
-            losses = tyr1.losses + tyr2.losses
-            tyr2.losses = min(losses, tyr2.gains)
-            tyr1.losses = min(losses - tyr2.losses, tyr1.gains)
-            tyr2.losses = losses - tyr1.losses
-
-            # Allocate allowance first to post-budget period
-            tyr1.taxable_gain = tyr1.gains - tyr1.losses
-            tyr2.taxable_gain = tyr2.gains - tyr2.losses
-            tyr2.allowance = min(max(tyr2.taxable_gain, Decimal(0)), Decimal(3000))
-            tyr1.allowance = min(max(tyr1.taxable_gain, Decimal(0)), Decimal(3000) - tyr2.allowance)
-            tyr2.allowance = Decimal(3000) - tyr1.allowance
-            assert Decimal(0) <= tyr1.allowance <= Decimal(3000)
-            assert Decimal(0) <= tyr2.allowance <= Decimal(3000)
-            assert tyr1.allowance + tyr2.allowance == Decimal(3000)
-
-            tyr1.taxable_gain = max(tyr1.taxable_gain - tyr1.allowance, Decimal(0))
-            tyr2.taxable_gain = max(tyr2.taxable_gain - tyr2.allowance, Decimal(0))
-            assert tyr1.taxable_gain + tyr2.taxable_gain == max(tyr1.proceeds + tyr2.proceeds - tyr1.costs - tyr2.costs - Decimal(3000), Decimal(0))
-
-            tyr1.carried_losses = Decimal('NaN')
-            tyr2.carried_losses = max(tyr1.costs + tyr2.costs - tyr1.proceeds - tyr2.proceeds, Decimal(0))
 
     def write(self, report:Report) -> None:
         report.start()
@@ -337,22 +272,16 @@ class Result:
                 row[1] = len(row[1]) # disposals
                 rows.append(row)
             report.write_table(rows, header=header, just=just)
-            notes = []
-            if CGTaxYear(TaxYear(2024, 2025), 1) in self.tax_years:
-                notes.append('¹ — pre 30 October 2024.')
-            if CGTaxYear(TaxYear(2024, 2025), 2) in self.tax_years:
-                notes.append('² — on or after 30 October 2024.')
-            if notes:
-                if len(notes) >= 2:
-                    notes.append('Losses and annual allowance are primarily used against gains on or after 30 October 2024.')
-                report.write_paragraph('  '.join(notes))
         else:
             report.write_paragraph('No disposals in range.')
 
         for tax_year, tyr in self.tax_years.items():
             assert tyr.disposals
 
-            report.write_heading(f'Tax year {tax_year.description()}')
+            report.write_heading(f'Tax year {tax_year}')
+
+            pre_budget_gains:Decimal = Decimal(0)
+            post_budget_gains:Decimal = Decimal(0)
 
             for no, disposal in enumerate(tyr.disposals, start=1):
                 gain = disposal.proceeds - disposal.costs
@@ -361,11 +290,27 @@ class Result:
                     gain = -gain
                 else:
                     sign = 'GAIN'
+                    if tax_year == (2024, 2025):
+                        if disposal.date >= datetime.date(2024, 10, 30):
+                            post_budget_gains += gain
+                        else:
+                            pre_budget_gains += gain
 
                 report.write_heading(f'{no}. SOLD {disposal.shares} {disposal.security} on {disposal.date} for £{disposal.proceeds} giving {sign} of £{gain}', level=3)
 
                 footer = ('Gain', str(disposal.proceeds - disposal.costs), '')
                 report.write_table(disposal.table, footer=footer, just='lrl', indent='  ')
+
+            # https://www.gov.uk/guidance/work-out-your-capital-gains-tax-adjustment-for-the-2024-to-2025-tax-year
+            if tax_year == (2024, 2025):
+                report.write_heading(f'Capital Gains Tax adjustment for {tax_year}', level=2)
+                assert pre_budget_gains + post_budget_gains == tyr.gains
+                rows = [
+                    ['Total gains on or after 30 October 2024:', post_budget_gains],
+                    ['Total gains before 30 October 2024:',  pre_budget_gains],
+                    ['Total losses:', tyr.losses],
+                ]
+                report.write_table(rows, just='lr', indent='  ')
 
         if self.section104_tables:
             report.write_heading('Section 104 Holdings')
@@ -387,7 +332,7 @@ class Result:
         report.end()
 
     def filter_tax_year(self, tax_year:TaxYear) -> None:
-        self.tax_years = {ty:tyr for ty, tyr in self.tax_years.items() if ty.tax_year == tax_year}
+        self.tax_years = {ty:tyr for ty, tyr in self.tax_years.items() if ty == tax_year}
 
         assert tax_year.year1 + 1 == tax_year.year2
         start_date = tax_year.start_date()
