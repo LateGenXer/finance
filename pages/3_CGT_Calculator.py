@@ -15,7 +15,7 @@ import common
 
 from typing import TextIO
 from tax.uk import TaxYear
-from cgtcalc import calculate
+from cgtcalc import Calculator
 from report import Report, HtmlReport, TextReport
 
 
@@ -77,7 +77,9 @@ if transactions:
 else:
     stream = open(placeholder_filename, 'rt')
 
-result = calculate(stream, rounding=rounding)
+calculator = Calculator(rounding=rounding)
+calculator.parse(stream)
+result = calculator.calculate()
 for warning in result.warnings:
     st.warning(warning, icon="⚠️")
 

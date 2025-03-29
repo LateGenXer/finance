@@ -10,7 +10,8 @@ import os.path
 
 import pytest
 
-from cgtcalc import calculate, TaxYear
+from tax.uk import TaxYear
+from cgtcalc import Calculator
 from report import TextReport
 
 try:
@@ -49,7 +50,9 @@ def check_text_report(at, filename, rounding, tax_year=None):
             text = md.value[4: -3]
     assert text
 
-    result = calculate(open(filename, 'rt'), rounding=rounding)
+    calculator = Calculator(rounding=rounding)
+    calculator.parse(open(filename, 'rt'))
+    result = calculator.calculate()
 
     if tax_year is not None:
         result.filter_tax_year(tax_year)

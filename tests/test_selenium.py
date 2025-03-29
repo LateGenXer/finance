@@ -214,10 +214,12 @@ def test_cgtcalc_default(production, cgtcalc_page):
     srcdoc = iframe.get_attribute('srcdoc')
 
     if not production:
-        from cgtcalc import calculate
+        from cgtcalc import Calculator
         from report import HtmlReport
 
-        result = calculate(open(filename, 'rt'))
+        calculator = Calculator()
+        calculator.parse(open(filename, 'rt'))
+        result = calculator.calculate()
         expected_html = io.StringIO()
         report = HtmlReport(expected_html)
         result.write(report)

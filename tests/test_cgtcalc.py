@@ -19,13 +19,14 @@ import typing
 
 import pytest
 
+from contextlib import nullcontext
 from decimal import Decimal
 from glob import glob
 from pprint import pp
 
 from environ import ci
 from tax.uk import TaxYear
-from cgtcalc import calculate, DisposalResult, Result
+from cgtcalc import Calculator, DisposalResult, Result
 from report import TextReport, HtmlReport
 
 
@@ -227,12 +228,17 @@ def read_test_annotations(filename:str) -> tuple[set[str], type[BaseException]|N
 def test_calculate(filename:str) -> None:
     expected_warnings, raises, rounding = read_test_annotations(filename)
 
+    calculator = Calculator(rounding=rounding)
     with open(filename, 'rt') as istream:
+        context:typing.ContextManager
         if raises is None:
-            result = calculate(istream, rounding=rounding)
+            context = nullcontext()
         else:
-            with pytest.raises(raises):
-                result = calculate(istream, rounding=rounding)
+            context = pytest.raises(raises)
+        with context:
+            calculator.parse(istream)
+            result = calculator.calculate()
+        if raises is not None:
             return
 
     result.write(TextReport(io.StringIO()))
@@ -285,7 +291,9 @@ def test_calculate(filename:str) -> None:
 def test_filter_tax_year(filename:str) -> None:
     _, _, rounding = read_test_annotations(filename)
 
-    result = calculate(open(filename, 'rt'), rounding=rounding)
+    calculator = Calculator(rounding=rounding)
+    calculator.parse(open(filename, 'rt'))
+    result = calculator.calculate()
 
     for tax_year in result.tax_years:
         filtered_result = copy.copy(result)
@@ -319,7 +327,9 @@ def test_filter_tax_year(filename:str) -> None:
 def test_report_html(filename:str) -> None:
     _, _, rounding = read_test_annotations(filename)
 
-    result = calculate(open(filename, 'rt'), rounding=rounding)
+    calculator = Calculator(rounding=rounding)
+    calculator.parse(open(filename, 'rt'))
+    result = calculator.calculate()
 
     html = io.StringIO()
     result.write(HtmlReport(html))
