@@ -18,6 +18,7 @@ import dataclasses
 import datetime
 import math
 import operator
+import os
 import sys
 import typing
 
@@ -26,7 +27,7 @@ from decimal import Decimal, ROUND_HALF_EVEN, ROUND_CEILING, ROUND_FLOOR
 
 from environ import get_version
 from tax.uk import TaxYear
-from report import Report, TextReport, HtmlReport
+from report import Report, TextReport, HtmlReport, PdfReport
 
 
 Kind = IntEnum('Kind', ['DIVIDEND', 'CAPRETURN', 'BUY', 'SELL', 'RESTRUCTURING'])
@@ -678,7 +679,7 @@ def main() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument('-y', '--tax-year', metavar='TAX_YEAR', default=None, help='tax year in XXXX/YYYY, XX/YY, YYYY, or YY format')
     argparser.add_argument('--rounding', action=argparse.BooleanOptionalAction, default=True, help='(dis)enable rounding to whole pounds')
-    argparser.add_argument('--format', choices=['text', 'html'], default='text')
+    argparser.add_argument('--format', choices=['text', 'html', 'pdf'], default='text')
     argparser.add_argument('filename', nargs='+', metavar='FILENAME', help='file with input trades')
     args = argparser.parse_args()
 
@@ -702,9 +703,15 @@ def main() -> None:
     report: Report
     if args.format == 'text':
         report = TextReport(stream)
-    else:
-        assert args.format == 'html'
+    elif args.format == 'html':
         report = HtmlReport(stream)
+    else:
+        assert args.format == 'pdf'
+        root, _ = os.path.splitext(args.filename[0])
+        output = root + '.pdf'
+        assert output not in args.filename
+        report = PdfReport(open(output, 'wb'))
+        sys.stderr.write(f'info: writing report to {output}\n')
     result.write(report)
 
 

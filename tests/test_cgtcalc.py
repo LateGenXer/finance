@@ -386,3 +386,12 @@ def test_main() -> None:
         ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL)
+
+    subprocess.check_call(args=[
+            sys.executable,
+            cgtcalc_path,
+            '--format', 'pdf',
+            os.path.join(data_dir, 'cgtcalc', 'warning-capreturn-holding.tsv')
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL)

@@ -6,3 +6,5 @@ xlsxwriter ~= 3.2
 numpy ~= 2.2
 openpyxl ~= 3.1
 beautifulsoup4 ~= 4.12
+fpdf2 ~= 2.8
+types-fpdf2 ~= 2.8
