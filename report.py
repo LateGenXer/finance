@@ -6,11 +6,12 @@
 
 
 import html
+import logging
 import sys
 import textwrap
 
 
-from typing import Sequence, Any, TextIO
+from typing import Sequence, Any, BinaryIO, TextIO
 from abc import ABC, abstractmethod
 
 
@@ -211,3 +212,130 @@ class HtmlReport(Report):
         self.stream.write('</div>\n')
         self.stream.write('</body>\n')
         self.stream.write('</html>\n')
+
+
+# https://py-pdf.github.io/fpdf2/Logging.html
+logging.getLogger('fontTools.subset').level = logging.WARN
+
+
+# https://py-pdf.github.io/fpdf2/
+class PdfReport(Report):
+
+    a4_width_mm = 210
+    pt_to_mm = 25.4 / 72
+
+    # https://fonts.google.com/noto
+    font_family = 'NotoSansMono'
+    fontsize_pt = 8
+    fontsize_mm = fontsize_pt * pt_to_mm
+    line_height = fontsize_mm * 1.25
+    margin_bottom_mm = 10
+
+    def __init__(self, stream:BinaryIO):
+        self.stream = stream
+        from fpdf import FPDF
+        self.pdf = FPDF(orientation='P', unit='mm', format='A4')
+        self.pdf.set_creator('https://lategenxer.github.io/')
+        self.pdf.set_display_mode('fullwidth', 'continuous')
+        self.pdf.set_auto_page_break(True, margin=self.margin_bottom_mm)
+        self.pdf.add_font("NotoSansMono", style="",  fname="/usr/share/fonts/truetype/noto/NotoSansMono-Regular.ttf")
+        self.pdf.add_font("NotoSansMono", style="B", fname="/usr/share/fonts/truetype/noto/NotoSansMono-Bold.ttf")
+        self.pdf.add_page()
+        self.pdf.set_font(family=self.font_family, size=self.fontsize_pt)
+        self.heading_sep = False
+
+    def write_heading(self, heading:str, level:int=1) -> None:
+        if level <= 1:
+            heading = heading.upper()
+        if self.heading_sep:
+            self._ln()
+        self.pdf.set_font(family=self.font_family, style='B', size=self.fontsize_pt)
+        self.write_line(heading)
+        self._ln()
+        self.pdf.set_font(family=self.font_family, style='', size=self.fontsize_pt)
+        self.heading_sep = False
+
+    def write_paragraph(self, paragraph:str) -> None:
+        for line in textwrap.wrap(paragraph, width=120): #XXX
+            self.write_line(paragraph)
+        self._ln()
+        self.heading_sep = True
+
+    def write_table(self, rows:list[list], header:Sequence[Any]|None=None, footer:Sequence[Any]|None=None, just:Sequence[Any]|None=None, indent:str='') -> None:  # pragma: no cover
+
+        columns = [list(col) for col in zip(*rows)]
+        if header is not None:
+            header = list(header)
+            assert len(header) == len(columns)
+        if footer is not None:
+            footer = list(footer)
+            assert len(footer) == len(columns)
+        if just is None:
+            just = [str.center]*len(columns)
+        else:
+            assert len(just) == len(columns)
+            m = {
+                'c': str.center,
+                'l': str.ljust,
+                'r': str.rjust,
+            }
+            just = [m[j] for j in just]
+
+        widths = []
+        for c in range(len(columns)):
+            width = 0
+            if header is not None:
+                header[c] = self.format(header[c])
+                width = max(width, len(header[c]))
+            if footer is not None:
+                footer[c] = self.format(footer[c])
+                width = max(width, len(footer[c]))
+            column = columns[c]
+            for r in range(len(column)):
+                cell = column[r]
+                cell = self.format(cell)
+                column[r] = cell
+                width = max(width, len(cell))
+            if header is not None:
+                header[c] = just[c](header[c], width)
+            for r in range(len(column)):
+                column[r] = just[c](column[r], width)
+            if footer is not None:
+                footer[c] = just[c](footer[c], width)
+            widths.append(width)
+
+        sep = '  '
+
+        line_width = len(sep.join([' '*width for width in widths]))
+
+        if header is not None:
+            self.write_line(indent + sep.join(header).rstrip())
+            self._rule(line_width, indent)
+        for row in zip(*columns):
+            self.write_line(indent + sep.join(row).rstrip())
+        if footer is not None:
+            self._rule(line_width, indent)
+            self.write_line(indent + sep.join(footer).rstrip())
+
+        self._ln()
+
+        self.heading_sep = True
+
+    def write_line(self, line:str) -> None:
+        self.pdf.write(self.line_height, line)
+        self._ln()
+
+    def _rule(self, length, indent=''):
+        assert indent == ' '*len(indent)
+        y1 = self.pdf.get_y()
+        x1 = self.pdf.l_margin + self.pdf.c_margin + self.pdf.get_string_width(indent)
+        x2 = x1 + self.pdf.get_string_width('─' * length)
+        y = y1 + self.fontsize_mm * 0.5
+        self.pdf.line(x1, y, x2, y)
+        self._ln()
+
+    def _ln(self):
+        self.pdf.ln(self.line_height)
+
+    def end(self) -> None:
+        self.pdf.output(self.stream)  # type: ignore[call-overload]
