@@ -362,7 +362,7 @@ class Calculator:
         line_no = 0
         for line in stream:
             line_no += 1
-            line = line.rstrip('\n')
+            line = line.rstrip()
             if line.startswith('#'):
                 continue
             row = line.split()
