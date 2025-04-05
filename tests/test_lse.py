@@ -69,7 +69,7 @@ def test_get_latest_gilt_prices() -> None:
 
 
 def test_main() -> None:
-    output = subprocess.check_output([sys.executable, lse.__file__], text=True)
+    output = subprocess.check_output([sys.executable, '-m', 'data.lse'], text=True)
     found = False
     with io.StringIO(output) as stream:
         for entry in list(csv.DictReader(stream)):

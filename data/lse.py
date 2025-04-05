@@ -12,6 +12,7 @@ import csv
 import datetime
 import email.utils
 import logging
+import os.path
 import re
 import requests
 import string
@@ -172,6 +173,9 @@ def main() -> None:
 
     dt, content = get_latest_gilt_prices()
 
+    isins = set()
+    latestclosedate = datetime.date(datetime.MINYEAR, 1, 1)
+
     w = csv.writer(sys.stdout, lineterminator='\n')
 
     th = ['date', 'isin', 'tidm', 'price']
@@ -193,17 +197,30 @@ def main() -> None:
                 # Newly auctioned gilts often start with a null closing price
                 continue
 
-            lastclosedate = data['lastclosedate']
-            lastclosedate = datetime.datetime.fromisoformat(lastclosedate)
-            lastclosedate = lastclosedate.date()
-            lastclosedate = lastclosedate.isoformat()
+            lastclosedate = datetime.datetime.fromisoformat(data['lastclosedate']).date()
 
         except:  # pragma: no cover
             pp(data, stream=sys.stderr)
             raise
 
-        tr = [lastclosedate, isin, tidm, lastclose]
+        tr = [lastclosedate.isoformat(), isin, tidm, lastclose]
         w.writerow(tr)
+
+        isins.add(isin)
+        latestclosedate = max(latestclosedate, lastclosedate)
+
+    # LSE sometimes gives incomplete data when ongoing maitenance
+    from gilts.gilts import Issued
+    issued = Issued(csv_filename = os.path.join(os.path.dirname(__file__), 'dmo_issued.csv'), rpi_series=None)
+    from ukcalendar import next_business_day
+    settlement_date = next_business_day(latestclosedate)
+
+    status = 0
+    for gilt in issued.filter(settlement_date=settlement_date):
+        if gilt.isin not in isins:
+            sys.stderr.write(f'error: {gilt.isin} ({gilt.short_name()}): price missing\n')
+            status = 1
+    sys.exit(status)
 
 
 if __name__ == '__main__':
