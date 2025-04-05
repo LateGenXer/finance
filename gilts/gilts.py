@@ -391,7 +391,6 @@ class Issued:
         else:
             entries = self._parse_xml(filename)
 
-        assert rpi_series is not None
         self.rpi_series = rpi_series
 
         self.all = []
@@ -504,14 +503,7 @@ class Issued:
             coupon += float(units)
         return coupon
 
-    __types = {
-        False: ('Conventional',),
-        True:  ('Index-linked',),
-        None:  ('Conventional', 'Index-linked'),
-    }
-
-    def filter(self, index_linked:bool|None, settlement_date=None):
-        types = self.__types[index_linked]
+    def filter(self, index_linked:bool|None=None, settlement_date=None):
         for g in self.all:
             # Per https://www.dmo.gov.uk/responsibilities/gilt-market/about-gilts/ :
             # "If an investor purchases a gilt for settlement on the final day
@@ -521,13 +513,17 @@ class Issued:
             # ex-dividend period."
             if settlement_date is not None and settlement_date > g.ex_dividend_date(g.maturity):
                 continue
-            type_ = g.type_
-            if g.type_ == 'Index-linked':
-                assert isinstance(g, IndexLinkedGilt)
-                if g.is_redemption_fixed():
-                    type_ = 'Conventional'
-            if type_ not in types:
-                continue
+
+            if index_linked is not None:
+                type_ = g.type_
+                if g.type_ == 'Index-linked':
+                    assert isinstance(g, IndexLinkedGilt)
+                    assert g.rpi_series is not None
+                    if g.is_redemption_fixed():
+                        type_ = 'Conventional'
+                if (type_ == 'Index-linked') is not index_linked:
+                    continue
+
             yield g
 
 
