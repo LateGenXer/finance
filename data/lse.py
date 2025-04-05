@@ -172,7 +172,7 @@ def main() -> None:
 
     dt, content = get_latest_gilt_prices()
 
-    w = csv.writer(sys.stdout)
+    w = csv.writer(sys.stdout, lineterminator='\n')
 
     th = ['date', 'isin', 'tidm', 'price']
     w.writerow(th)

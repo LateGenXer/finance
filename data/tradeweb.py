@@ -33,7 +33,7 @@ def main():
 
     tidms = load_tidms()
 
-    w = csv.writer(sys.stdout)
+    w = csv.writer(sys.stdout, lineterminator='\n')
     th = ['date', 'isin', 'tidm', 'price']
     w.writerow(th)
     for arg in sys.argv[1:]:
