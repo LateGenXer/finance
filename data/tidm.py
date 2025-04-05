@@ -18,7 +18,7 @@ data_dir = os.path.dirname(__file__)
 tidm_csv = os.path.join(data_dir, 'tidm.csv')
 
 
-def load():
+def load() -> dict[str, str]:
     tidms = {}
 
     for isin, tidm in csv.reader(open(tidm_csv, 'rt')):
@@ -29,7 +29,7 @@ def load():
     return tidms
 
 
-def main():
+def main() -> None:
     logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s %(message)s', level=logging.INFO)
 
     tidms = load()
