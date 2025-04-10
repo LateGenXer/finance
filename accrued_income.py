@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2024 LateGenXer
+# Copyright (c) 2024-2025 LateGenXer
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 
 
+import argparse
 import csv
 import dataclasses
 import datetime
+import logging
 import operator
 import os.path
 import sys
@@ -67,15 +69,19 @@ footnote_mark = '†'
 
 class Calculator:
 
-    def __init__(self):
+    def __init__(self, tax_year_end=None):
         self.gilt_states: dict[str, GiltState] = {}
         self.events: list[Event] = []
 
-        today = datetime.datetime.now(datetime.timezone.utc).date()
-        if today < datetime.date(today.year, 4, 6):
-            self.tax_year_end = datetime.date(today.year + 1, 4, 5)
-        else:
-            self.tax_year_end = datetime.date(today.year + 2, 4, 5)
+        if tax_year_end is None:
+            today = datetime.datetime.now(datetime.timezone.utc).date()
+            if today < datetime.date(today.year, 4, 6):
+                tax_year_end = datetime.date(today.year + 1, 4, 5)
+            else:
+                tax_year_end = datetime.date(today.year + 2, 4, 5)
+        assert tax_year_end.month == 4
+        assert tax_year_end.day == 5
+        self.tax_year_end = tax_year_end
 
         self.provisional = False
 
@@ -224,9 +230,24 @@ class Calculator:
             report.write_paragraph(f'{footnote_mark} Provisional figures, assuming a RPI inflation rate of {gilts.IndexLinkedGilt.inflation_rate:.1%} from {last_rpi_date.day} {last_rpi_date:%B} {last_rpi_date.year}.')
 
 
-def main():
-    calculator = Calculator()
-    for arg in sys.argv[1:]:
+def main() -> None:
+    logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s %(message)s', level=logging.INFO)
+
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument('-y', '--tax-year', metavar='TAX_YEAR', default=None, help='tax year in XXXX/YYYY, XX/YY, YYYY, or YY format')
+    argparser.add_argument('filename', nargs='+', metavar='FILENAME', help='CSV file with input trades')
+    args = argparser.parse_args()
+
+    tax_year_end = None
+    if args.tax_year is not None:
+        try:
+            tax_year = TaxYear.from_string(args.tax_year)
+        except ValueError as e:
+            argparser.error(f'invalid tax year {args.tax_year!r}: {e}')
+        tax_year_end = tax_year.end_date()
+
+    calculator = Calculator(tax_year_end=tax_year_end)
+    for arg in args.filename:
         calculator.parse(open(arg, 'rt'))
     calculator.process()
     report = TextReport(sys.stdout)
