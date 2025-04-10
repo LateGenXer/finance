@@ -123,7 +123,7 @@ class Calculator:
                 div = 'cum div' if settlement_date <= xd_date else 'ex div'
                 warnings.warn(f'{settlement_date}, {units} x {gilt.short_name()}, {div}: expected accrued interest of {expected_accrued_interest}, got {accrued_interest}\n')
 
-            # Shuft holding adjustments by 7 business days to account for ex-dividend period
+            # Shift holding adjustments by 7 business days to account for ex-dividend period
             cum_div_date = settlement_date
             for i in range(7):
                 cum_div_date = ukcalendar.next_business_day(cum_div_date)
@@ -171,6 +171,9 @@ class Calculator:
                 description = f'{verb} nominal £{abs(ev.units)}'
 
                 _, next_coupon_date = gilt.prev_next_coupon_date(ev.date)
+                if next_coupon_date > self.tax_year_end:
+                    continue
+
                 accrued_incomes.append((next_coupon_date, ev.date, gilt_state, description, accrued_income))
             elif ev.kind == Kind.INTEREST:
                 if gilt_state.holding > Decimal(0):
