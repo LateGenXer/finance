@@ -219,8 +219,9 @@ class Calculator:
 
         # https://www.gov.uk/hmrc-internal-manuals/self-assessment-manual/sam121190
         if self.provisional:
+            last_rpi_date = rpi_series.last_date()
             report.write_heading('Footnotes')
-            report.write_paragraph(f'{footnote_mark} Provisional figures, assuming an RPI rate of {gilts.IndexLinkedGilt.inflation_rate:.1%}')
+            report.write_paragraph(f'{footnote_mark} Provisional figures, assuming a RPI inflation rate of {gilts.IndexLinkedGilt.inflation_rate:.1%} from {last_rpi_date.day} {last_rpi_date:%B} {last_rpi_date.year}.')
 
 
 def main():
