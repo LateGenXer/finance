@@ -408,9 +408,9 @@ def model(
     assert sipp_contrib_2 <= UK.aa
 
     if country == 'PT':
-        gbpeur = hmrc.exchange_rate('EUR')
+        gbpeur = float(hmrc.exchange_rate('EUR'))
     if country == 'JP':
-        gbpjpy = hmrc.exchange_rate('JPY')
+        gbpjpy = float(hmrc.exchange_rate('JPY'))
 
     prob = lp.LpProblem("Retirement")
 
@@ -850,10 +850,10 @@ def run(params):
 
     country=params['country']
     if country == 'PT':
-        gbpeur = hmrc.exchange_rate('EUR')
+        gbpeur = float(hmrc.exchange_rate('EUR'))
         print(f"Retirement net income: {result.retirement_income_net*gbpeur:10,.0f} EUR")
     if country == 'JP':
-        gbpjpy = hmrc.exchange_rate('JPY')
+        gbpjpy = float(hmrc.exchange_rate('JPY'))
         print(f"Retirement net income: {result.retirement_income_net*gbpjpy:10,.0f} JPY")
 
     print(f"End net worth:         {result.net_worth_end:10,.0f}")

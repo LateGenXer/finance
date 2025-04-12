@@ -13,13 +13,15 @@ import xml.etree.ElementTree
 
 import requests
 
+from decimal import Decimal
+
 
 # https://requests.readthedocs.io/en/latest/user/advanced/#keep-alive
 _session = requests.Session()
 
 
 @functools.lru_cache
-def exchange_rates(year:int, month:int) -> dict[str, float]:
+def exchange_rates(year:int, month:int) -> dict[str, Decimal]:
     assert year >= 2021
     assert 1 <= month and month <= 12
     url = f'https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/files/monthly_xml_{year}-{month}.xml'
@@ -29,7 +31,7 @@ def exchange_rates(year:int, month:int) -> dict[str, float]:
     stream = io.BytesIO(r.content)
     tree = xml.etree.ElementTree.parse(stream)
     root = tree.getroot()
-    rates: dict[str, float] = {}
+    rates: dict[str, Decimal] = {}
     for node in root:
         currencyCode = node.find('currencyCode')
         assert currencyCode is not None
@@ -39,12 +41,12 @@ def exchange_rates(year:int, month:int) -> dict[str, float]:
         assert rateNew is not None
         rateText = rateNew.text
         assert rateText is not None
-        rate = float(rateText)
+        rate = Decimal(rateText)
         rates[currency] = rate
     return rates
 
 
-def exchange_rate(currency:str) -> float:
+def exchange_rate(currency:str) -> Decimal:
     today = datetime.datetime.now(datetime.timezone.utc).date()
     rates = exchange_rates(today.year, today.month)
     return rates[currency]
