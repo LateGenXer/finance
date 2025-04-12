@@ -44,7 +44,7 @@ class Report(ABC):
 
 class TextReport(Report):
 
-    def __init__(self, stream:TextIO):
+    def __init__(self, stream:TextIO=sys.stdout):
         self.stream = stream
         self.heading_sep = ''
 
