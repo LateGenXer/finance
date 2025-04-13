@@ -106,7 +106,8 @@ with st.container(border=True):
         result.write(report)
         b64 = base64.b64encode(buffer.getvalue()).decode('ASCII')
         # https://discuss.streamlit.io/t/rendering-pdf-on-ui/13505
-        h = f'<iframe src="data:application/pdf;base64,{b64}" width="100%" height="768" type="application/pdf" />'
+        h = f'<embed src="data:application/pdf;base64,{b64}" width="100%" height="768" type="application/pdf" />'
+        #h = f'<iframe src="data:application/pdf;base64,{b64}" width="100%" height="768" type="application/pdf" />'
         st.markdown(h, unsafe_allow_html=True)
 
 
