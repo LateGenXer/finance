@@ -5,7 +5,9 @@
 #
 
 
+import base64
 import html
+import io
 import logging
 import sys
 import textwrap
@@ -401,3 +403,127 @@ class PdfReport(Report):
 
     def end(self) -> None:
         self.pdf.output(self.stream)  # type: ignore[call-overload]
+
+    def as_html(self) -> str:
+        assert isinstance(self.stream, io.BytesIO)
+        data = self.stream.getvalue()
+
+        b64 = base64.b64encode(data).decode('ASCII')
+
+        return _html_template.replace("BASE64", b64)
+
+
+_html_template = '''<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PDF Viewer</title>
+  <style>
+    body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial; margin: 16px; }
+    .toolbar { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+    .viewer { border: 1px solid #ddd; padding:8px; border-radius:8px; width:100%; }
+    canvas { display:block; margin: 0 auto; }
+    button, input { font-size:14px; padding:6px 8px; }
+    input[type="number"] { width:64px; }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button id="prev">◀ Prev</button>
+    <button id="next">Next ▶</button>
+    <label>Page <input id="pageNum" type="number" min="1" value="1"> / <span id="pageCount">0</span></label>
+    <button id="zoomOut">-</button>
+    <button id="zoomIn">+</button>
+    <label>Scale <span id="scaleLabel">1.0</span></label>
+  </div>
+
+  <div class="viewer">
+    <canvas id="pdfCanvas"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.min.js"></script>
+  <script>
+    const data = atob("BASE64");
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.worker.min.js';
+
+    const canvas = document.getElementById('pdfCanvas');
+    const ctx = canvas.getContext('2d');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+    const pageNumInput = document.getElementById('pageNum');
+    const pageCountSpan = document.getElementById('pageCount');
+    const zoomInBtn = document.getElementById('zoomIn');
+    const zoomOutBtn = document.getElementById('zoomOut');
+    const scaleLabel = document.getElementById('scaleLabel');
+
+    let pdfDoc = null;
+    let pageNum = 1;
+    let scale = 1.0;
+
+    const loadingTask = pdfjsLib.getDocument({ data: data });
+
+    loadingTask.promise.then(function(pdf) {
+      pdfDoc = pdf;
+      pageCountSpan.textContent = pdfDoc.numPages;
+      renderPage(pageNum);
+    }).catch(function(err) {
+      console.error('Error loading PDF:', err);
+      document.body.insertAdjacentHTML('beforeend', '<p style="color:crimson">Error loading PDF: '+ (err && err.message ? err.message : err) + '</p>');
+    });
+
+    function renderPage(num) {
+      pdfDoc.getPage(num).then(function(page) {
+        const viewport = page.getViewport({ scale });
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const renderContext = {
+          canvasContext: ctx,
+          viewport: viewport
+        };
+        page.render(renderContext).promise.then(function() {
+          // Render finished
+        });
+
+        pageNumInput.value = num;
+        pageCountSpan.textContent = pdfDoc.numPages;
+        scaleLabel.textContent = scale.toFixed(2);
+      });
+    }
+
+    prevBtn.addEventListener('click', function() {
+      if (pageNum <= 1) return;
+      pageNum--;
+      renderPage(pageNum);
+    });
+
+    nextBtn.addEventListener('click', function() {
+      if (pageNum >= pdfDoc.numPages) return;
+      pageNum++;
+      renderPage(pageNum);
+    });
+
+    pageNumInput.addEventListener('change', function() {
+      let v = parseInt(this.value, 10);
+      if (isNaN(v) || v < 1) v = 1;
+      if (v > pdfDoc.numPages) v = pdfDoc.numPages;
+      pageNum = v;
+      renderPage(pageNum);
+    });
+
+    zoomInBtn.addEventListener('click', function() {
+      scale = Math.min(scale + 0.25, 4.0);
+      renderPage(pageNum);
+    });
+    zoomOutBtn.addEventListener('click', function() {
+      scale = Math.max(scale - 0.25, 0.25);
+      renderPage(pageNum);
+    });
+  </script>
+</body>
+</html>
+'''

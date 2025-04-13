@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 LateGenXer
+# Copyright (c) 2024-2025 LateGenXer
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
@@ -16,7 +16,7 @@ import common
 from typing import TextIO
 from tax.uk import TaxYear
 from cgtcalc import Calculator
-from report import Report, HtmlReport, TextReport
+from report import Report, HtmlReport, TextReport, PdfReport
 
 
 common.set_page_config(
@@ -49,7 +49,7 @@ with st.sidebar:
 
     rounding = st.checkbox("Rounding", value=True, key="rounding", help="Round to whole pounds.")
 
-    format_ = st.selectbox('Format', ['HTML', 'Text'], key='format')
+    format_ = st.selectbox('Format', ['HTML', 'Text', 'PDF'], key='format')
 
 #
 # Inputs
@@ -93,12 +93,28 @@ with st.container(border=True):
         report = HtmlReport(html)
         result.write(report)
         st.components.v1.html(html.getvalue(), height=768, scrolling=True)
-    else:
-        assert format_ == 'Text'
+    elif format_ == 'Text':
         text = io.StringIO()
         report = TextReport(text)
         result.write(report)
         st.markdown('```\n' + text.getvalue() + '```\n')
+    else:
+        assert format_ == 'PDF'
+        buffer = io.BytesIO()
+        report = PdfReport(buffer)
+        result.write(report)
+
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(sep='-', timespec='seconds')
+        st.download_button("Download PDF", buffer.getvalue(), file_name=f"cgtcalc-{timestamp}.pdf", mime="application/pdf", help="Download PDF report.", use_container_width=True)
+
+
+        # https://discuss.streamlit.io/t/rendering-pdf-on-ui/13505
+        # b64 = base64.b64encode(buffer.getvalue()).decode('ASCII')
+        #h = f'<embed class="pdfobject" type="application/pdf" title="Embedded PDF" src="data:application/pdf;base64,{b64}" style="overflow:auto; width:100%; height:768px;" />'
+        #st.markdown(h, unsafe_allow_html=True)
+
+        h = report.as_html()
+        st.components.v1.html(h, height=768, scrolling=True)
 
 
 common.analytics_html()
