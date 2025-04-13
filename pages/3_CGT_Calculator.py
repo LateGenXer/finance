@@ -5,6 +5,7 @@
 #
 
 
+import base64
 import datetime
 import io
 import os.path
@@ -16,7 +17,7 @@ import common
 from typing import TextIO
 from tax.uk import TaxYear
 from cgtcalc import Calculator
-from report import Report, HtmlReport, TextReport
+from report import Report, HtmlReport, TextReport, PdfReport
 
 
 common.set_page_config(
@@ -49,7 +50,7 @@ with st.sidebar:
 
     rounding = st.checkbox("Rounding", value=True, key="rounding", help="Round to whole pounds.")
 
-    format_ = st.selectbox('Format', ['HTML', 'Text'], key='format')
+    format_ = st.selectbox('Format', ['HTML', 'Text', 'PDF'], key='format')
 
 #
 # Inputs
@@ -93,12 +94,20 @@ with st.container(border=True):
         report = HtmlReport(html)
         result.write(report)
         st.components.v1.html(html.getvalue(), height=768, scrolling=True)
-    else:
-        assert format_ == 'Text'
+    elif format_ == 'Text':
         text = io.StringIO()
         report = TextReport(text)
         result.write(report)
         st.markdown('```\n' + text.getvalue() + '```\n')
+    else:
+        assert format_ == 'PDF'
+        buffer = io.BytesIO()
+        report = PdfReport(buffer)
+        result.write(report)
+        b64 = base64.b64encode(buffer.getvalue()).decode('ASCII')
+        # https://discuss.streamlit.io/t/rendering-pdf-on-ui/13505
+        h = f'<iframe src="data:application/pdf;base64,{b64}" width="100%" height="768" type="application/pdf" />'
+        st.markdown(h, unsafe_allow_html=True)
 
 
 common.analytics_html()

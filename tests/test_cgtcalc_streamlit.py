@@ -93,3 +93,10 @@ def test_calculation(at):
     at.run()
     assert not at.exception
     check_text_report(at, filename, False, TaxYear(2021, 2022))
+
+
+def test_pdf(at):
+    format_ = at.selectbox(key='format')
+    format_.select('PDF')
+    at.run()
+    assert not at.exception
