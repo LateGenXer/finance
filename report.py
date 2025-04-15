@@ -131,12 +131,78 @@ class TextReport(Report):
 
 class HtmlReport(Report):
 
+    _css = '''
+body {
+  font-family: "Noto Sans Mono", monospace;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+  font-size: 0.75rem; /* 12px */
+}
+
+.fixed-right {
+  position: fixed;
+  top: 0;
+  right: 0;
+}
+
+h1, h2, h3, h4 {
+  font-size: 100%;
+  font-weight: bold;
+  font-style: normal;
+  margin-top: 2em;
+  margin-bottom: 1em;
+}
+
+h1 {
+  text-align: center;
+}
+
+h1, h2, h3 {
+  text-transform: uppercase;
+}
+
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-left { text-align: left; }
+.text-justify { text-align: justify; }
+
+.center-block { margin-left: auto; margin-right: auto; }
+
+.visible-print-block { display: none; }
+@media print {
+  body { font-size: 10px; }
+  .hidden-print { display: none !important; }
+  .visible-print-block { display: block; }
+}
+
+.table {
+  margin: 1em auto 1em 2ch;
+  border-spacing: 0;
+}
+
+thead tr th {
+  border-bottom: 1.5px solid;
+  border-collapse: collapse;
+}
+
+tfoot tr th {
+  border-top: 1.5px solid;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 0.25em 1ch 0.25em 1ch;
+}
+'''
+
     def __init__(self, stream:TextIO):
         self.stream = stream
 
     def start(self, title:str) -> None:
         title = html.escape(title)
-        # https://getbootstrap.com/docs/3.4/getting-started/#template
+        # https://fonts.google.com/noto/specimen/Noto+Sans+Mono
         self.stream.write(f'''<!doctype html>
 <html lang="en">
 <head>
@@ -144,18 +210,12 @@ class HtmlReport(Report):
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
-<style>
-.fixed-right {{
-  position: fixed;
-  top: 0;
-  right: 0;
-}}
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Mono&amp;display=swap" rel="stylesheet">
+<style>{self._css}</style>
 </head>
 <body>
-<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
 <div class="fixed-right hidden-print">
 <button class="btn btn-primary" onclick="window.print()">Print</button>
 </div>
