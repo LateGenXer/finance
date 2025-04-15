@@ -17,7 +17,7 @@ from abc import ABC, abstractmethod
 
 class Report(ABC):
 
-    def start(self) ->None:
+    def start(self, title:str) -> None:
         pass
 
     @abstractmethod
@@ -134,22 +134,23 @@ class HtmlReport(Report):
     def __init__(self, stream:TextIO):
         self.stream = stream
 
-    def start(self) -> None:
+    def start(self, title:str) -> None:
+        title = html.escape(title)
         # https://getbootstrap.com/docs/3.4/getting-started/#template
-        self.stream.write('''<!doctype html>
+        self.stream.write(f'''<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Capital Gains Calculation</title>
+<title>{title}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
 <style>
-.fixed-right {
+.fixed-right {{
   position: fixed;
   top: 0;
   right: 0;
-}
+}}
 </style>
 </head>
 <body>
@@ -159,7 +160,7 @@ class HtmlReport(Report):
 <button class="btn btn-primary" onclick="window.print()">Print</button>
 </div>
 <div class="container-fluid">
-<h1 class="visible-print-block">Capital Gains Calculation</h1>
+<h1 class="visible-print-block">{title}</h1>
 ''')
 
     def write_heading(self, heading:str, level:int=1) -> None:

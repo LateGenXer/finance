@@ -211,7 +211,7 @@ class Result:
             tyr.carried_losses = max(tyr.costs - tyr.proceeds, Decimal(0))
 
     def write(self, report:Report) -> None:
-        report.start()
+        report.start('Capital Gains Calculation')
 
         report.write_heading('Summary')
 
