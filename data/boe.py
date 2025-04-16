@@ -6,6 +6,7 @@
 #
 
 
+import datetime
 import logging
 import math
 import os
@@ -21,13 +22,15 @@ import pandas as pd
 from download import download
 
 
-def read(sh, data):
+def read(sh: openpyxl.worksheet.worksheet.Worksheet, data:dict[float, float]) -> datetime.date:
     # Find the last row
     for row in range(6, sh.max_row + 1):
         if sh.cell(row + 1, 1).value is None:
             break
 
-    date = sh.cell(row, 1).value.date()
+    datetime_ = sh.cell(row, 1).value
+    assert isinstance(datetime_, datetime.datetime)
+    date = datetime_.date()
 
     years_row = 4
 
@@ -37,6 +40,7 @@ def read(sh, data):
         years = sh.cell(years_row, col).value
         if years is None:
             break
+        assert isinstance(years, (float, int))
 
         months = round(years*12)
         assert math.isclose(years*12, months, rel_tol=1e-5)
@@ -44,7 +48,7 @@ def read(sh, data):
 
         value = sh.cell(row, col).value
         try:
-            rate = float(value)
+            rate = float(value)  # type: ignore[arg-type]
         except (ValueError, TypeError):
             rate = math.nan
 
@@ -65,7 +69,7 @@ _measures = {
 }
 
 
-def load():
+def load() -> None:
     url = 'https://www.bankofengland.co.uk/-/media/boe/files/statistics/yield-curves/latest-yield-curve-data.zip'
     filename = os.path.join(_data_dir, posixpath.basename(url))
     download(url, filename, content_type='application/x-zip-compressed', ttl=6*3600)
