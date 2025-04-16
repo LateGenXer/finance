@@ -83,7 +83,7 @@ def load():
             sh = wb[sheet_name]
 
             # TODO: Include date
-            _ = read(sh, data)
+            date = read(sh, data)
 
         df = pd.DataFrame(data.items(), columns=['Years', f'{measure}_Spot'])
         df.set_index('Years', inplace=True)
@@ -93,12 +93,24 @@ def load():
 
         dfs.append(df)
 
+    assert df.index.is_unique
     df = pd.concat(dfs, axis=1)
 
     assert df.index.is_monotonic_increasing
     assert df.index.is_unique
 
     df.interpolate(method='cubicspline', axis=0, limit_direction='both', inplace=True)
+
+    # Add reference date
+    ref_date = pd.DataFrame([(0.0, date)], columns=['Years', 'Date'])
+    ref_date.set_index('Years', inplace=True)
+    dfs.append(ref_date)
+
+    assert df.index.is_unique
+    df = pd.concat(dfs, axis=1)
+
+    df.sort_index(inplace=True)
+    assert df.index.is_monotonic_increasing
 
     df.to_csv(_filename, float_format='{:.6f}'.format)
 
