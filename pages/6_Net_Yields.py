@@ -264,7 +264,7 @@ with st.expander('Notes'):
 1. {gross_yield_footnote}
 2. Net yield deducts tax but ignores the [Personal Savings Allowance](https://www.gov.uk/apply-tax-free-interest-on-savings#personal-savings-allowance) and the [Capital Gains Tax allowance](https://www.gov.uk/capital-gains-tax/allowances).
 3. Equivalent gross yield is the standard cash savings account interest necessary to yield the same net yield.
-4. Premium Bonds' yield is the [median](https://www.moneysavingexpert.com/savings/premium-bonds/#tips-3) interest rate for a £50k investment, based on the [{premium_bonds_desc}](https://nsandi-corporate.com/news-research/news/nsi-announces-rate-changes-some-variable-and-fixed-term-products).
+4. Premium Bonds' yield is the [median](https://www.moneysavingexpert.com/savings/premium-bonds/#tips-3) interest rate for a £50k investment, based on the [{premium_bonds_desc}](https://www.nsandi.com/get-to-know-us/monthly-prize-allocation).
 5. GBP Money Market Fund (MMF) gross yield is based from [SONIA interest rate benchmark](https://www.bankofengland.co.uk/markets/sonia-benchmark) from {sonia_date.day} {sonia_date:%B} {sonia_date.year}, ignoring fees.
 6. GBP MMF _Capital Gain_ figure assumes funds are held for a short time, without overlapping income distribution or [Excess Reportable Income (ERI)](https://www.gov.uk/government/publications/offshore-funds-self-assessment-helpsheet-hs265/hs265-offshore-funds), therefore being only liable for Capital Gains Tax.
 7. {gilts_footnote}
