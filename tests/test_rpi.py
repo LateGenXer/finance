@@ -17,7 +17,7 @@ from data.rpi import RPI, OutOfDateError
 from download import download
 
 
-def _test(rpi):
+def _test(rpi:RPI) -> None:
 
     assert len(rpi.series) >= 442
 
@@ -43,12 +43,12 @@ def _test(rpi):
     assert rpi.extrapolate(d2, .03) / rpi.interpolate(d0) == approx(1.03**(r/12.0))
 
 
-def test_rpi():
+def test_rpi() -> None:
     rpi = RPI()
     _test(rpi)
 
 
-def test_rpi_latest():
+def test_rpi_latest() -> None:
     url = 'https://www.ons.gov.uk/generator?format=csv&uri=/economy/inflationandpriceindices/timeseries/chaw/mm23'
     filename = 'rpi-series-latest.csv'
     download(url, filename)
@@ -57,7 +57,7 @@ def test_rpi_latest():
     _test(rpi)
 
 
-def test_rpi_superseded():
+def test_rpi_superseded() -> None:
     filename = os.path.join(os.path.dirname(__file__), 'data', 'rpi-series-20231115.csv')
     with pytest.raises(OutOfDateError):
         series, release_date = RPI.parse(filename)

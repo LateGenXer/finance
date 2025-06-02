@@ -49,7 +49,7 @@ class RPI:
 
     ref_year = 1987
 
-    def __init__(self, filename=None):
+    def __init__(self, filename:str|None=None):
         if filename is None:
             self.series, self.release_date = self._load()
         else:
@@ -61,20 +61,20 @@ class RPI:
     _filename = os.path.join(os.path.dirname(__file__), 'rpi-series.csv')
 
     @classmethod
-    def _load(cls):
+    def _load(cls) -> tuple[list[float], datetime.date]:
         download(RPI._url, cls._filename)
         return cls.parse(cls._filename)
 
-    def last_date(self):
+    def last_date(self) -> datetime.date:
         months = len(self.series) - 1
         year = self.ref_year + months // 12
         month = months % 12 + 1
         return datetime.date(year, month, 1)
 
     @staticmethod
-    def parse(filename, ignore_date=False):
+    def parse(filename:str, ignore_date:bool=False) -> tuple[list[float], datetime.date]:
         stream = open(filename, 'rt')
-        series = []
+        series:list[float] = []
         next_year = RPI.ref_year
         next_month = 1
         release_date = None
@@ -105,20 +105,22 @@ class RPI:
                 series.append(rpi)
                 next_year += next_month // 12
                 next_month = next_month % 12 + 1
+        assert release_date is not None
         return series, release_date
 
     # https://www.dmo.gov.uk/media/0ltegugd/igcalc.pdf
-    def lookup_index(self, date):
+    def lookup_index(self, date:datetime.date) -> int:
         assert date.year >= self.ref_year
         return (date.year - self.ref_year)*12 + (date.month - 1)
 
-    def lookup(self, date):
+    def lookup(self, date:datetime.date) -> float:
         month_idx = self.lookup_index(date)
         return self.series[month_idx]
 
     # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf,
     # Annex B: Method of indexation for index-linked gilts with a 3-month indexation lag
-    def _interpolate(self, date, rpi0, rpi1):
+    @staticmethod
+    def _interpolate(date:datetime.date, rpi0:float, rpi1:float) -> float:
         date0 = date.replace(day = 1)
         date1 = date.replace(year = date.year + date.month // 12, month = date.month % 12 + 1, day=1)
 
@@ -127,7 +129,7 @@ class RPI:
 
         return rpi
 
-    def interpolate(self, date):
+    def interpolate(self, date:datetime.date) -> float:
         assert date.year >= self.ref_year
 
         month_idx = self.lookup_index(date)
@@ -138,20 +140,20 @@ class RPI:
 
         return self._interpolate(date, rpi0, rpi1)
 
-    def latest(self):
+    def latest(self) -> float:
         return self.series[-1]
 
     # https://www.dmo.gov.uk/media/1sljygul/yldeqns.pdf
     # ANNEX A: Estimation of the nominal values of future unknown cash
     # flows on index-linked gilts with an 8-month indexation lag.
-    def extrapolate_from_index(self, month_idx, inflation_rate):
+    def extrapolate_from_index(self, month_idx:int, inflation_rate:float) -> float:
         try:
             return self.series[month_idx]
         except IndexError:
             months = month_idx + 1 - len(self.series)
             return self.series[-1] * (1 + inflation_rate) ** (months / 12)
 
-    def extrapolate(self, date, inflation_rate):
+    def extrapolate(self, date:datetime.date, inflation_rate:float) -> float:
         month_idx = self.lookup_index(date)
         rpi0 = self.extrapolate_from_index(month_idx, inflation_rate)
         if date.day == 1:
