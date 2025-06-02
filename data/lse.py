@@ -111,7 +111,7 @@ _session = requests.Session()
 
 def lookup_tidm(isin:str) -> str:
     logger.info(f'Looking up TIDM of {isin}')
-    # https://www.londonstockexchange.com/live-markets/market-data-dashboard/price-explorer?categories=BONDS&subcategories=14
+    # https://www.londonstockexchange.com/live-markets/market-data-dashboard/price-explorer
     url = f'https://api.londonstockexchange.com/api/gw/lse/search?worlds=quotes&q={isin}'
     r = _session.get(url, headers=_headers, stream=False)
     assert r.ok
