@@ -386,7 +386,7 @@ class PdfReport(Report):
         self.pdf.write(self.line_height, line)
         self._ln()
 
-    def _rule(self, length, indent=''):
+    def _rule(self, length:int, indent:str='') -> None:
         assert indent == ' '*len(indent)
         y1 = self.pdf.get_y()
         x1 = self.pdf.l_margin + self.pdf.c_margin + self.pdf.get_string_width(indent)
@@ -395,7 +395,7 @@ class PdfReport(Report):
         self.pdf.line(x1, y, x2, y)
         self._ln()
 
-    def _ln(self):
+    def _ln(self) -> None:
         self.pdf.ln(self.line_height)
 
     def end(self) -> None:
