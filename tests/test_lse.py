@@ -20,7 +20,7 @@ isin_tidm = {
     'GB0007980591': 'BP.',
     'GB00BBJNQY21': 'TR68',
     'LU1230136894': 'CSH2',
-    'US0846707026': '0R37',
+    'IE00BK5BQT80': 'VWRP',
 }
 
 def test_is_tidm() -> None:
