@@ -118,7 +118,12 @@ def lookup_tidm(isin:str) -> str:
 
     obj = r.json()
 
-    mo = _tidm_re.match(obj['instruments'][0]['url'])
+
+    instruments = obj['instruments']
+    if len(instruments) != 1:
+        logger.warning(f'Found {len(instruments)} TIDMs for ISIN {isin}')
+
+    mo = _tidm_re.match(instruments[0]['url'])
     assert mo
     tidm = mo.group('tidm')
 
