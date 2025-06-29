@@ -395,6 +395,8 @@ def model(
 
     result.net_worth_start = normalize(sipp_1 + sipp_df_1 + sipp_2 + sipp_df_2 + isa + gia, 2)
 
+    assert state_pension_years_1 <= 35
+    assert state_pension_years_2 <= 35
     state_pension_1 = UK.state_pension_full * state_pension_years_1 / 35
     state_pension_2 = UK.state_pension_full * state_pension_years_2 / 35
 
