@@ -20,6 +20,7 @@ from decimal import Decimal
 _session = requests.Session()
 
 
+# https://www.trade-tariff.service.gov.uk/exchange_rates
 @functools.lru_cache
 def exchange_rates(year:int, month:int) -> dict[str, Decimal]:
     assert year >= 2021
