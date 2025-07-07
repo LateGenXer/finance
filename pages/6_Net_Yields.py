@@ -293,8 +293,9 @@ st.markdown(
 - https://www.foxymonkey.com/best-places-cash/
 
 Related tools:
-- https://www.yieldgimp.com/
+- https://giltsyield.com/tax/
 - https://www.dividenddata.co.uk/uk-gilts-prices-yields.py
+- https://www.yieldgimp.com/
 ''')
 
 common.analytics_html()
