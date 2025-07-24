@@ -4,6 +4,7 @@ pulp ~= 3.0
 pytest ~= 8.1
 pytest-xdist ~= 3.5
 pytest-cov ~= 6.0
+pytest-github-actions-annotate-failures ~= 0.3.0
 selenium ~= 4.19
 webdriver-manager ~= 4.0
 pre-commit ~= 4.1
