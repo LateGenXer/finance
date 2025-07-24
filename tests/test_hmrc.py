@@ -19,3 +19,13 @@ from decimal import Decimal
 def test_exchange_rates(year:int, month:int, currency:str, rate:Decimal) -> None:
     rates = data.hmrc.exchange_rates(year, month)
     assert rates[currency] == rate
+
+
+@pytest.mark.parametrize("currency", [
+    'EUR',
+    'JPY',
+    'USD',
+])
+def test_exchange_rate(currency:str) -> None:
+    rate = data.hmrc.exchange_rate(currency)
+    assert rate > Decimal(0)
