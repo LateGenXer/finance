@@ -25,7 +25,7 @@ _session = requests.Session()
 def exchange_rates(year:int, month:int) -> dict[str, Decimal]:
     assert year >= 2021
     assert 1 <= month and month <= 12
-    url = f'https://www.trade-tariff.service.gov.uk/api/v2/exchange_rates/files/monthly_xml_{year}-{month}.xml'
+    url = f'https://www.trade-tariff.service.gov.uk/uk/api/exchange_rates/files/monthly_xml_{year}-{month}.xml'
     headers = {'user-agent': 'Mozilla/5.0'}
     r = _session.get(url, headers=headers, stream=False)
     assert r.ok
