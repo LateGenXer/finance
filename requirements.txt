@@ -1,4 +1,4 @@
-streamlit ~= 1.43
+streamlit ~= 1.47
 matplotlib ~= 3.9
 scipy ~= 1.14.1
 xlrd ~= 2.0
