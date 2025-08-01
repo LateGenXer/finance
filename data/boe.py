@@ -103,8 +103,6 @@ def load() -> None:
     assert df.index.is_monotonic_increasing
     assert df.index.is_unique
 
-    df.interpolate(method='cubicspline', axis=0, limit_direction='both', inplace=True)
-
     # Add reference date
     ref_date = pd.DataFrame([(0.0, date)], columns=['Years', 'Date'])
     ref_date.set_index('Years', inplace=True)
