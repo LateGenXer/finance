@@ -58,14 +58,24 @@ with st.sidebar:
             help='Withdrawal start date.  Default is a year/month from today, as determined by the frequency.')
     with tab2:
         schedule_file = st.file_uploader("Upload withdrawal schedule as a CSV file.", type=['csv'], help='''
-Upload a CSV file with (date, amount) pairs, like:
+Create a spreadsheet with a `Date` and `Value` columns like:
+
+| Date       | Value |
+| :--------- | ----: |
+| 2025-12-01 |  1000 |
+| 2026-12-01 |  1000 |
+| 2027-12-01 |  1000 |
+| 2028-12-01 |  1000 |
+| 2029-12-01 |  1000 |
+
+Then export it as CSV, and upload it.  The CSV file should look like:
 ```
 Date,Value
-2024-12-01,1000
 2025-12-01,1000
 2026-12-01,1000
 2027-12-01,1000
 2028-12-01,1000
+2029-12-01,1000
 ```
 ''')
 
