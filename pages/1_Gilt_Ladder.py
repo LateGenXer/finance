@@ -281,7 +281,7 @@ with tab1:
 
 with tab2:
     if st.session_state.index_linked:
-        st.info("Amounts shown below are in _today_'s money, i.e.,. discounted by assumed inflation.", icon="ℹ️")
+        st.info("Values shown below are in _today_'s money, i.e., discounted by assumed inflation.  Balances [depreciate with time](https://github.com/LateGenXer/finance/issues/5#issuecomment-2451693350), besides reflecting in/out-flows.", icon="ℹ️")
 
     df = bl.cash_flow_df
 
