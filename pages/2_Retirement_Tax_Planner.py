@@ -76,7 +76,7 @@ default_state = {
 }
 
 
-def load_state(data, override):
+def load_state(data:bytes, override:bool) -> None:
     state = json.loads(data)
     uploaded_version = state.pop('version', 0)
     if uploaded_version != version:
@@ -97,11 +97,11 @@ devel = False
 if "PYTEST_CURRENT_TEST" not in os.environ:
     if len(sys.argv) == 2:
         devel = True
-        data = open(sys.argv[1], 'rt').read()
+        data = open(sys.argv[1], 'rb').read()
         load_state(data, override=False)
     else:
         try:
-            from rtp.devel import state as devel_state
+            from rtp.devel import state as devel_state  # type: ignore[import-not-found]
         except ImportError:
             pass
         else:
@@ -135,7 +135,7 @@ st.session_state.setdefault('uploaded_hashes', set())
 with st.expander("Upload..."):
     uploaded_file = st.file_uploader("Upload parameters", type=['json'], help='Upload all parameters from JSON file.', label_visibility='collapsed')
     if uploaded_file is not None:
-        data = str(uploaded_file.getvalue())
+        data = uploaded_file.getvalue()
         # Avoid reprocessing the uploaded file on re-runs
         data_hash = hash(data)
         if data_hash not in st.session_state.uploaded_hashes:
@@ -276,7 +276,7 @@ This is equivalent to the old Lifetime Allowance percentage.
 
 state = {key: value for key, value in st.session_state.items() if key in default_state}
 state['version'] = version
-data = json.dumps(state, sort_keys=True, indent=2)
+data = json.dumps(state, sort_keys=True, indent=2).encode('utf-8')
 timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(sep='-', timespec='seconds')
 st.download_button("Download", data, file_name=f"rtp-{timestamp}.json", mime="application/json", help="Download all parameters as a JSON file.", use_container_width=True)
 

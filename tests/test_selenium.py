@@ -172,6 +172,45 @@ def test_gilt_ladder_file_upload(gilt_ladder_page):
 
 
 #
+# Retirement Plan Calculator
+#
+
+@pytest.fixture(scope="function")
+def rtp_page(server, driver):
+    driver.get(server + '/Retirement_Tax_Planner')
+
+    driver.add_cookie(analytics_cookie)
+
+    driver.implicitly_wait(15)
+    driver.find_element(By.ID, 'test-marker')
+
+    return driver
+
+
+def test_rtp_default(production, rtp_page):
+    driver = rtp_page
+
+    driver.implicitly_wait(0)
+    with pytest.raises(NoSuchElementException):
+        driver.find_element(By.XPATH, "//div[@class='stException']")
+
+    driver.implicitly_wait(15)
+
+    # https://www.selenium.dev/documentation/webdriver/elements/file_upload/
+    s = driver.find_element(By.XPATH, "//input[@type='file']")
+    s.send_keys(os.path.join(data_dir, 'rtp-params-default.json'))
+
+    time.sleep(3)
+
+    driver.find_element(By.ID, 'test-marker')
+    driver.implicitly_wait(0)
+
+    with pytest.raises(NoSuchElementException):
+        driver.find_element(By.XPATH, "//div[@class='stException']")
+        driver.save_screenshot('selenium.png')
+
+
+#
 # Capital Gains Calculator
 #
 
