@@ -7,9 +7,27 @@
 BUY	21/11/2016	IE00B3X1LS57	100	229.2590	0
 SELL	29/12/2016	IE00B3X1LS57	100	231.9236	0
 
-# https://www.gov.uk/hmrc-internal-manuals/investment-funds/ifm13222
-# https://fund-docs.vanguard.com/uk-reporting-fund-faq.pdf
-# https://monevator.com/excess-reportable-income/#comment-1748259
+# See:
+#
+# - https://www.gov.uk/hmrc-internal-manuals/investment-funds/ifm13222
+#
+#   "If a participant disposes of an interest in a reporting period and S106A
+#   TCGA 1992 (Identification of securities: capital gains tax) applies to
+#   identify the whole or part of that interest with an interest acquired in
+#   the next reporting period, then the disposal is ignored and the participant
+#   is treated as having held that interest at the end of the earlier period.
+#   (regulation 94(3A))."
+#
+# - https://fund-docs.vanguard.com/uk-reporting-fund-faq.pdf
+#
+#   "Note: If you sell your shares and buy them back within a 30-day period
+#   (and this activity straddles the reporting period end) you’ll still need to
+#   calculate ERI for your holding, as if you continued to hold the shares at
+#   the reporting period end."
+#
+# - https://monevator.com/excess-reportable-income/#comment-1748259
+# - https://monevator.com/excess-reportable-income/#comment-1748526
+#
 DIVIDEND	30/12/2016	IE00B3X1LS57	100	14.69
 
 BUY	03/01/2017	IE00B3X1LS57	100	231.7566	0
