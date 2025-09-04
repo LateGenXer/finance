@@ -243,7 +243,7 @@ with tab1:
         dict(selector='table', props='margin: 0px auto;'),
         dict(selector='table, tr, th, td', props='border: 0;'),
         dict(selector='td', props='text-align: right; padding: 0px 5px 0px 5px;'),
-        dict(selector='tbody tr:nth-child(even)', props='background-color: whitesmoke;'),
+        dict(selector='tbody tr:nth-child(even)', props='background-color: rgba(128, 128, 128, 7.38%);'),
         dict(selector='td.col0, td.col1', props='text-align: left'),
     ])
 
@@ -296,7 +296,7 @@ with tab2:
         dict(selector='th, td', props='font-family: monospace; font-size: 8pt;'),
         dict(selector='table, tr, th, td', props='border: 0;'),
         dict(selector='td', props='text-align: right; padding: 0px 5px 0px 5px;'),
-        dict(selector='tbody tr:nth-child(even)', props='background-color: whitesmoke;'),
+        dict(selector='tbody tr:nth-child(even)', props='background-color: rgba(128, 128, 128, 7.38%);'),
         dict(selector='th.col1, td.col1', props='text-align: left'),
     ])
     s.set_properties(subset=['Description'], **{'text-align': 'left'})

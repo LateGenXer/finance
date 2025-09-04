@@ -139,6 +139,7 @@ body {
   font-style: normal;
   font-variation-settings: "wdth" 100;
   font-size: 0.75rem; /* 12px */
+  background-color: white;
 }
 
 .fixed-right {
