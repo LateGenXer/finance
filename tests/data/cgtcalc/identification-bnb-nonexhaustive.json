@@ -1,0 +1,21 @@
+[
+  {
+    "tax_year": "2023/2024",
+    "disposals": [
+      {
+        "date": "2024-01-02",
+        "security": "LOBSTER",
+        "shares": 1,
+        "proceeds": 4,
+        "gain": -1
+      }
+    ],
+    "proceeds": 4,
+    "costs": 5,
+    "gains": 0,
+    "losses": 1,
+    "allowance": 6000,
+    "taxable_gain": 0,
+    "carried_losses": 1
+  }
+]

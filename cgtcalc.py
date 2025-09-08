@@ -506,6 +506,8 @@ class Calculator:
                     if not acquisition.unidentified:
                         continue
                     identify(disposal, acquisition, Identification.BED_AND_BREAKFAST, tr2.date, numerator, denominator)
+                    if not disposal.unidentified:
+                        break
 
             pool_updates: list[PoolUpdate] = []
 
