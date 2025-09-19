@@ -67,7 +67,7 @@ class Calculator:
     # Scrape prizes and odds from nsandi.com
     @classmethod
     def from_latest(cls) -> Calculator:
-        # https://nsandi-corporate.com/news-research/news/new-prize-fund-rate-august-premium-bonds-draw#
+        # https://nsandi-corporate.com/news-research/news/new-prize-fund-rate-august-premium-bonds-draw
         odds = 1/22000
         prizes = [
             ( 1000000,       2 ),

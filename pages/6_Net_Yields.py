@@ -29,6 +29,8 @@ from tax.uk import cgt_rates
 
 import common
 
+from environ import production
+
 
 common.set_page_config(
     page_title="Net Yields",
@@ -138,8 +140,19 @@ sonia_rate, sonia_date = latest_sonia_rate()
 if not index_linked:
     data.append(("Premium bonds⁴", '', '', premium_bonds_rate, premium_bonds_rate, 1.0/12.0))
 
+
     data.append(('GBP MMF - Income⁵', '', '', sonia_rate, sonia_rate * (1 - marginal_income_tax), 1.5/12.0))
     data.append(('GBP MMF - Capital Gain⁶', '', '', sonia_rate, sonia_rate * (1 - cgt_rate), 1.5/12.0))
+
+    # https://www.amundietf.co.uk/en/professional/products/fixed-income/amundi-smart-overnight-return-ucits-etf-gbp-hedged-acc/lu1230136894
+    # https://www.gov.uk/tax-on-dividends#how-much-tax-you-pay
+    if not production:
+        dividend_tax = {
+            0.20:  8.75e-2,
+            0.40: 33.75e-2,
+            0.45: 39.75e-2,
+        }[marginal_income_tax]
+        data.append(('GBP MMF - Dividend', '', '', sonia_rate, sonia_rate * (1 - dividend_tax), 1.5/12.0))
 
     if mortgage_rate:
         mortgage_rate = float(mortgage_rate) / 100.0
