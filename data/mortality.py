@@ -123,19 +123,19 @@ def get_ons_table(basis:str, gender:str) -> Table:
 
 # https://www.actuaries.org.uk/learn-and-develop/continuous-mortality-investigation/other-cmi-outputs/unisex-rates-0
 def get_cmi_table() -> Table:
-    url = "https://www.actuaries.org.uk/system/files/field/document/Unisex%20mortality%20rates%20for%202025-2026%20illustrations%20v01%202024-11-04_0.xlsx"
+    url = "https://www.actuaries.org.uk/system/files/field/document/Unisex%20mortality%20rates%20for%202026-2027%20illustrations%20v01%202025-10-17_0.xlsx"
     filename = os.path.join(data_dir, posixpath.basename(url))
     basis = 'cohort'
     gender = 'unisex'
 
-    min_year = 2024
-    max_year = 2124
+    min_year = 2026
+    max_year = min_year + 100
     num_year = max_year - min_year + 1
     min_age = 20
     max_age = 120
     num_age = max_age - min_age + 1
 
-    npy = os.path.join(data_dir, f'mortality_{basis}_{gender}.npy')
+    npy = os.path.join(data_dir, f'mortality_{basis}_{gender}_{min_year}.npy')
     try:
         if "PYTEST_CURRENT_TEST" in os.environ:
             raise FileNotFoundError
@@ -144,7 +144,8 @@ def get_cmi_table() -> Table:
         download(url, filename, ttl=sys.maxsize, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
         wb = openpyxl.load_workbook(filename, read_only=True, data_only=True)
-        sh = wb['2024-25']
+        sheet_name = f'{min_year}-{(min_year + 1) % 100:02d}'
+        sh = wb[sheet_name]
 
         header_cells, = sh.iter_rows(min_row=4, max_row=4)
         header_values = row_values(header_cells)
