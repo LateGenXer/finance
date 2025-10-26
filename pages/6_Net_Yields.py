@@ -148,6 +148,7 @@ if not index_linked:
     # https://www.gov.uk/tax-on-dividends#how-much-tax-you-pay
     if not production:
         dividend_tax = {
+            0.00:  8.75e-2,
             0.20:  8.75e-2,
             0.40: 33.75e-2,
             0.45: 39.75e-2,
