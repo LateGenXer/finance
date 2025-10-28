@@ -547,9 +547,14 @@ def model(
 
         if uk_yr:
             # UK
-            cg_1 = lp.LpVariable(f'cg_1@{yr}', 0)
-            cg_2 = lp.LpVariable(f'cg_2@{yr}', 0)
-            prob += cg_1 + cg_2 == cg
+            cg_2:lp.LpVariable|int
+            if joint:
+                cg_1 = lp.LpVariable(f'cg_1@{yr}', 0)
+                cg_2 = lp.LpVariable(f'cg_2@{yr}', 0)
+                prob += cg_1 + cg_2 == cg
+            else:
+                cg_1 = cg
+                cg_2 = 0
             if yr < retirement_year:
                 tax_1, cgt_1 = uk_tax_lp(prob, base_salary_1 + income_gross_1, cg_1)
                 tax_2, cgt_2 = uk_tax_lp(prob, base_salary_2 + income_gross_2, cg_2)
