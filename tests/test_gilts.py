@@ -148,6 +148,12 @@ def tradeweb_str_to_float(s:str, na:float=math.nan) -> float:
         return float(s)
 
 
+tradeweb_exceptions = {
+    ('GB00BT7HZZ68', '26/06/2025'), # Tradeweb uses index ratio of 1.02661 instead of 1.02660
+    ('GB00BMY62Z61', '11/06/2025'), # Tradeweb uses index ratio of 1.00000 instead of 1.00058 on close of first issue
+}
+
+
 @pytest.mark.parametrize("entries", tradeweb_parse())
 def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
     caplog.set_level(logging.DEBUG, logger="gilts")
@@ -192,6 +198,10 @@ def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
         logger.debug('')
 
         assert row['ISIN'] == isin
+
+        if (row['ISIN'], row['Close of Business Date']) in tradeweb_exceptions:
+            logger.debug('Exception')
+            continue
 
         close_date = datetime.datetime.strptime(row['Close of Business Date'], '%d/%m/%Y').date()
 
