@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 LateGenXer
+# Copyright (c) 2023-2025 LateGenXer
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
@@ -17,8 +17,13 @@ import urllib.error
 from download import download
 
 
-def test_static() -> None:
-    url = 'https://httpbun.com/cache'
+@pytest.fixture(scope="session")
+def httpbun():
+    yield os.environ.get('HTTPBUN', 'https://httpbun.com')
+
+
+def test_static(httpbun:str) -> None:
+    url = httpbun + '/cache'
     filename = 'test_download_static.bin'
 
     # Download
@@ -35,8 +40,8 @@ def test_static() -> None:
     os.unlink(filename)
 
 
-def test_dynamic() -> None:
-    url = 'https://httpbun.com/range/128'
+def test_dynamic(httpbun:str) -> None:
+    url = httpbun + '/range/128'
     filename = 'test_download_dynamic.bin'
 
     # Download
@@ -53,8 +58,8 @@ def test_dynamic() -> None:
     os.unlink(filename)
 
 
-def test_ttl() -> None:
-    url = 'https://httpbun.com/range/128'
+def test_ttl(httpbun:str) -> None:
+    url = httpbun + '/range/128'
     filename = 'test_download_ttl.bin'
 
     # Download
@@ -78,24 +83,24 @@ def test_ttl() -> None:
     os.unlink(filename)
 
 
-def test_content_type() -> None:
+def test_content_type(httpbun:str) -> None:
     filename = 'test_download_content_type.bin'
 
     # Download
     if os.path.exists(filename):
         os.unlink(filename)
-    download('https://httpbun.com/range/128', filename, content_type='application/octet-stream')
+    download(httpbun + '/range/128', filename, content_type='application/octet-stream')
     assert os.path.isfile(filename)
     os.unlink(filename)
 
     with pytest.raises(ValueError):
-        download('https://httpbun.com/html', filename, content_type='application/xml')
+        download(httpbun + '/html', filename, content_type='application/xml')
     assert not os.path.isfile(filename)
 
 
-def test_content_length() -> None:
+def test_content_length(httpbun:str) -> None:
     last_modfiied = 'Fri, 08 Dec 2023 20:03:24 GMT'
-    url = 'https://httpbun.com/response-headers?Last-modified=' + urllib.parse.quote_plus(last_modfiied)
+    url = httpbun + '/response-headers?Last-modified=' + urllib.parse.quote_plus(last_modfiied)
     filename = 'test_download_content_length.bin'
 
     if os.path.exists(filename):
@@ -110,8 +115,8 @@ def test_content_length() -> None:
     os.unlink(filename)
 
 
-def test_404() -> None:
-    url = 'https://httpbun.com/status/404'
+def test_404(httpbun:str) -> None:
+    url = httpbun + '/status/404'
     filename = 'test_download_404.bin'
 
     assert not os.path.isfile(filename)
@@ -120,9 +125,9 @@ def test_404() -> None:
     assert not os.path.isfile(filename)
 
 
-def test_filename() -> None:
+def test_filename(httpbun:str) -> None:
     filename = 'test_download_filename.bin'
-    url = f'https://httpbun.com/anything/{filename}'
+    url = httpbun + '/anything/' + filename
 
     if os.path.exists(filename):
         os.unlink(filename)
@@ -131,8 +136,8 @@ def test_filename() -> None:
     os.unlink(filename)
 
 
-def test_main() -> None:
-    url = 'https://httpbun.com/range/128'
+def test_main(httpbun:str) -> None:
+    url = httpbun + '/range/128'
     filename = 'test_download_main.bin'
 
     from download import __file__ as download_path
