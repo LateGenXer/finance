@@ -58,6 +58,7 @@
 			"--server.port", "8509",
 			"--server.headless", "true",
 			"--server.enableCORS", "false",
-			"--server.enableXsrfProtection", "false"
+			"--server.enableXsrfProtection", "false",
+			"--browser.gatherUsageStats", "false"
 	]
 }
