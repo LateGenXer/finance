@@ -44,21 +44,22 @@ def server(production, worker_id):
         'Home.py'
     ], stdout=subprocess.DEVNULL)
 
-    # https://stackoverflow.com/a/19196218
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tries = 300
-    result = sock.connect_ex((host, port))
-    while result != 0 and tries > 0:
-        tries -= 1
-        time.sleep(0.010)
-        result = sock.connect_ex((host, port))
-    sock.close()
-    print(tries)
-    if result != 0:
-        raise TimeoutError
-
     try:
+
+        # https://stackoverflow.com/a/19196218
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        tries = 300
+        result = sock.connect_ex((host, port))
+        while result != 0 and tries > 0:
+            tries -= 1
+            time.sleep(0.010)
+            result = sock.connect_ex((host, port))
+        sock.close()
+        if result != 0:
+            raise TimeoutError
+
         yield f'http://{host}:{port}'
+
     finally:
         app.terminate()
         app.wait()
