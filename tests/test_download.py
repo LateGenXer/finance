@@ -7,6 +7,7 @@
 
 import os.path
 import pytest
+import socket
 import subprocess
 import sys
 import time
@@ -18,8 +19,40 @@ from download import download
 
 
 @pytest.fixture(scope="session")
-def httpbun():
-    yield os.environ.get('HTTPBUN', 'https://httpbun.com')
+def httpbun(worker_id):
+    try:
+        yield os.environ['HTTPBUN']
+    except KeyError:
+        pass
+    else:
+        return
+
+    if sys.platform != 'linux' or os.path.exists('/.dockerenv'):
+        yield 'https://httpbun.com'
+        return
+
+    host = '127.0.0.1'
+
+    port = 8000 + (hash(worker_id) % 100)
+
+    container_id = subprocess.check_output(['docker', 'run', '--rm', '--detach', '--publish', f'{host}:{port}:80', 'ghcr.io/sharat87/httpbun'])
+
+    try:
+        # https://stackoverflow.com/a/19196218
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        tries = 3000  # 30 secs
+        result = sock.connect_ex((host, port))
+        while result != 0 and tries > 0:
+            tries -= 1
+            time.sleep(0.010)
+            result = sock.connect_ex((host, port))
+        sock.close()
+        if result != 0:
+            raise TimeoutError
+
+        yield f'http://{host}:{port}'
+    finally:
+        subprocess.check_call(['docker', 'stop', container_id.strip()])
 
 
 def test_static(httpbun:str) -> None:
