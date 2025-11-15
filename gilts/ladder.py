@@ -80,8 +80,8 @@ class BondLadder:
         self.rpi_series = issued.rpi_series
         self.prices = prices
         self.schedule = schedule
-        self.buy_df = None
-        self.cash_flow_df = None
+        self.buy_df:pd.DataFrame|None = None
+        self.cash_flow_df:pd.DataFrame|None = None
         self.today = datetime.datetime.now(datetime.timezone.utc).date()
 
     def solve(self):

@@ -573,10 +573,13 @@ def test_bond_ladder(issued, prices, count, amount, shift, index_linked, margina
     df = bl.cash_flow_df
     assert df is not None
     for cf in df.itertuples():
+        assert isinstance(cf.In, float)
+        assert isinstance(cf.Out, float)
         assert math.isnan(cf.In) != math.isnan(cf.Out)
         assert not cf.In < 0.005
         assert not cf.Out < 0.005
 
+        assert isinstance(cf.Balance, float)
         assert cf.Balance > -0.005
 
     withdrawals = df['Out'].loc[df['Description'] == 'Withdrawal'].sum()

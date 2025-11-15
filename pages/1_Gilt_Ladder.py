@@ -228,16 +228,16 @@ with tab1:
     from pandas.io.formats.style import Styler
     s = Styler(df, uuid_len=0, cell_ids=False)
     s.hide(axis='index')
-    formatters = {
-        'Clean Price': currency_format,
-        'Dirty Price': currency_format,
+    formatters:dict[str, typing.Callable[[object], str]] = {
+        'Clean Price': currency_format.format,
+        'Dirty Price': currency_format.format,
         'GRY':   '{:.2%}'.format,
         'Quantity':  '{:.2f}'.format,
-        'Cost':  currency_format,
+        'Cost':  currency_format.format,
     }
     s.format(na_rep='')
     s.format(lambda tidm: f'<a href="https://www.londonstockexchange.com/stock/{tidm:}/united-kingdom">{tidm}</a>', subset=['TIDM'], na_rep='')
-    s.format(formatters, subset=list(formatters.keys()), na_rep='')
+    s.format(formatters, subset=list(formatters.keys()), na_rep='')  # type: ignore[arg-type]
 
     s.set_table_styles([
         dict(selector='table', props='margin: 0px auto;'),
@@ -249,7 +249,7 @@ with tab1:
 
     df_ = df[df['Quantity'].lt(.005)]
     slice_ = pd.IndexSlice[df_.index, df_.columns]
-    s.set_properties(**{'opacity': '0.25'}, subset=slice_)
+    s.set_properties(**{'opacity': '0.25'}, subset=slice_)  # type: ignore[arg-type]
     s.set_properties(**{'font-weight': 'bold'}, subset=df.index[-1])
 
     # https://github.com/streamlit/streamlit/issues/4830#issuecomment-1147878371
@@ -284,6 +284,7 @@ with tab2:
         st.info("Values shown below are in _today_'s money, i.e., discounted by assumed inflation.  Balances [depreciate with time](https://github.com/LateGenXer/finance/issues/5#issuecomment-2451693350), besides reflecting in/out-flows.", icon="ℹ️")
 
     df = bl.cash_flow_df
+    assert df is not None
 
     s = Styler(df, uuid_len=0, cell_ids=False)
 
