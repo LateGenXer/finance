@@ -74,12 +74,6 @@ def isukbankholiday(date:datetime.date) -> bool:
     return (date.year, date.month, date.day) in ukbankholidays
 
 
-# Bank holidays from
-# - https://www.dmo.gov.uk/publications/gilt-market/formulae-and-examples/
-#     https://www.dmo.gov.uk/media/bfknrcrn/ukbankholidays-jul19.xls
-# with corrections from
-# - https://www.api.gov.uk/gds/bank-holidays/
-#     curl -s https://www.gov.uk/bank-holidays.json | jq -r '.["england-and-wales"].events[].date'
 def _read() -> set[tuple[int, int, int]]:
     dates = set()
     filename = os.path.join(os.path.dirname(__file__), 'ukbankholidays.csv')
@@ -96,8 +90,11 @@ ukbankholidays = _read()
 def main() -> None:
     """Generate ukbankholidays.csv."""
 
+    import requests
     import xlrd  # type: ignore[import-untyped]
     from download import download
+
+    dates:set[datetime.date] = set()
 
     # https://www.dmo.gov.uk/publications/gilt-market/formulae-and-examples/
     # XXX Merge https://www.api.gov.uk/gds/bank-holidays/ too
@@ -111,6 +108,15 @@ def main() -> None:
         cell = sh.cell(rowx, 0)
         assert cell.ctype == xlrd.XL_CELL_DATE
         date = datetime.datetime(*xlrd.xldate_as_tuple(cell.value, sh.book.datemode)).date()
+        dates.add(date)
+
+    r = requests.get('https://www.gov.uk/bank-holidays.json')
+    obj = r.json()
+    for event in obj['england-and-wales']['events']:
+        date = datetime.datetime.fromisoformat(event["date"]).date()
+        dates.add(date)
+
+    for date in sorted(dates):
         print(f'{date.strftime("%Y-%m-%d")}')
 
 
