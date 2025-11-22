@@ -24,8 +24,9 @@ data_dir = os.path.join(os.path.dirname(__file__), 'data')
 def collect_filenames():
     filenames = []
     for filename in glob(os.path.join(data_dir, 'accrued_income', '*.csv')):
-        name, _ = os.path.splitext(os.path.basename(filename))
-        filenames.append(pytest.param(filename, id=name))
+        if not os.path.islink(filename) or os.path.exists(filename):
+            name, _ = os.path.splitext(os.path.basename(filename))
+            filenames.append(pytest.param(filename, id=name))
     return filenames
 
 

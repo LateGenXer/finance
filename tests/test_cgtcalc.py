@@ -36,12 +36,13 @@ data_dir = os.path.join(os.path.dirname(__file__), 'data')
 def collect_filenames(no_raises:bool=False) -> list:
     filenames = []
     for filename in glob(os.path.join(data_dir, 'cgtcalc', '*.tsv')):
-        if no_raises:
-            _, raises, _  = read_test_annotations(filename)
-            if raises is not None:
-                continue
-        name, _ = os.path.splitext(os.path.basename(filename))
-        filenames.append(pytest.param(filename, id=name))
+        if not os.path.islink(filename) or os.path.exists(filename):
+            if no_raises:
+                _, raises, _  = read_test_annotations(filename)
+                if raises is not None:
+                    continue
+            name, _ = os.path.splitext(os.path.basename(filename))
+            filenames.append(pytest.param(filename, id=name))
     return filenames
 
 
