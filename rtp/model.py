@@ -130,13 +130,13 @@ def uk_cgt_lp(prob, cg, cgt_rate, cgt_allowance):
     return tax
 
 
-def uk_tax_lp(prob, gross_income, cg, marriage_allowance:int=0):
+def uk_tax_lp(prob, gross_income, cg, itt:UK.IncomeTaxThresholds, marriage_allowance:int=0):
     assert not isinstance(marriage_allowance, bool)
     global uid
 
-    personal_allowance    = UK.income_tax_threshold_20 + marriage_allowance
-    basic_rate_allowance  = UK.income_tax_threshold_40 - UK.income_tax_threshold_20
-    higher_rate_allowance = UK.pa_limit - personal_allowance - basic_rate_allowance
+    personal_allowance    = itt.income_tax_threshold_20 + marriage_allowance
+    basic_rate_allowance  = itt.income_tax_threshold_40 - itt.income_tax_threshold_20
+    higher_rate_allowance = itt.pa_limit - personal_allowance - basic_rate_allowance
     # FIXME: we can't model the 45% tax rate, as it's no longer convex
 
     income_pa                = lp.LpVariable(f'income_pa_{uid}', 0, personal_allowance)
@@ -162,7 +162,7 @@ def uk_tax_lp(prob, gross_income, cg, marriage_allowance:int=0):
 
     prob += cg_allowance + cg_basic_rate + cg_higher_rate == cg
 
-    prob += income_pa + income_basic_rate + cg_basic_rate <= UK.income_tax_threshold_40
+    prob += income_pa + income_basic_rate + cg_basic_rate <= itt.income_tax_threshold_40
 
     cgt_rate_basic, cgt_rate_higher = UK.cgt_rates
 
@@ -181,14 +181,6 @@ def pt_income_tax_lp(prob, gross_income, factor=1.0):
 def normalize(x, ndigits=None):
     # https://bugs.python.org/issue45995
     return round(x, ndigits) + 0.0
-
-
-marginal_income_tax_to_base_salary = {
-    0.00: 0,
-    0.20: UK.income_tax_threshold_20,
-    0.40: UK.income_tax_threshold_40,
-    0.45: UK.income_tax_threshold_45,
-}
 
 
 # https://www.investopedia.com/terms/i/inflation_adjusted_return.asp
@@ -410,11 +402,6 @@ def model(
     if max_income:
         retirement_income_net = lp.LpVariable("income", 0)
 
-    base_salary_1 = marginal_income_tax_to_base_salary[marginal_income_tax_1]
-    base_salary_2 = marginal_income_tax_to_base_salary[marginal_income_tax_2]
-    base_income_tax_1, _ = UK.tax(base_salary_1, 0)
-    base_income_tax_2, _ = UK.tax(base_salary_2, 0)
-
     isa_allowance = UK.isa_allowance
 
     # XXX: Lump sum analysis
@@ -454,6 +441,8 @@ def model(
         sipp_contrib_limit = UK.uiaa
         sipp_contrib_limit_1 = min(sipp_contrib_1 * 1.30, sipp_contrib_limit, UK.mpaa)
         sipp_contrib_limit_2 = min(sipp_contrib_2 * 1.30, sipp_contrib_limit, UK.mpaa)
+
+    itt = UK.IncomeTaxThresholds()
 
     for yr in range(present_year, end_year):
         retirement = yr >= retirement_year
@@ -546,19 +535,29 @@ def model(
                 cg_1 = cg
                 cg_2 = 0
             if yr < retirement_year:
-                tax_1, cgt_1 = uk_tax_lp(prob, base_salary_1 + income_gross_1, cg_1)
-                tax_2, cgt_2 = uk_tax_lp(prob, base_salary_2 + income_gross_2, cg_2)
+                marginal_income_tax_to_base_salary = {
+                    0.00: 0,
+                    0.20: itt.income_tax_threshold_20,
+                    0.40: itt.income_tax_threshold_40,
+                    0.45: itt.income_tax_threshold_45,
+                }
+                base_salary_1 = marginal_income_tax_to_base_salary[marginal_income_tax_1]
+                base_salary_2 = marginal_income_tax_to_base_salary[marginal_income_tax_2]
+                base_income_tax_1, _ = UK.tax(itt, base_salary_1, 0)
+                base_income_tax_2, _ = UK.tax(itt, base_salary_2, 0)
+                tax_1, cgt_1 = uk_tax_lp(prob, base_salary_1 + income_gross_1, cg_1, itt)
+                tax_2, cgt_2 = uk_tax_lp(prob, base_salary_2 + income_gross_2, cg_2, itt)
                 tax_1 = tax_1 - base_income_tax_1
                 tax_2 = tax_2 - base_income_tax_2
             else:
-                if marriage_allowance and ann_income_2 <= UK.income_tax_threshold_20:
-                    prob += income_gross_1 <= UK.income_tax_threshold_40
-                    prob += income_gross_2 <= UK.income_tax_threshold_20
-                    tax_1, cgt_1 = uk_tax_lp(prob, income_gross_1, cg_1, marriage_allowance=UK.marriage_allowance)
-                    tax_2, cgt_2 = uk_tax_lp(prob, income_gross_2, cg_2, marriage_allowance=-UK.marriage_allowance)
+                if marriage_allowance and ann_income_2 <= itt.income_tax_threshold_20:
+                    prob += income_gross_1 <= itt.income_tax_threshold_40
+                    prob += income_gross_2 <= itt.income_tax_threshold_20
+                    tax_1, cgt_1 = uk_tax_lp(prob, income_gross_1, cg_1, itt, marriage_allowance=itt.marriage_allowance)
+                    tax_2, cgt_2 = uk_tax_lp(prob, income_gross_2, cg_2, itt, marriage_allowance=-itt.marriage_allowance)
                 else:
-                    tax_1, cgt_1 = uk_tax_lp(prob, income_gross_1, cg_1)
-                    tax_2, cgt_2 = uk_tax_lp(prob, income_gross_2, cg_2)
+                    tax_1, cgt_1 = uk_tax_lp(prob, income_gross_1, cg_1, itt)
+                    tax_2, cgt_2 = uk_tax_lp(prob, income_gross_2, cg_2, itt)
             cgt = cgt_1 + cgt_2
         elif country == 'PT':
             income_gross = (income_gross_1 + tfc_1 +
@@ -624,6 +623,15 @@ def model(
             tax_2=tax_2,
             cgt=cgt,
         )
+
+        # https://www.gov.uk/government/publications/the-personal-allowance-and-basic-rate-limit-for-income-tax-and-certain-national-insurance-contributions-nics-thresholds-from-6-april-2026-to-5-apr/income-tax-personal-allowance-and-the-basic-rate-limit-and-certain-national-insurance-contributions-thresholds-from-6-april-2026-to-5-april-2028
+        # https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html#taxation-of-income-from-assets#asking-everyone-to-contribute
+        if yr < 2031:
+            itt.income_tax_threshold_20 = round(itt.income_tax_threshold_20 / (1.0 + inflation_rate))
+            itt.income_tax_threshold_40 = round(itt.income_tax_threshold_40 / (1.0 + inflation_rate))
+            itt.income_tax_threshold_45 = round(itt.income_tax_threshold_45 / (1.0 + inflation_rate))
+            itt.pa_limit                = round(itt.pa_limit                / (1.0 + inflation_rate))
+            itt.marriage_allowance      = round(itt.marriage_allowance      / (1.0 + inflation_rate))
 
     if max_income:
         prob.setObjective(-retirement_income_net)
