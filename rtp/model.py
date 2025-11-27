@@ -19,8 +19,6 @@ import tax.uk as UK
 import tax.pt as PT
 import tax.jp as JP
 
-from tax.uk import *
-
 
 verbosity = 0
 
@@ -136,9 +134,9 @@ def uk_tax_lp(prob, gross_income, cg, marriage_allowance:int=0):
     assert not isinstance(marriage_allowance, bool)
     global uid
 
-    personal_allowance    = income_tax_threshold_20 + marriage_allowance
-    basic_rate_allowance  = income_tax_threshold_40 - income_tax_threshold_20
-    higher_rate_allowance = pa_limit - personal_allowance - basic_rate_allowance
+    personal_allowance    = UK.income_tax_threshold_20 + marriage_allowance
+    basic_rate_allowance  = UK.income_tax_threshold_40 - UK.income_tax_threshold_20
+    higher_rate_allowance = UK.pa_limit - personal_allowance - basic_rate_allowance
     # FIXME: we can't model the 45% tax rate, as it's no longer convex
 
     income_pa                = lp.LpVariable(f'income_pa_{uid}', 0, personal_allowance)
@@ -164,7 +162,7 @@ def uk_tax_lp(prob, gross_income, cg, marriage_allowance:int=0):
 
     prob += cg_allowance + cg_basic_rate + cg_higher_rate == cg
 
-    prob += income_pa + income_basic_rate + cg_basic_rate <= income_tax_threshold_40
+    prob += income_pa + income_basic_rate + cg_basic_rate <= UK.income_tax_threshold_40
 
     cgt_rate_basic, cgt_rate_higher = UK.cgt_rates
 
@@ -187,9 +185,9 @@ def normalize(x, ndigits=None):
 
 marginal_income_tax_to_base_salary = {
     0.00: 0,
-    0.20: income_tax_threshold_20,
-    0.40: income_tax_threshold_40,
-    0.45: income_tax_threshold_45,
+    0.20: UK.income_tax_threshold_20,
+    0.40: UK.income_tax_threshold_40,
+    0.45: UK.income_tax_threshold_45,
 }
 
 
@@ -435,8 +433,8 @@ def model(
         isa    = isa    + ls_isa
         gia    = gia    + ls_gia * (1 - eps)
 
-    nmpa_1 = nmpa(dob_1)
-    nmpa_2 = nmpa(dob_2)
+    nmpa_1 = UK.nmpa(dob_1)
+    nmpa_2 = UK.nmpa(dob_2)
 
     lsa_1 = lsa * lsa_ratio_1
     lsa_2 = lsa * lsa_ratio_2
@@ -454,8 +452,8 @@ def model(
     if sipp_extra_contrib:
         # Pension income is not classed as earned income, therefore one's limited to the 3600 limit
         sipp_contrib_limit = UK.uiaa
-        sipp_contrib_limit_1 = min(sipp_contrib_1 * 1.30, sipp_contrib_limit, mpaa)
-        sipp_contrib_limit_2 = min(sipp_contrib_2 * 1.30, sipp_contrib_limit, mpaa)
+        sipp_contrib_limit_1 = min(sipp_contrib_1 * 1.30, sipp_contrib_limit, UK.mpaa)
+        sipp_contrib_limit_2 = min(sipp_contrib_2 * 1.30, sipp_contrib_limit, UK.mpaa)
 
     for yr in range(present_year, end_year):
         retirement = yr >= retirement_year
@@ -487,8 +485,8 @@ def model(
         sipp_2.contrib(contrib_2)
 
         # Don't drawdown pension pre-retirement if there's a chance of violating MPAA
-        drawdown_1 = lp.LpVariable(f'dd_1@{yr}', 0) if age_1 >= nmpa_1 and (retirement or sipp_contrib_1 <= mpaa) else 0
-        drawdown_2 = lp.LpVariable(f'dd_2@{yr}', 0) if age_2 >= nmpa_2 and (retirement or sipp_contrib_2 <= mpaa) else 0
+        drawdown_1 = lp.LpVariable(f'dd_1@{yr}', 0) if age_1 >= nmpa_1 and (retirement or sipp_contrib_1 <= UK.mpaa) else 0
+        drawdown_2 = lp.LpVariable(f'dd_2@{yr}', 0) if age_2 >= nmpa_2 and (retirement or sipp_contrib_2 <= UK.mpaa) else 0
 
         tfc_1 = sipp_1.drawdown(drawdown_1, age=age_1)
         tfc_2 = sipp_2.drawdown(drawdown_2, age=age_2)
@@ -516,8 +514,8 @@ def model(
         sipp_2.uf *= 1.0 + eps
 
         # State pension
-        spa_1 = state_pension_age(dob_1)
-        spa_2 = state_pension_age(dob_2)
+        spa_1 = UK.state_pension_age(dob_1)
+        spa_2 = UK.state_pension_age(dob_2)
         income_state_1 = state_pension_1 if age_1 >= spa_1 else 0
         income_state_2 = state_pension_2 if age_2 >= spa_2 else 0
         if country not in ('UK', 'PT'):
