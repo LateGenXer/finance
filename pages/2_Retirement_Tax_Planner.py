@@ -278,7 +278,7 @@ state = {key: value for key, value in st.session_state.items() if key in default
 state['version'] = version
 data = json.dumps(state, sort_keys=True, indent=2).encode('utf-8')
 timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(sep='-', timespec='seconds')
-st.download_button("Download", data, file_name=f"rtp-{timestamp}.json", mime="application/json", help="Download all parameters as a JSON file.", use_container_width=True)
+st.download_button("Download", data, file_name=f"rtp-{timestamp}.json", mime="application/json", help="Download all parameters as a JSON file.", width='stretch')
 
 
 #
@@ -427,7 +427,7 @@ if True:
                 theta=alt.Theta(field="Value", type="quantitative"),
                 color=alt.Color(field="Asset", type="nominal"),
             )
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, width='stretch')
 
     st.subheader("Time series")
 
@@ -468,7 +468,7 @@ if True:
             alt.Color("Asset:N", legend=legend),
         )
     )
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart, width='stretch')
 
     cdf = pd.DataFrame()
 
@@ -493,7 +493,7 @@ if True:
             alt.Color("Tax:N", legend=legend),
         )
     )
-    st.altair_chart(chart2, use_container_width=True)
+    st.altair_chart(chart2, width='stretch')
 
 st.subheader("Plan")
 

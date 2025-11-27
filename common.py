@@ -135,4 +135,4 @@ def plot_yield_curve(df, yTitle, ySeries='Yield', cSeries='TIDM', ois=None):
                 color=alt.value("#333333")
             )
         )
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart, width='stretch')

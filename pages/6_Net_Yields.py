@@ -259,7 +259,7 @@ df.sort_values(by='NetYield', ascending=False, inplace=True, ignore_index=True)
 
 st.dataframe(
     df,
-    use_container_width=True,
+    width='stretch',
     height=768,
     hide_index=True,
     column_config={

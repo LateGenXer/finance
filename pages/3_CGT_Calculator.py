@@ -105,7 +105,7 @@ with st.container(border=True):
         result.write(report)
 
         timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(sep='-', timespec='seconds')
-        st.download_button("Download PDF", buffer.getvalue(), file_name=f"cgtcalc-{timestamp}.pdf", mime="application/pdf", help="Download PDF report.", use_container_width=True)
+        st.download_button("Download PDF", buffer.getvalue(), file_name=f"cgtcalc-{timestamp}.pdf", mime="application/pdf", help="Download PDF report.", width='stretch')
 
 
         # https://discuss.streamlit.io/t/rendering-pdf-on-ui/13505
