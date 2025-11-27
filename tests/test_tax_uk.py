@@ -11,7 +11,14 @@ import pytest
 
 from contextlib import nullcontext
 
-from tax.uk import *
+from tax.uk import IncomeTaxThresholds, cgt_allowance, cgt_rates, tax, TaxYear
+
+
+income_tax_threshold_20 = IncomeTaxThresholds.income_tax_threshold_20
+income_tax_threshold_40 = IncomeTaxThresholds.income_tax_threshold_40
+income_tax_threshold_45 = IncomeTaxThresholds.income_tax_threshold_45
+pa_limit = IncomeTaxThresholds.pa_limit
+marriage_allowance = IncomeTaxThresholds.marriage_allowance
 
 
 basic_rate_allowance  = income_tax_threshold_40 - income_tax_threshold_20
@@ -53,7 +60,8 @@ combined_test_cases = [
 
 @pytest.mark.parametrize("income,income_tax,cg,cgt,ma", combined_test_cases)
 def test_tax(income:int, cg:int, income_tax:float, cgt:float, ma:int) -> None:
-    income_tax_, cgt_ = tax(income, cg, marriage_allowance=ma)
+    itt = IncomeTaxThresholds()
+    income_tax_, cgt_ = tax(itt, income, cg, marriage_allowance=ma)
     assert income_tax_ == pytest.approx(income_tax, abs=1e-2)
     assert cgt_ == pytest.approx(cgt, abs=1e-2)
 
