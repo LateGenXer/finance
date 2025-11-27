@@ -185,15 +185,6 @@ def normalize(x, ndigits=None):
     return round(x, ndigits) + 0.0
 
 
-def aa_lbound(marginal_income_tax):
-    return {
-        0.00: UK.uiaa,
-        0.20: income_tax_threshold_20,
-        0.40: min(income_tax_threshold_40, UK.aa),
-        0.45: UK.aa_taper,
-    }[marginal_income_tax]
-
-
 marginal_income_tax_to_base_salary = {
     0.00: 0,
     0.20: income_tax_threshold_20,

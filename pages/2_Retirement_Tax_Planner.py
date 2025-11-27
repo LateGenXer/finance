@@ -497,7 +497,7 @@ if True:
 
 st.subheader("Plan")
 
-st.info(f"""- The _Personal Allowance_ and the _Higher Rate Threshold_ have been adjusted down to £{uk.income_tax_threshold_20:,.0f} and £{uk.income_tax_threshold_40:,.0f} respectively, to reflect the fact that these thresholds [will remain the same in nominal terms until 2028](https://www.gov.uk/government/publications/the-personal-allowance-and-basic-rate-limit-for-income-tax-and-certain-national-insurance-contributions-nics-thresholds-from-6-april-2026-to-5-apr/income-tax-personal-allowance-and-the-basic-rate-limit-and-certain-national-insurance-contributions-thresholds-from-6-april-2026-to-5-april-2028), therefore shrinking in _real_ terms.
+st.info(f"""- The _Personal Allowance_ and the _Higher Rate Threshold_ have been adjusted down to £{uk.income_tax_threshold_20:,.0f} and £{uk.income_tax_threshold_40:,.0f} respectively, to reflect the fact that these thresholds [will remain the same in nominal terms until 2031](https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html#taxation-of-income-from-assets#asking-everyone-to-contribute), therefore shrinking in _real_ terms.
 - The ISA allowance is progressively adjusted down until 2030 to reflect the fact that [this limit will be frozen in nominal terms until 2030](https://www.gov.uk/government/publications/autumn-budget-2024/autumn-budget-2024-html#:~:text=Individual%20Savings%20Accounts%2C%20Lifetime%20ISA%2C%20Junior%20ISA%20and%20Child%20Trust%20Fund%20Allowance%20%E2%80%93%20Annual%20subscription%20limits%20will%20remain%20at%20%C2%A320%2C000%20for%20ISAs%2C%20%C2%A34%2C000%20for%20Lifetime%20ISAs%20and%20%C2%A39%2C000%20for%20Junior%20ISAs%20and%20Child%20Trust%20Funds%20until%205%20April%202030).
 """, icon="ℹ️")
 

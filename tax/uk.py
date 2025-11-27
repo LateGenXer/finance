@@ -13,8 +13,11 @@ income_tax_threshold_45 = pa_limit + 2*income_tax_threshold_20 # 2023/2024
 assert income_tax_threshold_45 == 125140
 
 # https://www.gov.uk/government/publications/the-personal-allowance-and-basic-rate-limit-for-income-tax-and-certain-national-insurance-contributions-nics-thresholds-from-6-april-2026-to-5-apr/income-tax-personal-allowance-and-the-basic-rate-limit-and-certain-national-insurance-contributions-thresholds-from-6-april-2026-to-5-april-2028
+# https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html#taxation-of-income-from-assets#asking-everyone-to-contribute
+_today = datetime.datetime.now(datetime.timezone.utc).date()
+_years = max(2031 - _today.year, 0)
 _inflation_rate = .035
-_inflation_adjustment = (1 + _inflation_rate) ** -3
+_inflation_adjustment = (1 + _inflation_rate) ** -_years
 income_tax_threshold_20 = int(income_tax_threshold_20 * _inflation_adjustment)
 income_tax_threshold_40 = int(income_tax_threshold_40 * _inflation_adjustment)
 pa_limit                = int(pa_limit * _inflation_adjustment)
@@ -63,7 +66,6 @@ def state_pension_age(dob:int) -> int:
 # https://www.gov.uk/government/publications/rates-and-allowances-pension-schemes/pension-schemes-rates
 uiaa     =  3600     # Unearned income annual allowance
 aa       = 60000
-aa_taper = 10000
 mpaa     = 10000
 
 # https://www.gov.uk/tax-on-your-private-pension/lump-sum-allowance
