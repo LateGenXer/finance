@@ -132,7 +132,8 @@ def uk_cgt_lp(prob, cg, cgt_rate, cgt_allowance):
     return tax
 
 
-def uk_tax_lp(prob, gross_income, cg, marriage_allowance=0):
+def uk_tax_lp(prob, gross_income, cg, marriage_allowance:int=0):
+    assert not isinstance(marriage_allowance, bool)
     global uid
 
     personal_allowance    = income_tax_threshold_20 + marriage_allowance
@@ -369,7 +370,7 @@ def model(
         lump_sum,
         aa_1,
         aa_2,
-        marriage_allowance,
+        marriage_allowance:bool,
         end_age,
     ):
 
@@ -564,8 +565,8 @@ def model(
                 if marriage_allowance and ann_income_2 <= UK.income_tax_threshold_20:
                     prob += income_gross_1 <= UK.income_tax_threshold_40
                     prob += income_gross_2 <= UK.income_tax_threshold_20
-                    tax_1, cgt_1 = uk_tax_lp(prob, income_gross_1, cg_1, marriage_allowance=marriage_allowance)
-                    tax_2, cgt_2 = uk_tax_lp(prob, income_gross_2, cg_2, marriage_allowance=-marriage_allowance)
+                    tax_1, cgt_1 = uk_tax_lp(prob, income_gross_1, cg_1, marriage_allowance=UK.marriage_allowance)
+                    tax_2, cgt_2 = uk_tax_lp(prob, income_gross_2, cg_2, marriage_allowance=-UK.marriage_allowance)
                 else:
                     tax_1, cgt_1 = uk_tax_lp(prob, income_gross_1, cg_1)
                     tax_2, cgt_2 = uk_tax_lp(prob, income_gross_2, cg_2)
