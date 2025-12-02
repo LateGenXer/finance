@@ -24,7 +24,7 @@ def get_version() -> str:
                 '--format=%h (%cd)',
                 'HEAD',
         ], text=True)
-    except subprocess.CalledProcessError:
+    except (FileNotFoundError, subprocess.CalledProcessError):
         if ci:
             raise
         else:
