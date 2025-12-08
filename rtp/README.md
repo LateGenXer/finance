@@ -19,6 +19,7 @@ I initially wrote this for my own personal use, after running against limitation
 
 ## Recent changes
 
+* Update for Autumn Budget 2025 changes.
 * Rudimentary Defined Benefit Pension Scheme support.
 * Reflect frozen ISA allowance until 2030.
 * Update CGT rates to those announced on Autumn Budget 2024.
