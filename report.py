@@ -48,6 +48,8 @@ class Report(ABC):
 class TextReport(Report):
 
     def __init__(self, stream:TextIO=sys.stdout):
+        if sys.platform == 'win32' and not stream.isatty():
+            stream.reconfigure(encoding='utf-8-sig')
         self.stream = stream
         self.heading_sep = ''
 
@@ -201,6 +203,8 @@ th, td {
 '''
 
     def __init__(self, stream:TextIO):
+        if sys.platform == 'win32' and not stream.isatty():
+            stream.reconfigure(encoding='utf-8-sig')
         self.stream = stream
 
     def start(self, title:str) -> None:
