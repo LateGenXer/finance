@@ -362,315 +362,315 @@ class Calculator:
     def parse(self, stream:typing.TextIO) -> None:
         line_no = 0
         for line in stream:
-            line_no += 1
-            line = line.rstrip()
-            if line.startswith('#'):
-                continue
-            row = line.split()
-            if not row:
-                continue
+                line_no += 1
+                line = line.rstrip()
+                if line.startswith('#'):
+                    continue
+                row = line.split()
+                if not row:
+                    continue
 
-            trade, date_str, security = row[:3]
-            params = [Decimal(field) for field in row[3:]]
+                trade, date_str, security = row[:3]
+                params = [Decimal(field) for field in row[3:]]
 
-            date = datetime.datetime.strptime(date_str, "%d/%m/%Y").date()
+                date = datetime.datetime.strptime(date_str, "%d/%m/%Y").date()
 
-            # Case-insensitive
-            trade = trade.upper()
+                # Case-insensitive
+                trade = trade.upper()
 
-            if trade in ('B', 'BUY'):
-                kind = Kind.BUY
-                if len(params) == 4:
-                    tax = params.pop(3)
-                    params[2] += tax
-                else:
-                    assert len(params) == 3
-            elif trade in ('S', 'SELL'):
-                kind = Kind.SELL
-                # Section 104 rules
-                if date < datetime.date(2008, 4, 6):
-                    raise NotImplementedError(f'line {line_no}: {trade} {date:%d/%m/%Y} {security}: disposals before 4 April 2008 unsupported; replace earlier trades with BUY for Section 104 holding.\n')
-                if len(params) == 4:
-                    tax = params.pop(3)
-                    assert not tax
-                else:
-                    assert len(params) == 3
-            elif trade == 'CAPRETURN':
-                kind = Kind.CAPRETURN
-            elif trade == 'DIVIDEND':
-                kind = Kind.DIVIDEND
-            elif trade == 'R':
-                kind = Kind.RESTRUCTURING
-                factor = params[0]
-                if factor >= Decimal(1):
+                if trade in ('B', 'BUY'):
+                    kind = Kind.BUY
+                    if len(params) == 4:
+                        tax = params.pop(3)
+                        params[2] += tax
+                    else:
+                        assert len(params) == 3
+                elif trade in ('S', 'SELL'):
+                    kind = Kind.SELL
+                    # Section 104 rules
+                    if date < datetime.date(2008, 4, 6):
+                        raise NotImplementedError(f'line {line_no}: {trade} {date:%d/%m/%Y} {security}: disposals before 4 April 2008 unsupported; replace earlier trades with BUY for Section 104 holding.\n')
+                    if len(params) == 4:
+                        tax = params.pop(3)
+                        assert not tax
+                    else:
+                        assert len(params) == 3
+                elif trade == 'CAPRETURN':
+                    kind = Kind.CAPRETURN
+                elif trade == 'DIVIDEND':
+                    kind = Kind.DIVIDEND
+                elif trade == 'R':
+                    kind = Kind.RESTRUCTURING
+                    factor = params[0]
+                    if factor >= Decimal(1):
+                        params = [factor, Decimal(1)]
+                    else:
+                        factor = dround(Decimal(1) / factor, 6)
+                        params = [Decimal(1), factor]
+                elif trade == 'SPLIT':
+                    kind = Kind.RESTRUCTURING
+                    factor = params[0]
                     params = [factor, Decimal(1)]
-                else:
-                    factor = dround(Decimal(1) / factor, 6)
+                elif trade == 'UNSPLIT':
+                    kind = Kind.RESTRUCTURING
+                    factor = params[0]
                     params = [Decimal(1), factor]
-            elif trade == 'SPLIT':
-                kind = Kind.RESTRUCTURING
-                factor = params[0]
-                params = [factor, Decimal(1)]
-            elif trade == 'UNSPLIT':
-                kind = Kind.RESTRUCTURING
-                factor = params[0]
-                params = [Decimal(1), factor]
-            else:
-                raise NotImplementedError(trade)
+                else:
+                    raise NotImplementedError(trade)
 
-            tr = Trade(date, kind, params)
+                tr = Trade(date, kind, params)
 
-            trades = self.securities.setdefault(security, [])
-            trades.append(tr)
+                trades = self.securities.setdefault(security, [])
+                trades.append(tr)
 
     def calculate(self) -> Result:
         result = Result()
 
         for security, trades in self.securities.items():
-            # Sort
-            trades.sort(key=operator.attrgetter("date", "kind"))
+                # Sort
+                trades.sort(key=operator.attrgetter("date", "kind"))
 
-            # Merge same-day buys/sells, as per
-            # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg51560#IDATX33F
-            i = 0
-            while i + 1 < len(trades):
-                tr0 = trades[i + 0]
-                tr1 = trades[i + 1]
-                if tr0.date == tr1.date and tr0.kind == tr1.kind and tr0.kind in (Kind.BUY, Kind.SELL):
-                    shares0, price0, charges0 = tr0.params
-                    shares1, price1, charges1 = tr1.params
-                    shares = shares0 + shares1
-                    price = (shares0*price0 + shares1*price1) / shares
-                    charges = charges0 + charges1
-                    params0 = [shares, price, charges]
-                    trades[i] = Trade(tr0.date, tr0.kind, params0)
-                    trades.pop(i + 1)
-                else:
-                    i += 1
-
-            acquisitions = {}
-            disposals = {}
-
-            for tr in trades:
-                if tr.kind == Kind.BUY:
-                    shares, price, charges = tr.params
-                    # XXX: We could track acquisition charges separately (and
-                    # round it separately) but coalescing into a single figure
-                    # greatly simplifies things
-                    cost = shares*price + charges
-                    cost = dround(cost, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
-                    cost = dround(cost, self.places, ROUND_CEILING)
-                    acquisition = Acquisition(cost, shares, shares)
-                    assert tr.date not in acquisitions
-                    acquisitions[tr.date] = acquisition
-                if tr.kind == Kind.SELL:
-                    shares, price, charges = tr.params
-                    proceeds = shares*price
-                    proceeds = dround(proceeds, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
-                    proceeds = dround(proceeds, self.places, ROUND_FLOOR)
-                    charges = dround(charges, self.places, ROUND_CEILING)
-                    disposal = Disposal(proceeds, charges, shares, shares)
-                    assert tr.date not in disposals
-                    disposals[tr.date] = disposal
-
-            # Same day rule
-            for date, disposal in disposals.items():
-                try:
-                    acquisition = acquisitions[date]
-                except KeyError:
-                    continue
-                identify(disposal, acquisition, Identification.SAME_DAY, date)
-
-            # Bed and Breakfast rule
-            for i in range(len(trades)):
-                tr = trades[i]
-                if tr.kind != Kind.SELL:
-                    continue
-                disposal = disposals[tr.date]
-                if not disposal.unidentified:
-                    continue
-                j = i + 1
-                numerator = Decimal(1)
-                denominator = Decimal(1)
-                for j in range(i, len(trades)):
-                    tr2 = trades[j]
-                    if (tr2.date - tr.date).days > 30:
-                        break
-                    if tr2.kind == Kind.RESTRUCTURING:
-                        n, d = tr2.params
-                        numerator *= n
-                        denominator *= d
-                    if tr2.kind != Kind.BUY:
-                        continue
-                    acquisition = acquisitions[tr2.date]
-                    if not acquisition.unidentified:
-                        continue
-                    identify(disposal, acquisition, Identification.BED_AND_BREAKFAST, tr2.date, numerator, denominator)
-                    if not disposal.unidentified:
-                        break
-
-            pool_updates: list[PoolUpdate] = []
-
-            # Walk trades chronologically:
-            # - pooling unidentified shares into a Section 104 pool
-            # - tracking equalisation group 1 and group 2 shares and acquisitions
-            pool = Acquisition(Decimal(0), Decimal(0), Decimal(0))
-            group1_holding = Decimal(0)
-            group2_holding = Decimal(0)
-            for tr in trades:
-
-                if tr.kind == Kind.BUY:
-                    acquisition = acquisitions[tr.date]
-                    if acquisition.unidentified:
-                        if acquisition.unidentified == acquisition.shares:
-                            delta_cost = acquisition.cost
-                        else:
-                            delta_cost = dround(acquisition.cost * acquisition.unidentified / acquisition.shares, self.places, ROUND_CEILING)
-                        update_pool(pool_updates, pool, tr,
-                            description=f'Bought {acquisition.shares} shares for £{acquisition.cost}',
-                            delta_cost=delta_cost,
-                            delta_shares=acquisition.unidentified
-                        )
-                    group2_holding += acquisition.shares
-
-                elif tr.kind == Kind.SELL:
-                    disposal = disposals[tr.date]
-
-                    table = []
-                    table.append(('Disposal proceeds', disposal.proceeds, ''))
-                    if disposal.cost:
-                        table.append(('Disposal costs', -disposal.cost, ''))
-                    for identification in disposal.identifications:
-                        identified, kind, acquisition_date, numerator, denominator = identification
-                        acquisition = acquisitions[acquisition_date]
-                        if kind == Identification.SAME_DAY:
-                            assert numerator == Decimal(1)
-                            assert denominator == Decimal(1)
-                            acquisition_date_desc = 'same day'
-                        else:
-                            assert kind == Identification.BED_AND_BREAKFAST
-                            acquisition_date_desc = f'{acquisition_date} (B&B)'
-                        if numerator != Decimal(1) or denominator != Decimal(1):
-                            restructuring_desc = f' ({numerator}-for-{denominator})'
-                        else:
-                            restructuring_desc = ''
-                        assert identified > Decimal(0)
-                        assert identified <= acquisition.shares
-                        if identified == acquisition.shares:
-                            description = f'Cost of {acquisition.shares}{restructuring_desc} shares acquired on {acquisition_date_desc} for £{acquisition.cost}'
-                            table.append((description, -acquisition.cost, ''))
-                        else:
-                            description = f'Cost of {identified}{restructuring_desc} shares of {acquisition.shares} acquired on {acquisition_date_desc} for £{acquisition.cost}'
-                            cost = dround(acquisition.cost * identified / acquisition.shares, self.places, ROUND_CEILING)
-                            table.append((description, -cost, f'(-{acquisition.cost} × {identified} / {acquisition.shares})'))
-                    if disposal.unidentified:
-                        assert pool.cost > 0
-                        assert pool.shares >= disposal.unidentified
-                        identified = disposal.unidentified
-                        if identified == pool.shares:
-                            description = f'Cost of {pool.shares} shares in S.104 holding for £{pool.cost}'
-                            cost = pool.cost
-                            table.append((description, -cost, ''))
-                        else:
-                            description = f'Cost of {identified} shares of {pool.shares} in S.104 holding for £{pool.cost}'
-                            cost = dround(pool.cost * identified / pool.shares, self.places, ROUND_CEILING)
-                            table.append((description, -cost, f'({-pool.cost} × {identified} / {pool.shares})'))
-                        update_pool(pool_updates, pool, tr,
-                            description=f'Sold {disposal.shares} shares',
-                            delta_shares = -identified,
-                            delta_cost = -cost
-                        )
-
-                    # Assume FIFO for notional distributions and equalisation payments
-                    if group1_holding >= disposal.shares:
-                        group1_holding -= disposal.shares
+                # Merge same-day buys/sells, as per
+                # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg51560#IDATX33F
+                i = 0
+                while i + 1 < len(trades):
+                    tr0 = trades[i + 0]
+                    tr1 = trades[i + 1]
+                    if tr0.date == tr1.date and tr0.kind == tr1.kind and tr0.kind in (Kind.BUY, Kind.SELL):
+                        shares0, price0, charges0 = tr0.params
+                        shares1, price1, charges1 = tr1.params
+                        shares = shares0 + shares1
+                        price = (shares0*price0 + shares1*price1) / shares
+                        charges = charges0 + charges1
+                        params0 = [shares, price, charges]
+                        trades[i] = Trade(tr0.date, tr0.kind, params0)
+                        trades.pop(i + 1)
                     else:
-                        group2_holding -= disposal.shares - group1_holding
-                        group1_holding = Decimal(0)
+                        i += 1
 
-                    gain = Decimal(0)
-                    allowable_costs = Decimal(0)
-                    for description, cost, calculation in table:
-                        if calculation:
-                            assert math.isclose(eval(calculation.replace('×', '*')), cost, abs_tol=1.0)
-                        gain += cost
-                        if cost < Decimal(0):
-                            allowable_costs -= cost
+                acquisitions = {}
+                disposals = {}
 
-                    assert gain == disposal.proceeds - allowable_costs
+                for tr in trades:
+                    if tr.kind == Kind.BUY:
+                        shares, price, charges = tr.params
+                        # XXX: We could track acquisition charges separately (and
+                        # round it separately) but coalescing into a single figure
+                        # greatly simplifies things
+                        cost = shares*price + charges
+                        cost = dround(cost, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
+                        cost = dround(cost, self.places, ROUND_CEILING)
+                        acquisition = Acquisition(cost, shares, shares)
+                        assert tr.date not in acquisitions
+                        acquisitions[tr.date] = acquisition
+                    if tr.kind == Kind.SELL:
+                        shares, price, charges = tr.params
+                        proceeds = shares*price
+                        proceeds = dround(proceeds, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
+                        proceeds = dround(proceeds, self.places, ROUND_FLOOR)
+                        charges = dround(charges, self.places, ROUND_CEILING)
+                        disposal = Disposal(proceeds, charges, shares, shares)
+                        assert tr.date not in disposals
+                        disposals[tr.date] = disposal
 
-                    result.add_disposal(DisposalResult(
-                        date=tr.date,
-                        security=security,
-                        shares=disposal.shares,
-                        proceeds=disposal.proceeds,
-                        costs=allowable_costs,
-                        table=table
-                    ))
+                # Same day rule
+                for date, disposal in disposals.items():
+                    try:
+                        acquisition = acquisitions[date]
+                    except KeyError:
+                        continue
+                    identify(disposal, acquisition, Identification.SAME_DAY, date)
 
-                elif tr.kind == Kind.DIVIDEND:
+                # Bed and Breakfast rule
+                for i in range(len(trades)):
+                    tr = trades[i]
+                    if tr.kind != Kind.SELL:
+                        continue
+                    disposal = disposals[tr.date]
+                    if not disposal.unidentified:
+                        continue
+                    j = i + 1
+                    numerator = Decimal(1)
+                    denominator = Decimal(1)
+                    for j in range(i, len(trades)):
+                        tr2 = trades[j]
+                        if (tr2.date - tr.date).days > 30:
+                            break
+                        if tr2.kind == Kind.RESTRUCTURING:
+                            n, d = tr2.params
+                            numerator *= n
+                            denominator *= d
+                        if tr2.kind != Kind.BUY:
+                            continue
+                        acquisition = acquisitions[tr2.date]
+                        if not acquisition.unidentified:
+                            continue
+                        identify(disposal, acquisition, Identification.BED_AND_BREAKFAST, tr2.date, numerator, denominator)
+                        if not disposal.unidentified:
+                            break
 
-                    reference_holding, income = tr.params
-                    holding = group1_holding + group2_holding
-                    if not (is_close_decimal(reference_holding, holding) or is_close_decimal(reference_holding, pool.shares)):
-                        result.warnings.append(f'DIVIDEND {tr.date:%d/%m/%Y} {security}: expected holding of {holding} {security} but {reference_holding} were specified')
-                    assert pool.shares >= holding
+                pool_updates: list[PoolUpdate] = []
 
-                    # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57707
-                    # Add notional distribution to the Section 104 pool cost
-                    if not pool.shares:
-                        raise ValueError(f'DIVIDEND {tr.date:%d/%m/%Y} {security}: no shares held on-ex-dividend date')
-                    income = dround(income, self.places, ROUND_CEILING)
+                # Walk trades chronologically:
+                # - pooling unidentified shares into a Section 104 pool
+                # - tracking equalisation group 1 and group 2 shares and acquisitions
+                pool = Acquisition(Decimal(0), Decimal(0), Decimal(0))
+                group1_holding = Decimal(0)
+                group2_holding = Decimal(0)
+                for tr in trades:
 
-                    update_pool(pool_updates, pool, tr,
-                        description="Notional distribution",
-                        delta_cost=income,
-                    )
+                    if tr.kind == Kind.BUY:
+                        acquisition = acquisitions[tr.date]
+                        if acquisition.unidentified:
+                            if acquisition.unidentified == acquisition.shares:
+                                delta_cost = acquisition.cost
+                            else:
+                                delta_cost = dround(acquisition.cost * acquisition.unidentified / acquisition.shares, self.places, ROUND_CEILING)
+                            update_pool(pool_updates, pool, tr,
+                                description=f'Bought {acquisition.shares} shares for £{acquisition.cost}',
+                                delta_cost=delta_cost,
+                                delta_shares=acquisition.unidentified
+                            )
+                        group2_holding += acquisition.shares
 
-                elif tr.kind == Kind.CAPRETURN:
-                    reference_holding, equalisation = tr.params
-                    if not is_close_decimal(reference_holding, group2_holding):
-                        result.warnings.append(f'CAPRETURN {tr.date:%d/%m/%Y} {security}: expected Group 2 holding of {group2_holding} {security} but {reference_holding} was specified')
+                    elif tr.kind == Kind.SELL:
+                        disposal = disposals[tr.date]
 
-                    # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57705
-                    # Allocate equalisation payments to Group 2 acquisitions in proportion to the remaining holdings
-                    if not pool.shares:
-                        raise ValueError(f'CAPRETURN {tr.date:%d/%m/%Y} {security}: no shares held on-ex-dividend date')
-                    assert pool.cost >= equalisation
+                        table = []
+                        table.append(('Disposal proceeds', disposal.proceeds, ''))
+                        if disposal.cost:
+                            table.append(('Disposal costs', -disposal.cost, ''))
+                        for identification in disposal.identifications:
+                            identified, kind, acquisition_date, numerator, denominator = identification
+                            acquisition = acquisitions[acquisition_date]
+                            if kind == Identification.SAME_DAY:
+                                assert numerator == Decimal(1)
+                                assert denominator == Decimal(1)
+                                acquisition_date_desc = 'same day'
+                            else:
+                                assert kind == Identification.BED_AND_BREAKFAST
+                                acquisition_date_desc = f'{acquisition_date} (B&B)'
+                            if numerator != Decimal(1) or denominator != Decimal(1):
+                                restructuring_desc = f' ({numerator}-for-{denominator})'
+                            else:
+                                restructuring_desc = ''
+                            assert identified > Decimal(0)
+                            assert identified <= acquisition.shares
+                            if identified == acquisition.shares:
+                                description = f'Cost of {acquisition.shares}{restructuring_desc} shares acquired on {acquisition_date_desc} for £{acquisition.cost}'
+                                table.append((description, -acquisition.cost, ''))
+                            else:
+                                description = f'Cost of {identified}{restructuring_desc} shares of {acquisition.shares} acquired on {acquisition_date_desc} for £{acquisition.cost}'
+                                cost = dround(acquisition.cost * identified / acquisition.shares, self.places, ROUND_CEILING)
+                                table.append((description, -cost, f'(-{acquisition.cost} × {identified} / {acquisition.shares})'))
+                        if disposal.unidentified:
+                            assert pool.cost > 0
+                            assert pool.shares >= disposal.unidentified
+                            identified = disposal.unidentified
+                            if identified == pool.shares:
+                                description = f'Cost of {pool.shares} shares in S.104 holding for £{pool.cost}'
+                                cost = pool.cost
+                                table.append((description, -cost, ''))
+                            else:
+                                description = f'Cost of {identified} shares of {pool.shares} in S.104 holding for £{pool.cost}'
+                                cost = dround(pool.cost * identified / pool.shares, self.places, ROUND_CEILING)
+                                table.append((description, -cost, f'({-pool.cost} × {identified} / {pool.shares})'))
+                            update_pool(pool_updates, pool, tr,
+                                description=f'Sold {disposal.shares} shares',
+                                delta_shares = -identified,
+                                delta_cost = -cost
+                            )
 
-                    equalisation = dround(equalisation, self.places, ROUND_FLOOR)
+                        # Assume FIFO for notional distributions and equalisation payments
+                        if group1_holding >= disposal.shares:
+                            group1_holding -= disposal.shares
+                        else:
+                            group2_holding -= disposal.shares - group1_holding
+                            group1_holding = Decimal(0)
 
-                    update_pool(pool_updates, pool, tr,
-                        description="Equalisation payment",
-                        delta_cost = -equalisation,
-                    )
+                        gain = Decimal(0)
+                        allowable_costs = Decimal(0)
+                        for description, cost, calculation in table:
+                            if calculation:
+                                assert math.isclose(eval(calculation.replace('×', '*')), cost, abs_tol=1.0)
+                            gain += cost
+                            if cost < Decimal(0):
+                                allowable_costs -= cost
 
-                    # Move Group 2 shares into Group 1
-                    group1_holding += group2_holding
-                    group2_holding = Decimal(0)
+                        assert gain == disposal.proceeds - allowable_costs
 
-                elif tr.kind == Kind.RESTRUCTURING:
+                        result.add_disposal(DisposalResult(
+                            date=tr.date,
+                            security=security,
+                            shares=disposal.shares,
+                            proceeds=disposal.proceeds,
+                            costs=allowable_costs,
+                            table=table
+                        ))
 
-                    numerator, denominator = tr.params
+                    elif tr.kind == Kind.DIVIDEND:
 
-                    pool.shares    = pool.shares    * numerator / denominator
-                    group1_holding = group1_holding * numerator / denominator
-                    group2_holding = group2_holding * numerator / denominator
+                        reference_holding, income = tr.params
+                        holding = group1_holding + group2_holding
+                        if not (is_close_decimal(reference_holding, holding) or is_close_decimal(reference_holding, pool.shares)):
+                            result.warnings.append(f'DIVIDEND {tr.date:%d/%m/%Y} {security}: expected holding of {holding} {security} but {reference_holding} were specified')
+                        assert pool.shares >= holding
 
-                    pool_updates.append(PoolUpdate(
-                        date=tr.date,
-                        description=f"{numerator}-for-{denominator} share restructuring",
-                        identified=Decimal('NaN'),
-                        delta_cost=Decimal('NaN'),
-                        pool_shares=pool.shares,
-                        pool_cost=dround(pool.cost, 2),
-                    ))
+                        # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57707
+                        # Add notional distribution to the Section 104 pool cost
+                        if not pool.shares:
+                            raise ValueError(f'DIVIDEND {tr.date:%d/%m/%Y} {security}: no shares held on-ex-dividend date')
+                        income = dround(income, self.places, ROUND_CEILING)
 
-                else:  # pragma: no cover
-                    raise NotImplementedError(tr.kind)
+                        update_pool(pool_updates, pool, tr,
+                            description="Notional distribution",
+                            delta_cost=income,
+                        )
 
-            if pool_updates:
-                result.section104_tables[security] = pool_updates
+                    elif tr.kind == Kind.CAPRETURN:
+                        reference_holding, equalisation = tr.params
+                        if not is_close_decimal(reference_holding, group2_holding):
+                            result.warnings.append(f'CAPRETURN {tr.date:%d/%m/%Y} {security}: expected Group 2 holding of {group2_holding} {security} but {reference_holding} was specified')
+
+                        # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57705
+                        # Allocate equalisation payments to Group 2 acquisitions in proportion to the remaining holdings
+                        if not pool.shares:
+                            raise ValueError(f'CAPRETURN {tr.date:%d/%m/%Y} {security}: no shares held on-ex-dividend date')
+                        assert pool.cost >= equalisation
+
+                        equalisation = dround(equalisation, self.places, ROUND_FLOOR)
+
+                        update_pool(pool_updates, pool, tr,
+                            description="Equalisation payment",
+                            delta_cost = -equalisation,
+                        )
+
+                        # Move Group 2 shares into Group 1
+                        group1_holding += group2_holding
+                        group2_holding = Decimal(0)
+
+                    elif tr.kind == Kind.RESTRUCTURING:
+
+                        numerator, denominator = tr.params
+
+                        pool.shares    = pool.shares    * numerator / denominator
+                        group1_holding = group1_holding * numerator / denominator
+                        group2_holding = group2_holding * numerator / denominator
+
+                        pool_updates.append(PoolUpdate(
+                            date=tr.date,
+                            description=f"{numerator}-for-{denominator} share restructuring",
+                            identified=Decimal('NaN'),
+                            delta_cost=Decimal('NaN'),
+                            pool_shares=pool.shares,
+                            pool_cost=dround(pool.cost, 2),
+                        ))
+
+                    else:  # pragma: no cover
+                        raise NotImplementedError(tr.kind)
+
+                if pool_updates:
+                    result.section104_tables[security] = pool_updates
 
         result.finalize()
 
