@@ -425,7 +425,7 @@ class Calculator:
                 trades.append(tr)
 
             except BaseException as e:
-                print(f"Exception processing line {line_no}: {line}")
+                sys.stderr.write(f"Exception processing line {line_no}: {line}\n")
                 raise
 
     def calculate(self) -> Result:
@@ -678,7 +678,7 @@ class Calculator:
                 if pool_updates:
                     result.section104_tables[security] = pool_updates
             except BaseException as e:
-                print(f"Exception calculating trade: {tr}")
+                sys.stderr.write(f"Exception calculating trade: {tr}\n")
                 raise
 
         result.finalize()
