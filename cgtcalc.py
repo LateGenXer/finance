@@ -362,6 +362,7 @@ class Calculator:
     def parse(self, stream:typing.TextIO) -> None:
         line_no = 0
         for line in stream:
+            try:    
                 line_no += 1
                 line = line.rstrip()
                 if line.startswith('#'):
@@ -423,10 +424,15 @@ class Calculator:
                 trades = self.securities.setdefault(security, [])
                 trades.append(tr)
 
+            except BaseException as e:
+                print(f"Exception processing line {line_no}: {line}")
+                raise
+
     def calculate(self) -> Result:
         result = Result()
 
         for security, trades in self.securities.items():
+            try:
                 # Sort
                 trades.sort(key=operator.attrgetter("date", "kind"))
 
@@ -671,6 +677,9 @@ class Calculator:
 
                 if pool_updates:
                     result.section104_tables[security] = pool_updates
+            except BaseException as e:
+                print(f"Exception calculating trade: {tr}")
+                raise
 
         result.finalize()
 
