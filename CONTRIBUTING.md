@@ -36,3 +36,13 @@ For more information on creating your codespace, visit the [GitHub documentation
 If you have VS Code and Docker installed, you can click the badge above or [here](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/LateGenXer/finance) to get started. Clicking this link will cause VS Code to automatically install the Dev Containers extension if needed, clone the source code into a container volume, and spin up a dev container for use.
 
 For more information on developing on VS Code with Dev Containers, visit [here](https://github.com/microsoft/vscode-remote-try-python/blob/main/README.md#vs-code-dev-containers)
+
+### Running the tests
+To execute the entire test suite using uv:
+```shell
+uv run pytest
+```
+To execute specific tests (e.g. for cgtcalc):
+```shell
+uv run pytest ./tests/test_cgtcalc.py
+```
