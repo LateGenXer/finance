@@ -59,6 +59,13 @@ def test_get_instrument_data(tidm:str) -> None:
     assert isinstance(data['lastclose'], (float, int))
 
 
+def test_get_instrument_data_error() -> None:
+    tidm = '____'
+    assert lse.is_tidm(tidm)
+    with pytest.raises(ValueError):
+        _ = lse.get_instrument_data(tidm)
+
+
 def test_get_latest_gilt_prices() -> None:
     dt, content = lse.get_latest_gilt_prices()
     for instrument in content:

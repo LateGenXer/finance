@@ -134,6 +134,13 @@ def get_instrument_data(tidm:str) -> dict:
     logger.info(f'Getting {tidm} instrument data')
     url = f'https://api.londonstockexchange.com/api/gw/lse/instruments/alldata/{tidm}'
     r = _session.get(url, headers=_headers, stream=False)
+    if not r.ok:
+        try:
+            obj = r.json()
+            message = obj['message']
+        except Exception:
+            message = str(r.status_code)
+        raise ValueError(message)
     assert r.ok
     obj = r.json()
     return obj
