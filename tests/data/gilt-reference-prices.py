@@ -114,7 +114,7 @@ def convert(input, output):
             entry['Mod Duration'] = fields['Modified Duration']
             entry['Accrued Interest'] = fields['Accrued Interest (£)']
 
-        except:
+        except Exception:
             print(row)
             raise
 

@@ -277,7 +277,7 @@ def test_calculate(filename:str) -> None:
 
                 gain = disposal.proceeds - disposal.costs
                 assert gain == pytest.approx(expected_disposal['gain'], abs=abs_tol)
-            except:
+            except Exception:
                 pp(dataclasses.asdict(disposal))
                 pp(expected_disposal)
                 raise

@@ -211,7 +211,7 @@ def main() -> None:
 
             lastclosedate = datetime.datetime.fromisoformat(data['lastclosedate']).date()
 
-        except:  # pragma: no cover
+        except Exception:  # pragma: no cover
             pp(data, stream=sys.stderr)
             raise
 
