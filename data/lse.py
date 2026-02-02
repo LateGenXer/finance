@@ -146,7 +146,7 @@ def get_instrument_data(tidm:str) -> dict:
     return obj
 
 
-def get_latest_gilt_prices() -> tuple[datetime.datetime, dict]:
+def get_latest_gilt_prices() -> tuple[datetime.datetime, list]:
     '''Get the latest gilt prices with a single request'''
 
     logger.info('Getting gilt prices from LSE')
@@ -174,9 +174,18 @@ def get_latest_gilt_prices() -> tuple[datetime.datetime, dict]:
     for item in obj[0]['content']:
         if item['name'] == 'priceexplorersearch':
             value = item['value']
+            assert value['totalPages'] == 1
             assert value['first'] is True
             assert value['last'] is True
-            return dt, value['content']
+            content = []
+            for subitem in value['content']:
+                maturity = datetime.datetime.fromisoformat(subitem['maturitydate']).date()
+                if dt.date() >= maturity:
+                    continue
+                if subitem['lastprice'] is None:
+                    continue
+                content.append(subitem)
+            return dt, content
     raise ValueError  # pragma: no cover
 
 
