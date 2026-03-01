@@ -59,6 +59,7 @@ I initially wrote this for my own personal education and simulations on gilts, m
 * PIMCO, [_Everything you need to know about bonds_](https://europe.pimco.com/en-eu/resources/education/everything-you-need-to-know-about-bonds)
 * Occam Investing, [bond articles](https://occaminvesting.co.uk/portfolio-construction/)
 * Office for National Statistics, [_The calculation of interest payable on government gilts_](https://www.ons.gov.uk/economy/governmentpublicsectorandtaxes/publicsectorfinance/methodologies/thecalculationofinterestpayableongovernmentgilts)
+* [The Lemon Fool's _Gilts and Bonds_ forum](https://www.lemonfool.co.uk/viewforum.php?f=52)
 
 #### On gilt ladders
 
@@ -69,7 +70,6 @@ I initially wrote this for my own personal education and simulations on gilts, m
 ### Tools
 
 * [Index-linked gilt ladder spreadsheet](https://www.lemonfool.co.uk/viewtopic.php?p=621213#p621213)
-* [The Lemon Fool's _Gilts and Bonds_ forum](https://www.lemonfool.co.uk/viewforum.php?f=52)
 * [Yield Gimp](https://www.yieldgimp.com/)
 * [Gilt Prices and Yields](https://www.dividenddata.co.uk/uk-gilts-prices-yields.py)
 * [Gilt Closing Prices](https://www.tradeweb.com/our-markets/data--reporting/gilt-closing-prices/)
