@@ -1,0 +1,35 @@
+[
+  {
+    "tax_year": "2021/2022",
+    "disposals": [
+      {
+        "date": "2021-12-20",
+        "security": "Fundname",
+        "shares": 2.12,
+        "proceeds": 6,
+        "gain": -1
+      },
+      {
+        "date": "2021-12-21",
+        "security": "Fundname",
+        "shares": 6722.63,
+        "proceeds": 19623,
+        "gain": -370
+      },
+      {
+        "date": "2022-01-04",
+        "security": "Fundname",
+        "shares": 0.2,
+        "proceeds": 0,
+        "gain": 0
+      }
+    ],
+    "proceeds": 19629,
+    "costs": 20000,
+    "gains": 0,
+    "losses": 371,
+    "allowance": 12300,
+    "taxable_gain": 0,
+    "carried_losses": 371
+  }
+]

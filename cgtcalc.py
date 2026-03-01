@@ -570,7 +570,7 @@ class Calculator:
                                 cost = dround(acquisition.cost * identified / acquisition.shares, self.places, ROUND_CEILING)
                                 table.append((description, -cost, f'(-{acquisition.cost} × {identified} / {acquisition.shares})'))
                         if disposal.unidentified:
-                            assert pool.cost > 0
+                            assert pool.cost >= Decimal(0)
                             assert pool.shares >= disposal.unidentified
                             identified = disposal.unidentified
                             if identified == pool.shares:
