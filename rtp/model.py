@@ -629,9 +629,9 @@ def model(
         if yr < 2031:
             itt.income_tax_threshold_20 = round(itt.income_tax_threshold_20 / (1.0 + inflation_rate))
             itt.income_tax_threshold_40 = round(itt.income_tax_threshold_40 / (1.0 + inflation_rate))
-            itt.income_tax_threshold_45 = round(itt.income_tax_threshold_45 / (1.0 + inflation_rate))
             itt.pa_limit                = round(itt.pa_limit                / (1.0 + inflation_rate))
             itt.marriage_allowance      = round(itt.marriage_allowance      / (1.0 + inflation_rate))
+            itt.income_tax_threshold_45 = itt.pa_limit + 2*itt.income_tax_threshold_20
 
     if max_income:
         prob.setObjective(-retirement_income_net)
