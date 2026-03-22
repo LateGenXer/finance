@@ -10,7 +10,7 @@ webdriver-manager ~= 4.0
 pre-commit ~= 4.1
 ruff ~= 0.9.7
 mypy ~= 1.15
-pandas-stubs
-types-requests
-types-beautifulsoup4
-types-openpyxl
+pandas-stubs ~= 2.3.2
+types-requests ~= 2.32.4
+types-beautifulsoup4 ~= 4.12.0
+types-openpyxl ~= 3.1.5
