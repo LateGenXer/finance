@@ -14,7 +14,7 @@ import posixpath
 import sys
 import zipfile
 
-import openpyxl
+import openpyxl.worksheet.worksheet
 
 import numpy as np
 import pandas as pd
