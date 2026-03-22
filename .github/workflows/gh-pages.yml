@@ -56,7 +56,7 @@ jobs:
       - run: uv pip install -r requirements-dev.txt
       - run: uv run .github/scripts/gh-pages.sh
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: '_site'
       - name: Deploy to GitHub Pages
