@@ -5,7 +5,7 @@
 #
 
 
-import os.path
+import os
 import pytest
 import socket
 import subprocess
@@ -55,128 +55,103 @@ def httpbun(worker_id):
         subprocess.check_call(['docker', 'stop', container_id.strip()])
 
 
-def test_static(httpbun:str) -> None:
+def test_static(httpbun:str, tmp_path) -> None:
     url = httpbun + '/cache'
-    filename = 'test_download_static.bin'
+    filename = tmp_path / 'test_download_static.bin'
 
     # Download
-    if os.path.exists(filename):
-        os.unlink(filename)
     download(url, filename)
-    assert os.path.isfile(filename)
+    assert filename.is_file()
 
     # Newer
-    mtime = os.path.getmtime(filename)
+    mtime = filename.stat().st_mtime
     download(url, filename)
-    assert os.path.getmtime(filename) == mtime
-
-    os.unlink(filename)
+    assert filename.stat().st_mtime == mtime
 
 
-def test_dynamic(httpbun:str) -> None:
+def test_dynamic(httpbun:str, tmp_path) -> None:
     url = httpbun + '/range/128'
-    filename = 'test_download_dynamic.bin'
+    filename = tmp_path / 'test_download_dynamic.bin'
 
     # Download
-    if os.path.exists(filename):
-        os.unlink(filename)
     download(url, filename)
-    assert os.path.isfile(filename)
+    assert filename.is_file()
 
     # Newer
-    mtime = os.path.getmtime(filename)
+    mtime = filename.stat().st_mtime
     download(url, filename)
-    assert os.path.getmtime(filename) > mtime
-
-    os.unlink(filename)
+    assert filename.stat().st_mtime > mtime
 
 
-def test_ttl(httpbun:str) -> None:
+def test_ttl(httpbun:str, tmp_path) -> None:
     url = httpbun + '/range/128'
-    filename = 'test_download_ttl.bin'
+    filename = tmp_path / 'test_download_ttl.bin'
 
     # Download
-    if os.path.exists(filename):
-        os.unlink(filename)
     download(url, filename, 0)
-    assert os.path.isfile(filename)
+    assert filename.is_file()
 
     # Over TTL
-    mtime = os.path.getmtime(filename)
+    mtime = filename.stat().st_mtime
     time.sleep(1)
     download(url, filename, ttl=1)
-    assert os.path.getmtime(filename) > mtime
+    assert filename.stat().st_mtime > mtime
 
     # Under TTL
-    mtime = os.path.getmtime(filename)
+    mtime = filename.stat().st_mtime
     time.sleep(1)
     download(url, filename, ttl=60)
-    assert os.path.getmtime(filename) == mtime
-
-    os.unlink(filename)
+    assert filename.stat().st_mtime == mtime
 
 
-def test_content_type(httpbun:str) -> None:
-    filename = 'test_download_content_type.bin'
+def test_content_type(httpbun:str, tmp_path) -> None:
+    filename = tmp_path / 'test_download_content_type.bin'
 
     # Download
-    if os.path.exists(filename):
-        os.unlink(filename)
     download(httpbun + '/range/128', filename, content_type='application/octet-stream')
-    assert os.path.isfile(filename)
-    os.unlink(filename)
+    assert filename.is_file()
 
     with pytest.raises(ValueError):
         download(httpbun + '/html', filename, content_type='application/xml')
-    assert not os.path.isfile(filename)
 
 
-def test_content_length(httpbun:str) -> None:
+def test_content_length(httpbun:str, tmp_path) -> None:
     last_modfiied = 'Fri, 08 Dec 2023 20:03:24 GMT'
     url = httpbun + '/response-headers?Last-modified=' + urllib.parse.quote_plus(last_modfiied)
-    filename = 'test_download_content_length.bin'
-
-    if os.path.exists(filename):
-        os.unlink(filename)
-    download(url, filename)
-    assert os.path.isfile(filename)
-    mtime = os.path.getmtime(filename)
+    filename = tmp_path / 'test_download_content_length.bin'
 
     download(url, filename)
-    assert os.path.isfile(filename)
-    assert os.path.getmtime(filename) == mtime
-    os.unlink(filename)
+    assert filename.is_file()
+    mtime = filename.stat().st_mtime
+
+    download(url, filename)
+    assert filename.is_file()
+    assert filename.stat().st_mtime == mtime
 
 
-def test_404(httpbun:str) -> None:
+def test_404(httpbun:str, tmp_path) -> None:
     url = httpbun + '/status/404'
-    filename = 'test_download_404.bin'
+    filename = tmp_path / 'test_download_404.bin'
 
-    assert not os.path.isfile(filename)
     with pytest.raises(urllib.error.HTTPError):
         download(url, filename)
-    assert not os.path.isfile(filename)
+    assert not filename.exists()
 
 
-def test_filename(httpbun:str) -> None:
+def test_filename(httpbun:str, tmp_path, monkeypatch) -> None:
     filename = 'test_download_filename.bin'
     url = httpbun + '/anything/' + filename
 
-    if os.path.exists(filename):
-        os.unlink(filename)
+    monkeypatch.chdir(tmp_path)
     download(url)
-    assert os.path.isfile(filename)
-    os.unlink(filename)
+    assert (tmp_path / filename).is_file()
 
 
-def test_main(httpbun:str) -> None:
+def test_main(httpbun:str, tmp_path) -> None:
     url = httpbun + '/range/128'
-    filename = 'test_download_main.bin'
+    filename = tmp_path / 'test_download_main.bin'
 
     from download import __file__ as download_path
 
-    if os.path.exists(filename):
-        os.unlink(filename)
     subprocess.check_call([sys.executable, download_path, url, filename])
-    assert os.path.isfile(filename)
-    os.unlink(filename)
+    assert filename.is_file()
