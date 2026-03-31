@@ -31,11 +31,11 @@ jobs:
     - run: uv run pytest -n auto --cov=. --junitxml=junit.xml -o junit_family=legacy
     - run: uv run coverage xml
       if: ${{ !cancelled() }}
-    - uses: codecov/codecov-action@v5
+    - uses: codecov/codecov-action@v6
       if: ${{ !cancelled() }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-    - uses: codecov/codecov-action@v5
+    - uses: codecov/codecov-action@v6
       if: ${{ !cancelled() }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
