@@ -21,6 +21,7 @@ import operator
 import os
 import sys
 import typing
+import warnings
 
 from enum import IntEnum, Enum
 from decimal import Decimal, ROUND_HALF_EVEN, ROUND_CEILING, ROUND_FLOOR
@@ -166,7 +167,6 @@ version = get_version()
 
 @dataclasses.dataclass
 class Result:
-    warnings: list[str] = dataclasses.field(default_factory=list)
     section104_tables: dict[str, list] = dataclasses.field(default_factory=dict)
     tax_years: dict[TaxYear, TaxYearResult] = dataclasses.field(default_factory=dict)
 
@@ -205,7 +205,7 @@ class Result:
                 tyr.allowance = Decimal(allowances[tax_year])
             except KeyError:
                 tyr.allowance = Decimal(0)
-                self.warnings.append(f'capital gains allowance for {tax_year} tax year unknown')
+                warnings.warn(f'capital gains allowance for {tax_year} tax year unknown')
 
             tyr.taxable_gain = max(tyr.proceeds - tyr.costs - tyr.allowance, Decimal(0))
             tyr.carried_losses = max(tyr.costs - tyr.proceeds, Decimal(0))
@@ -619,7 +619,7 @@ class Calculator:
                         reference_holding, income = tr.params
                         holding = group1_holding + group2_holding
                         if not (is_close_decimal(reference_holding, holding) or is_close_decimal(reference_holding, pool.shares)):
-                            result.warnings.append(f'DIVIDEND {tr.date:%d/%m/%Y} {security}: expected holding of {holding} {security} but {reference_holding} were specified')
+                            warnings.warn(f'DIVIDEND {tr.date:%d/%m/%Y} {security}: expected holding of {holding} {security} but {reference_holding} were specified')
                         assert pool.shares >= holding
 
                         # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57707
@@ -636,7 +636,7 @@ class Calculator:
                     elif tr.kind == Kind.CAPRETURN:
                         reference_holding, equalisation = tr.params
                         if not is_close_decimal(reference_holding, group2_holding):
-                            result.warnings.append(f'CAPRETURN {tr.date:%d/%m/%Y} {security}: expected Group 2 holding of {group2_holding} {security} but {reference_holding} was specified')
+                            warnings.warn(f'CAPRETURN {tr.date:%d/%m/%Y} {security}: expected Group 2 holding of {group2_holding} {security} but {reference_holding} was specified')
 
                         # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57705
                         # Allocate equalisation payments to Group 2 acquisitions in proportion to the remaining holdings
@@ -698,10 +698,6 @@ def main() -> None:
     for filename in args.filename:
         calculator.parse(open(filename, 'rt'))
     result = calculator.calculate()
-    if result.warnings:
-        for warning in result.warnings:
-            sys.stderr.write(f'warning: {warning}\n')
-        sys.stderr.write('\n')
 
     if args.tax_year is not None:
         try:

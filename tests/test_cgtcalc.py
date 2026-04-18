@@ -16,6 +16,7 @@ import re
 import subprocess
 import sys
 import typing
+import warnings
 
 import pytest
 
@@ -236,11 +237,13 @@ def test_calculate(filename:str) -> None:
             context = nullcontext()
         else:
             context = pytest.raises(raises)
-        with context:
-            calculator.parse(istream)
-            result = calculator.calculate()
-        if raises is not None:
-            return
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always")
+            with context:
+                calculator.parse(istream)
+                result = calculator.calculate()
+            if raises is not None:
+                return
 
     result.write(TextReport(io.StringIO()))
 
@@ -254,7 +257,7 @@ def test_calculate(filename:str) -> None:
         encode_json_result(result, name + '.json')
         return
 
-    assert set(result.warnings) == expected_warnings
+    assert {str(w.message) for w in caught_warnings} == expected_warnings
 
     assert sorted(result.tax_years) == list(result.tax_years)
 
@@ -293,8 +296,10 @@ def test_filter_tax_year(filename:str) -> None:
     _, _, rounding = read_test_annotations(filename)
 
     calculator = Calculator(rounding=rounding)
-    calculator.parse(open(filename, 'rt'))
-    result = calculator.calculate()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        calculator.parse(open(filename, 'rt'))
+        result = calculator.calculate()
 
     for tax_year in result.tax_years:
         filtered_result = copy.copy(result)
@@ -329,8 +334,10 @@ def test_report_html(filename:str) -> None:
     _, _, rounding = read_test_annotations(filename)
 
     calculator = Calculator(rounding=rounding)
-    calculator.parse(open(filename, 'rt'))
-    result = calculator.calculate()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        calculator.parse(open(filename, 'rt'))
+        result = calculator.calculate()
 
     html = io.StringIO()
     result.write(HtmlReport(html))

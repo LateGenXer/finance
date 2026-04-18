@@ -8,6 +8,7 @@
 import datetime
 import io
 import os.path
+import warnings
 
 import streamlit as st
 
@@ -78,10 +79,12 @@ else:
     stream = open(placeholder_filename, 'rt')
 
 calculator = Calculator(rounding=rounding)
-calculator.parse(stream)
-result = calculator.calculate()
-for warning in result.warnings:
-    st.warning(warning, icon="⚠️")
+with warnings.catch_warnings(record=True) as caught_warnings:
+    warnings.simplefilter("always")
+    calculator.parse(stream)
+    result = calculator.calculate()
+    for warning in caught_warnings:
+        st.warning(warning.message, icon="⚠️")
 
 if tax_year != 'All':
     result.filter_tax_year(TaxYear.from_string(tax_year))
