@@ -14,12 +14,29 @@ import time
 import urllib.parse
 import urllib.error
 
+from filelock import FileLock
 
 from download import download
 
 
+def _start_httpbun(host: str, port: int) -> str:
+    container_id = subprocess.check_output(['docker', 'run', '--rm', '--detach', '--publish', f'{host}:{port}:80', 'ghcr.io/sharat87/httpbun'])
+    # https://stackoverflow.com/a/19196218
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tries = 3000  # 30 secs
+    result = sock.connect_ex((host, port))
+    while result != 0 and tries > 0:
+        tries -= 1
+        time.sleep(0.010)
+        result = sock.connect_ex((host, port))
+    sock.close()
+    if result != 0:
+        raise TimeoutError
+    return container_id.decode('ascii').strip()
+
+
 @pytest.fixture(scope="session")
-def httpbun(worker_id):
+def httpbun(tmp_path_factory, worker_id):
     try:
         yield os.environ['HTTPBUN']
     except KeyError:
@@ -32,27 +49,34 @@ def httpbun(worker_id):
         return
 
     host = '127.0.0.1'
+    port = 8080
 
-    port = 8000 + (hash(worker_id) % 100)
+    container_id: str = ''
 
-    container_id = subprocess.check_output(['docker', 'run', '--rm', '--detach', '--publish', f'{host}:{port}:80', 'ghcr.io/sharat87/httpbun'])
+    # https://pytest-xdist.readthedocs.io/en/stable/how-to.html#making-session-scoped-fixtures-execute-only-once
+
+    if worker_id == 'master':
+        container_id = _start_httpbun(host, port)
+        try:
+            yield f'http://{host}:{port}'
+        finally:
+            subprocess.check_call(['docker', 'stop', container_id])
+        return
+
+    root_tmp_dir = tmp_path_factory.getbasetemp().parent
+
+    with FileLock(str(root_tmp_dir / 'httpbun.lock')):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        already_running = sock.connect_ex((host, port)) == 0
+        sock.close()
+        if not already_running:
+            container_id = _start_httpbun(host, port)
 
     try:
-        # https://stackoverflow.com/a/19196218
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        tries = 3000  # 30 secs
-        result = sock.connect_ex((host, port))
-        while result != 0 and tries > 0:
-            tries -= 1
-            time.sleep(0.010)
-            result = sock.connect_ex((host, port))
-        sock.close()
-        if result != 0:
-            raise TimeoutError
-
         yield f'http://{host}:{port}'
     finally:
-        subprocess.check_call(['docker', 'stop', container_id.strip()])
+        if container_id:
+            subprocess.check_call(['docker', 'stop', container_id])
 
 
 def test_static(httpbun:str, tmp_path) -> None:
