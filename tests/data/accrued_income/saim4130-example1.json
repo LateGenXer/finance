@@ -1,0 +1,49 @@
+[
+  {
+    "tax_year": "2005/2006",
+    "entries": [
+      {
+        "interest_date": "2005-09-08",
+        "transaction_date": "2005-09-08",
+        "gilt": "7.750% 2006-09-08 (GB0008916024)",
+        "description": "Bought nominal \u00a3100000",
+        "income": 0.0
+      },
+      {
+        "interest_date": "2006-03-08",
+        "transaction_date": "2006-03-08",
+        "gilt": "7.750% 2006-09-08 (GB0008916024)",
+        "description": "Interest of nominal \u00a3100000",
+        "income": 3875.0
+      }
+    ],
+    "total": 3875.0
+  },
+  {
+    "tax_year": "2006/2007",
+    "entries": [
+      {
+        "interest_date": "2006-09-08",
+        "transaction_date": "2006-03-19",
+        "gilt": "7.750% 2006-09-08 (GB0008916024)",
+        "description": "Sold nominal \u00a3100000",
+        "income": 2107.0
+      },
+      {
+        "interest_date": "2006-09-08",
+        "transaction_date": "2006-03-21",
+        "gilt": "7.750% 2006-09-08 (GB0008916024)",
+        "description": "Bought nominal \u00a350000",
+        "income": -1361.0
+      },
+      {
+        "interest_date": "2006-09-08",
+        "transaction_date": "2006-05-12",
+        "gilt": "7.750% 2006-09-08 (GB0008916024)",
+        "description": "Sold nominal \u00a350000",
+        "income": -131.0
+      }
+    ],
+    "total": 615.0
+  }
+]

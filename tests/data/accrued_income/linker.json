@@ -1,0 +1,95 @@
+[
+  {
+    "tax_year": "2023/2024",
+    "entries": [
+      {
+        "interest_date": "2024-03-22",
+        "transaction_date": "2024-03-22",
+        "gilt": "0.125% IL 2073-03-22 (TG73)",
+        "description": "Bought nominal \u00a31000.00",
+        "income": 0.0
+      }
+    ],
+    "total": 0.0
+  },
+  {
+    "tax_year": "2024/2025",
+    "entries": [
+      {
+        "interest_date": "2024-09-22",
+        "transaction_date": "2024-09-22",
+        "gilt": "0.125% IL 2073-03-22 (TG73)",
+        "description": "Interest of nominal \u00a31000.00",
+        "income": 0.79
+      },
+      {
+        "interest_date": "2025-03-22",
+        "transaction_date": "2025-03-22",
+        "gilt": "0.125% IL 2073-03-22 (TG73)",
+        "description": "Interest of nominal \u00a31000.00",
+        "income": 0.79
+      }
+    ],
+    "total": 1.58
+  },
+  {
+    "tax_year": "2025/2026",
+    "entries": [
+      {
+        "interest_date": "2025-09-22",
+        "transaction_date": "2025-09-22",
+        "gilt": "0.125% IL 2073-03-22 (TG73)",
+        "description": "Interest of nominal \u00a31000.00",
+        "income": 0.82
+      },
+      {
+        "interest_date": "2026-03-22",
+        "transaction_date": "2026-03-22",
+        "gilt": "0.125% IL 2073-03-22 (TG73)",
+        "description": "Interest of nominal \u00a31000.00",
+        "income": 0.83
+      }
+    ],
+    "total": 1.65
+  },
+  {
+    "tax_year": "2026/2027",
+    "entries": [
+      {
+        "interest_date": "2026-09-22",
+        "transaction_date": "2026-09-22",
+        "gilt": "0.125% IL 2073-03-22 (TG73)",
+        "description": "Interest of nominal \u00a31000.00\u2020",
+        "income": 0.84
+      },
+      {
+        "interest_date": "2027-03-22",
+        "transaction_date": "2027-03-22",
+        "gilt": "0.125% IL 2073-03-22 (TG73)",
+        "description": "Interest of nominal \u00a31000.00\u2020",
+        "income": 0.85
+      }
+    ],
+    "total": 1.69
+  },
+  {
+    "tax_year": "2027/2028",
+    "entries": [
+      {
+        "interest_date": "2027-09-22",
+        "transaction_date": "2027-09-22",
+        "gilt": "0.125% IL 2073-03-22 (TG73)",
+        "description": "Interest of nominal \u00a31000.00\u2020",
+        "income": 0.86
+      },
+      {
+        "interest_date": "2028-03-22",
+        "transaction_date": "2028-03-22",
+        "gilt": "0.125% IL 2073-03-22 (TG73)",
+        "description": "Interest of nominal \u00a31000.00\u2020",
+        "income": 0.88
+      }
+    ],
+    "total": 1.74
+  }
+]

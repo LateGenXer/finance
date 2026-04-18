@@ -1,0 +1,83 @@
+[
+  {
+    "tax_year": "2023/2024",
+    "entries": [
+      {
+        "interest_date": "2024-01-31",
+        "transaction_date": "2024-01-02",
+        "gilt": "0.250% 2025-01-31 (TN25)",
+        "description": "Bought nominal \u00a325000.00",
+        "income": -26.32
+      },
+      {
+        "interest_date": "2024-01-31",
+        "transaction_date": "2024-01-31",
+        "gilt": "0.250% 2025-01-31 (TN25)",
+        "description": "Interest of nominal \u00a325000.00",
+        "income": 31.25
+      }
+    ],
+    "total": 4.93
+  },
+  {
+    "tax_year": "2024/2025",
+    "entries": [
+      {
+        "interest_date": "2024-04-22",
+        "transaction_date": "2023-12-07",
+        "gilt": "1.000% 2024-04-22 (TG24)",
+        "description": "Bought nominal \u00a350000.00",
+        "income": -62.84
+      },
+      {
+        "interest_date": "2024-04-22",
+        "transaction_date": "2024-04-22",
+        "gilt": "1.000% 2024-04-22 (TG24)",
+        "description": "Interest of nominal \u00a350000.00",
+        "income": 250.0
+      },
+      {
+        "interest_date": "2024-07-31",
+        "transaction_date": "2024-07-31",
+        "gilt": "0.250% 2025-01-31 (TN25)",
+        "description": "Interest of nominal \u00a325000.00",
+        "income": 31.25
+      },
+      {
+        "interest_date": "2024-12-07",
+        "transaction_date": "2024-07-01",
+        "gilt": "0.625% 2025-06-07 (TG25)",
+        "description": "Bought nominal \u00a310000.00",
+        "income": -4.1
+      },
+      {
+        "interest_date": "2024-12-07",
+        "transaction_date": "2024-12-07",
+        "gilt": "0.625% 2025-06-07 (TG25)",
+        "description": "Interest of nominal \u00a310000.00",
+        "income": 31.25
+      },
+      {
+        "interest_date": "2025-01-31",
+        "transaction_date": "2025-01-31",
+        "gilt": "0.250% 2025-01-31 (TN25)",
+        "description": "Interest of nominal \u00a325000.00",
+        "income": 31.25
+      }
+    ],
+    "total": 276.81
+  },
+  {
+    "tax_year": "2025/2026",
+    "entries": [
+      {
+        "interest_date": "2025-06-07",
+        "transaction_date": "2025-06-07",
+        "gilt": "0.625% 2025-06-07 (TG25)",
+        "description": "Interest of nominal \u00a310000.00",
+        "income": 31.25
+      }
+    ],
+    "total": 31.25
+  }
+]

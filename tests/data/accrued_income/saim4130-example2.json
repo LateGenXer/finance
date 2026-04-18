@@ -1,0 +1,91 @@
+[
+  {
+    "tax_year": "2005/2006",
+    "entries": [
+      {
+        "interest_date": "2005-06-07",
+        "transaction_date": "2005-03-21",
+        "gilt": "7.500% 2006-12-07 (GB0009998302)",
+        "description": "Bought nominal \u00a3100000",
+        "income": -1395.0
+      },
+      {
+        "interest_date": "2005-06-07",
+        "transaction_date": "2005-05-27",
+        "gilt": "7.500% 2006-12-07 (GB0009998302)",
+        "description": "Bought nominal \u00a350000",
+        "income": 82.0
+      },
+      {
+        "interest_date": "2005-06-07",
+        "transaction_date": "2005-06-07",
+        "gilt": "7.500% 2006-12-07 (GB0009998302)",
+        "description": "Interest of nominal \u00a3100000",
+        "income": 3750.0
+      },
+      {
+        "interest_date": "2005-12-07",
+        "transaction_date": "2005-09-15",
+        "gilt": "7.500% 2006-12-07 (GB0009998302)",
+        "description": "Sold nominal \u00a320000",
+        "income": 271.0
+      },
+      {
+        "interest_date": "2005-12-07",
+        "transaction_date": "2005-12-07",
+        "gilt": "7.500% 2006-12-07 (GB0009998302)",
+        "description": "Interest of nominal \u00a3130000",
+        "income": 4875.0
+      },
+      {
+        "interest_date": "2006-03-07",
+        "transaction_date": "2005-09-22",
+        "gilt": "4.500% 2007-03-07 (GB0034040740)",
+        "description": "Bought nominal \u00a350000",
+        "income": -778.0
+      },
+      {
+        "interest_date": "2006-03-07",
+        "transaction_date": "2006-03-07",
+        "gilt": "4.500% 2007-03-07 (GB0034040740)",
+        "description": "Interest of nominal \u00a350000",
+        "income": 1125.0
+      }
+    ],
+    "total": 7930.0
+  },
+  {
+    "tax_year": "2006/2007",
+    "entries": [
+      {
+        "interest_date": "2006-06-07",
+        "transaction_date": "2006-06-07",
+        "gilt": "7.500% 2006-12-07 (GB0009998302)",
+        "description": "Interest of nominal \u00a3130000",
+        "income": 4875.0
+      },
+      {
+        "interest_date": "2006-09-07",
+        "transaction_date": "2006-09-07",
+        "gilt": "4.500% 2007-03-07 (GB0034040740)",
+        "description": "Interest of nominal \u00a350000",
+        "income": 1125.0
+      },
+      {
+        "interest_date": "2006-12-07",
+        "transaction_date": "2006-12-07",
+        "gilt": "7.500% 2006-12-07 (GB0009998302)",
+        "description": "Interest of nominal \u00a3130000",
+        "income": 4875.0
+      },
+      {
+        "interest_date": "2007-03-07",
+        "transaction_date": "2007-03-07",
+        "gilt": "4.500% 2007-03-07 (GB0034040740)",
+        "description": "Interest of nominal \u00a350000",
+        "income": 1125.0
+      }
+    ],
+    "total": 12000.0
+  }
+]
