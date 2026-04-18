@@ -15,14 +15,11 @@ from __future__ import annotations
 import logging
 import multiprocessing.dummy
 import operator
-import re
 import sys
 
 from math import exp, factorial, lgamma, log
 
 import numpy as np
-import requests
-import bs4
 
 
 logger = logging.getLogger('nsandi')
@@ -64,73 +61,74 @@ class Calculator:
 
         self.desc = desc
 
+    # https://www.nsandi.com/get-to-know-us/monthly-prize-allocation
+    @staticmethod
+    def _prizes(odds:float, fund_rate:float, total_prizes:float) -> list[tuple[int, int]]:
+        fund_rate /= 12.0
+
+        total = total_prizes / fund_rate
+
+        fund = total * fund_rate
+
+        total_prizes = round(total * odds)
+
+        prizes = []
+
+        # High value band
+        higher_value_band = fund * .10
+        prizes += [
+            ( 1000000, 2 )
+        ]
+        higher_value_band -= 2*1000000
+        x = higher_value_band / (5*100000)
+        prizes += [
+            (  100000, round(    x ) ),
+            (   50000, round(  2*x ) ),
+            (   25000, round(  4*x ) ),
+            (   10000, round( 10*x ) ),
+            (    5000, round( 20*x ) ),
+        ]
+
+        # Mediuam value band
+        medium_value_band = fund * .10
+        x = medium_value_band / (1000 + 3*500)
+        prizes += [
+            (    1000, round(   x ) ),
+            (     500, round( 3*x ) ),
+        ]
+
+        # Low value band
+        low_value_band = fund * .80
+
+        partial_prizes = sum([volume for _, volume in prizes])
+        missing_prizes = total_prizes - partial_prizes
+
+        # x: £100 and £50 volume
+        # y: £25 volume
+
+        # 2*x + y = missing_prizes
+        # 150/25*x + 25/25*y = low_value_band/25
+
+        x = round((low_value_band / 25 - missing_prizes) / (150/25 - 2))
+        y = missing_prizes - 2 *x
+
+        prizes += [
+            (     100, x ),
+            (      50, x ),
+            (      25, y ),
+        ]
+
+        return prizes
+
     # Scrape prizes and odds from nsandi.com
     @classmethod
     def from_latest(cls) -> Calculator:
         # https://nsandi-corporate.com/news-research/news/nsi-reduces-prize-fund-rate-and-lengthens-odds-premium-bonds
+        fund_rate = 3.3e-2
         odds = 1/23000
-        prizes = [
-            # :Tabularize /[0-9]\+/l2r0
-            ( 1000000,       2 ),
-            (  100000,      71 ),
-            (   50000,     143 ),
-            (   25000,     284 ),
-            (   10000,     712 ),
-            (    5000,    1424 ),
-            (    1000,   15035 ),
-            (     500,   45105 ),
-            (     100, 1537125 ),
-            (      50, 1537125 ),
-            (      25, 2806003 ),
-        ]
+        total_prizes = 375515275
+        prizes = cls._prizes(odds, fund_rate, total_prizes)
         desc = "April 2026 (estimate)"
-        return cls(odds, prizes, desc)
-
-        session = requests.Session()
-
-        r = session.get('https://www.nsandi.com/get-to-know-us/monthly-prize-allocation')
-        assert r.ok
-
-        soup = bs4.BeautifulSoup(r.text, features='html.parser')
-
-        table = soup.find('table')
-        _ = table.find('thead')
-        table_row = table.find('tr')
-        cells = table_row.find_all('th')
-        head = [cell.text for cell in cells]
-        _, _, _, desc = head
-
-        logger.info(f'using prizes for {desc}')
-
-        table_body = table.find('tbody')
-
-        prizes = []
-        for table_row in table_body.find_all('tr'):
-            cells = table_row.find_all('td')
-            fields = [cell.text for cell in cells]
-
-            band, value, _, draw = fields
-
-            if value.startswith('£'):
-                value = value.replace('£', '')
-                value = value.replace(' million', '000000')
-                value = value.replace(',', '')
-                draw = draw.replace(',', '')
-
-                prizes.append((int(value), int(draw)))
-
-        assert(len(prizes) == 11)
-
-        r = session.get('https://www.nsandi.com/products/premium-bonds')
-        assert r.ok
-        soup = bs4.BeautifulSoup(r.text, features='html.parser')
-        dl = soup.find('dl', class_='product-definition')
-        odds_re = re.compile("([0-9,]+) to 1 for every £1 Bond")
-        text = dl.find(string=lambda text: not isinstance(text, bs4.Comment) and odds_re.search(text))
-        mo = odds_re.search(text)
-        inv_odds = int(mo.group(1).replace(',', ''))
-        odds = 1/inv_odds
-
         return cls(odds, prizes, desc)
 
     def mean(self) -> float:
