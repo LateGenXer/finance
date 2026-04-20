@@ -71,25 +71,5 @@
       }
     ],
     "total": 1.69
-  },
-  {
-    "tax_year": "2027/2028",
-    "entries": [
-      {
-        "interest_date": "2027-09-22",
-        "transaction_date": "2027-09-22",
-        "gilt": "0.125% IL 2073-03-22 (TG73)",
-        "description": "Interest of nominal \u00a31000.00\u2020",
-        "income": 0.86
-      },
-      {
-        "interest_date": "2028-03-22",
-        "transaction_date": "2028-03-22",
-        "gilt": "0.125% IL 2073-03-22 (TG73)",
-        "description": "Interest of nominal \u00a31000.00\u2020",
-        "income": 0.88
-      }
-    ],
-    "total": 1.74
   }
 ]

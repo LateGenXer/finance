@@ -74,11 +74,12 @@ class Calculator:
         self.events: list[Event] = []
 
         if tax_year_end is None:
+            # Advance to next year a month before
             today = datetime.datetime.now(datetime.timezone.utc).date()
-            if today < datetime.date(today.year, 4, 6):
-                tax_year_end = datetime.date(today.year + 1, 4, 5)
+            if today < datetime.date(today.year, 3, 6):
+                tax_year_end = datetime.date(today.year    , 4, 5)
             else:
-                tax_year_end = datetime.date(today.year + 2, 4, 5)
+                tax_year_end = datetime.date(today.year + 1, 4, 5)
         assert tax_year_end.month == 4
         assert tax_year_end.day == 5
         self.tax_year_end = tax_year_end
