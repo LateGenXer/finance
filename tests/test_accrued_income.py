@@ -87,7 +87,17 @@ def parse_json_result(filename: str) -> dict:
 
 @pytest.mark.parametrize('filename', collect_filenames())
 def test_calculate(filename: str) -> None:
-    calculator = Calculator()
+    name, _ = os.path.splitext(filename)
+    json_filename = name + '.json'
+
+    if os.path.isfile(json_filename):
+        expected_result = parse_json_result(json_filename)
+        last_tax_year = max(expected_result.keys())
+        tax_year_end = last_tax_year.end_date()
+    else:
+        tax_year_end = None
+
+    calculator = Calculator(tax_year_end=tax_year_end)
     with warnings.catch_warnings(record=True):
         with open(filename, 'rt') as istream:
             calculator.parse(istream)
@@ -96,14 +106,9 @@ def test_calculate(filename: str) -> None:
     report = TextReport(io.StringIO())
     calculator.report(report)
 
-    name, _ = os.path.splitext(filename)
-    json_filename = name + '.json'
-
-    if not os.path.isfile(json_filename):
+    if tax_year_end is None:
         encode_json_result(calculator, json_filename)
         return
-
-    expected_result = parse_json_result(json_filename)
 
     assert set(calculator.yearly_acrued_income.keys()) == set(expected_result.keys())
 
