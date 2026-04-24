@@ -362,15 +362,15 @@ class Calculator:
     def parse(self, stream:typing.TextIO) -> None:
         line_no = 0
         for line in stream:
-            try:
-                line_no += 1
-                line = line.rstrip()
-                if line.startswith('#'):
-                    continue
-                row = line.split()
-                if not row:
-                    continue
+            line_no += 1
+            line = line.rstrip()
+            if line.startswith('#'):
+                continue
+            row = line.split()
+            if not row:
+                continue
 
+            try:
                 trade, date_str, security = row[:3]
                 params = [Decimal(field) for field in row[3:]]
 
@@ -421,110 +421,109 @@ class Calculator:
 
                 tr = Trade(date, kind, params)
 
-                trades = self.securities.setdefault(security, [])
-                trades.append(tr)
-
             except BaseException:
                 sys.stderr.write(f"Exception processing line {line_no}: {line}\n")
                 raise
+
+            trades = self.securities.setdefault(security, [])
+            trades.append(tr)
 
     def calculate(self) -> Result:
         result = Result()
 
         for security, trades in self.securities.items():
-            try:
-                # Sort
-                trades.sort(key=operator.attrgetter("date", "kind"))
+            # Sort
+            trades.sort(key=operator.attrgetter("date", "kind"))
 
-                # Merge same-day buys/sells, as per
-                # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg51560#IDATX33F
-                i = 0
-                while i + 1 < len(trades):
-                    tr0 = trades[i + 0]
-                    tr1 = trades[i + 1]
-                    if tr0.date == tr1.date and tr0.kind == tr1.kind and tr0.kind in (Kind.BUY, Kind.SELL):
-                        shares0, price0, charges0 = tr0.params
-                        shares1, price1, charges1 = tr1.params
-                        shares = shares0 + shares1
-                        price = (shares0*price0 + shares1*price1) / shares
-                        charges = charges0 + charges1
-                        params0 = [shares, price, charges]
-                        trades[i] = Trade(tr0.date, tr0.kind, params0)
-                        trades.pop(i + 1)
-                    else:
-                        i += 1
+            # Merge same-day buys/sells, as per
+            # https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg51560#IDATX33F
+            i = 0
+            while i + 1 < len(trades):
+                tr0 = trades[i + 0]
+                tr1 = trades[i + 1]
+                if tr0.date == tr1.date and tr0.kind == tr1.kind and tr0.kind in (Kind.BUY, Kind.SELL):
+                    shares0, price0, charges0 = tr0.params
+                    shares1, price1, charges1 = tr1.params
+                    shares = shares0 + shares1
+                    price = (shares0*price0 + shares1*price1) / shares
+                    charges = charges0 + charges1
+                    params0 = [shares, price, charges]
+                    trades[i] = Trade(tr0.date, tr0.kind, params0)
+                    trades.pop(i + 1)
+                else:
+                    i += 1
 
-                acquisitions = {}
-                disposals = {}
+            acquisitions = {}
+            disposals = {}
 
-                for tr in trades:
-                    if tr.kind == Kind.BUY:
-                        shares, price, charges = tr.params
-                        # XXX: We could track acquisition charges separately (and
-                        # round it separately) but coalescing into a single figure
-                        # greatly simplifies things
-                        cost = shares*price + charges
-                        cost = dround(cost, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
-                        cost = dround(cost, self.places, ROUND_CEILING)
-                        acquisition = Acquisition(cost, shares, shares)
-                        assert tr.date not in acquisitions
-                        acquisitions[tr.date] = acquisition
-                    if tr.kind == Kind.SELL:
-                        shares, price, charges = tr.params
-                        proceeds = shares*price
-                        proceeds = dround(proceeds, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
-                        proceeds = dround(proceeds, self.places, ROUND_FLOOR)
-                        charges = dround(charges, self.places, ROUND_CEILING)
-                        disposal = Disposal(proceeds, charges, shares, shares)
-                        assert tr.date not in disposals
-                        disposals[tr.date] = disposal
+            for tr in trades:
+                if tr.kind == Kind.BUY:
+                    shares, price, charges = tr.params
+                    # XXX: We could track acquisition charges separately (and
+                    # round it separately) but coalescing into a single figure
+                    # greatly simplifies things
+                    cost = shares*price + charges
+                    cost = dround(cost, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
+                    cost = dround(cost, self.places, ROUND_CEILING)
+                    acquisition = Acquisition(cost, shares, shares)
+                    assert tr.date not in acquisitions
+                    acquisitions[tr.date] = acquisition
+                if tr.kind == Kind.SELL:
+                    shares, price, charges = tr.params
+                    proceeds = shares*price
+                    proceeds = dround(proceeds, 2, ROUND_HALF_EVEN) # Compensate rounding in unit price
+                    proceeds = dround(proceeds, self.places, ROUND_FLOOR)
+                    charges = dround(charges, self.places, ROUND_CEILING)
+                    disposal = Disposal(proceeds, charges, shares, shares)
+                    assert tr.date not in disposals
+                    disposals[tr.date] = disposal
 
-                # Same day rule
-                for date, disposal in disposals.items():
-                    try:
-                        acquisition = acquisitions[date]
-                    except KeyError:
+            # Same day rule
+            for date, disposal in disposals.items():
+                try:
+                    acquisition = acquisitions[date]
+                except KeyError:
+                    continue
+                identify(disposal, acquisition, Identification.SAME_DAY, date)
+
+            # Bed and Breakfast rule
+            for i in range(len(trades)):
+                tr = trades[i]
+                if tr.kind != Kind.SELL:
+                    continue
+                disposal = disposals[tr.date]
+                if not disposal.unidentified:
+                    continue
+                j = i + 1
+                numerator = Decimal(1)
+                denominator = Decimal(1)
+                for j in range(i, len(trades)):
+                    tr2 = trades[j]
+                    if (tr2.date - tr.date).days > 30:
+                        break
+                    if tr2.kind == Kind.RESTRUCTURING:
+                        n, d = tr2.params
+                        numerator *= n
+                        denominator *= d
+                    if tr2.kind != Kind.BUY:
                         continue
-                    identify(disposal, acquisition, Identification.SAME_DAY, date)
-
-                # Bed and Breakfast rule
-                for i in range(len(trades)):
-                    tr = trades[i]
-                    if tr.kind != Kind.SELL:
+                    acquisition = acquisitions[tr2.date]
+                    if not acquisition.unidentified:
                         continue
-                    disposal = disposals[tr.date]
+                    identify(disposal, acquisition, Identification.BED_AND_BREAKFAST, tr2.date, numerator, denominator)
                     if not disposal.unidentified:
-                        continue
-                    j = i + 1
-                    numerator = Decimal(1)
-                    denominator = Decimal(1)
-                    for j in range(i, len(trades)):
-                        tr2 = trades[j]
-                        if (tr2.date - tr.date).days > 30:
-                            break
-                        if tr2.kind == Kind.RESTRUCTURING:
-                            n, d = tr2.params
-                            numerator *= n
-                            denominator *= d
-                        if tr2.kind != Kind.BUY:
-                            continue
-                        acquisition = acquisitions[tr2.date]
-                        if not acquisition.unidentified:
-                            continue
-                        identify(disposal, acquisition, Identification.BED_AND_BREAKFAST, tr2.date, numerator, denominator)
-                        if not disposal.unidentified:
-                            break
+                        break
 
-                pool_updates: list[PoolUpdate] = []
+            pool_updates: list[PoolUpdate] = []
 
-                # Walk trades chronologically:
-                # - pooling unidentified shares into a Section 104 pool
-                # - tracking equalisation group 1 and group 2 shares and acquisitions
-                pool = Acquisition(Decimal(0), Decimal(0), Decimal(0))
-                group1_holding = Decimal(0)
-                group2_holding = Decimal(0)
-                for tr in trades:
-
+            # Walk trades chronologically:
+            # - pooling unidentified shares into a Section 104 pool
+            # - tracking equalisation group 1 and group 2 shares and acquisitions
+            pool = Acquisition(Decimal(0), Decimal(0), Decimal(0))
+            group1_holding = Decimal(0)
+            group2_holding = Decimal(0)
+            for tr in trades:
+                try:
                     if tr.kind == Kind.BUY:
                         acquisition = acquisitions[tr.date]
                         if acquisition.unidentified:
@@ -675,11 +674,12 @@ class Calculator:
                     else:  # pragma: no cover
                         raise NotImplementedError(tr.kind)
 
-                if pool_updates:
-                    result.section104_tables[security] = pool_updates
-            except BaseException:
-                sys.stderr.write(f"Exception calculating trade: {tr}\n")
-                raise
+                except BaseException:
+                    sys.stderr.write(f"Exception calculating trade: {tr}\n")
+                    raise
+
+            if pool_updates:
+                result.section104_tables[security] = pool_updates
 
         result.finalize()
 
