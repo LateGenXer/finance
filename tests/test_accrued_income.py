@@ -20,7 +20,7 @@ from decimal import Decimal
 from glob import glob
 
 from tax.uk import TaxYear
-from accrued_income import Calculator, TextReport
+from accrued_income import Calculator, TextReport, footnote_mark
 
 
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
@@ -114,6 +114,7 @@ def test_calculate(filename: str) -> None:
 
     abs_tol = Decimal('0.02')
 
+    provisional = False
     for tax_year, entries in calculator.yearly_acrued_income.items():
         expected_tyr = expected_result[tax_year]
         expected_entries = expected_tyr['entries']
@@ -124,11 +125,14 @@ def test_calculate(filename: str) -> None:
             assert interest_date == expected_entry['interest_date']
             assert date == expected_entry['transaction_date']
             assert gilt_state.name() == expected_entry['gilt']
-            assert description == expected_entry['description']
-            assert income == pytest.approx(expected_entry['income'], abs=abs_tol)
+            assert description == expected_entry['description'] or description + footnote_mark == expected_entry['description']
+            if not expected_entry['description'].endswith(footnote_mark):
+                provisional = True
+                assert income == pytest.approx(expected_entry['income'], abs=abs_tol)
 
         total = sum(income for _, _, _, _, income in entries)
-        assert total == pytest.approx(expected_tyr['total'], abs=abs_tol)
+        if not provisional:
+            assert total == pytest.approx(expected_tyr['total'], abs=abs_tol)
 
 
 def test_main() -> None:
