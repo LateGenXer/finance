@@ -1,5 +1,6 @@
 streamlit ~= 1.53.1
 matplotlib ~= 3.9
+pandas ~= 2.3
 scipy ~= 1.16
 xlrd ~= 2.0
 xlsxwriter ~= 3.2
