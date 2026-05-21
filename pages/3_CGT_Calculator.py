@@ -95,7 +95,7 @@ with st.container(border=True):
         html = io.StringIO()
         report = HtmlReport(html)
         result.write(report)
-        st.components.v1.html(html.getvalue(), height=768, scrolling=True)
+        st.iframe(html.getvalue(), height=768)
     elif format_ == 'Text':
         text = io.StringIO()
         report = TextReport(text)
@@ -117,7 +117,7 @@ with st.container(border=True):
         #st.markdown(h, unsafe_allow_html=True)
 
         h = report.as_html()
-        st.components.v1.html(h, height=768, scrolling=True)
+        st.iframe(h, height=768)
 
 
 common.analytics_html()
