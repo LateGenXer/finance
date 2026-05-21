@@ -8,7 +8,6 @@
 import math
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 import environ
 
@@ -63,7 +62,7 @@ def analytics_html():
         '</div>'
     )
 
-    components.html(html)
+    st.iframe(html)
 
 
 @st.cache_data(ttl=1*60*60, show_spinner='Getting latest RPI data...')
