@@ -62,7 +62,7 @@ def analytics_html():
         '</div>'
     )
 
-    st.iframe(html)
+    st.html(html, unsafe_allow_javascript=True)
 
 
 @st.cache_data(ttl=1*60*60, show_spinner='Getting latest RPI data...')
