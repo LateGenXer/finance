@@ -239,6 +239,12 @@ class Calculator:
             report.write_paragraph(f'{footnote_mark} Provisional figures, assuming a RPI inflation rate of {gilts.IndexLinkedGilt.inflation_rate:.1%} from {last_rpi_date.day} {last_rpi_date:%B} {last_rpi_date.year}.')
 
 
+def showwarning(message:Warning|str, category:type[Warning], filename:str, lineno:int, file:typing.TextIO|None=None, line:str|None=None) -> None:
+    if file is None:
+        file = sys.stderr
+    file.write(f'warning: {category.__name__}: {message}\n')
+
+
 def main() -> None:
     logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s %(message)s', level=logging.INFO)
 
@@ -264,4 +270,5 @@ def main() -> None:
 
 
 if __name__ == '__main__':
+    warnings.showwarning = showwarning
     main()
