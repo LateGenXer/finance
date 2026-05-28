@@ -101,7 +101,6 @@ class Calculator:
                 isin = tidm_to_isin[security]
 
             units = Decimal(entry['Units'])
-            accrued_interest = round(Decimal(entry['AccruedInterest']), 2)
 
             try:
                 gilt_state = self.gilt_states[isin]
@@ -118,11 +117,17 @@ class Calculator:
             expected_accrued_interest = round(abs(units) * Decimal(gilt.accrued_interest(settlement_date)) * Decimal('.01'), 2)
 
             _, next_coupon_date = gilt.prev_next_coupon_date(settlement_date)
-            #print(settlement_date.strftime('%a %d %b %Y'), isin, gilt.short_name(), units, accrued_interest, expected_accrued_interest)
-            if abs(accrued_interest - expected_accrued_interest) > Decimal(.01):
-                xd_date = gilt.ex_dividend_date(next_coupon_date)
-                div = 'cum div' if settlement_date <= xd_date else 'ex div'
-                warnings.warn(f'{settlement_date}, {units} x {gilt.short_name()}, {div}: expected accrued interest of {expected_accrued_interest}, got {accrued_interest}\n')
+            xd_date = gilt.ex_dividend_date(next_coupon_date)
+            div = 'cum div' if settlement_date <= xd_date else 'ex div'
+
+            accrued_interest_str = entry['AccruedInterest']
+            if accrued_interest_str:
+                accrued_interest = round(Decimal(accrued_interest_str), 2)
+                if abs(accrued_interest - expected_accrued_interest) > Decimal(.01):
+                    warnings.warn(f'{settlement_date}, {units} x {gilt.short_name()}, {div}: expected accrued interest of {expected_accrued_interest}, got {accrued_interest}\n')
+            else:
+                accrued_interest = round(expected_accrued_interest, 2)
+                warnings.warn(f'{settlement_date}, {units} x {gilt.short_name()}, {div}: using calculated accrued_interest of {accrued_interest}\n')
 
             # Shift holding adjustments by 7 business days to account for ex-dividend period
             cum_div_date = settlement_date
