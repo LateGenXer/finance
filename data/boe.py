@@ -75,6 +75,9 @@ def load() -> None:
     download(url, filename, content_type='application/x-zip-compressed', ttl=6*3600)
     archive = zipfile.ZipFile(filename)
 
+    # XXX: Two nested Zip files from 2026-06-23
+    archive = zipfile.ZipFile(archive.open('Latest Yield Curve data (current month).zip', 'r'))
+
     dfs = []
 
     for measure, name in _measures.items():
