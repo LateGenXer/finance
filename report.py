@@ -6,6 +6,7 @@
 
 
 import base64
+import decimal
 import html
 import io
 import logging
@@ -38,6 +39,8 @@ class Report(ABC):
     def format(field:Any) -> str:
         if field is None or field != field:
             return ''
+        elif isinstance(field, (float, decimal.Decimal)):
+            return f'{field:f}'
         else:
             return str(field)
 
