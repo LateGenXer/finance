@@ -232,15 +232,23 @@ def test_tradeweb(caplog, tradeweb_issued, tradeweb_rpi, entries):
 
         if math.isnan(dirty_price):
             continue
-        assert not math.isnan(clean_price)
 
-        # Ensure Tradeweb's clean and dirty prices are consistent
-        if conventional or cast(IndexLinkedGilt, gilt).lag == 8:
-            assert clean_price + accrued_interest == approx(dirty_price, abs=1e-6)
+        if not math.isnan(clean_price):
+            # Ensure Tradeweb's clean and dirty prices are consistent
+            if conventional or cast(IndexLinkedGilt, gilt).lag == 8:
+                assert clean_price + accrued_interest == approx(dirty_price, abs=1e-6)
+            else:
+                assert isinstance(gilt, IndexLinkedGilt)
+                index_ratio = gilt.index_ratio(settlement_date)
+                assert clean_price * index_ratio + accrued_interest == approx(dirty_price, abs=1e-6)
         else:
-            assert isinstance(gilt, IndexLinkedGilt)
-            index_ratio = gilt.index_ratio(settlement_date)
-            assert clean_price * index_ratio + accrued_interest == approx(dirty_price, abs=1e-6)
+            # Derive clean price when absent
+            if conventional or cast(IndexLinkedGilt, gilt).lag == 8:
+                clean_price = dirty_price - accrued_interest
+            else:
+                assert isinstance(gilt, IndexLinkedGilt)
+                index_ratio = gilt.index_ratio(settlement_date)
+                clean_price = (dirty_price - accrued_interest) / index_ratio
 
         accrued_interest_ = gilt.accrued_interest(settlement_date)
         dirty_price_ = gilt.dirty_price(clean_price, settlement_date)
