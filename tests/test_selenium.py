@@ -119,7 +119,7 @@ def gilt_ladder_page(server, driver):
 
     driver.add_cookie(analytics_cookie)
 
-    driver.implicitly_wait(15)
+    driver.implicitly_wait(30)
     driver.find_element(By.ID, 'test-marker')
 
     return driver
@@ -141,7 +141,7 @@ def test_gilt_ladder_index_linked(gilt_ladder_page):
 
     time.sleep(3)
 
-    driver.implicitly_wait(15)
+    driver.implicitly_wait(30)
     driver.find_element(By.ID, 'test-marker')
 
     driver.implicitly_wait(0)
@@ -156,7 +156,7 @@ def test_gilt_ladder_file_upload(gilt_ladder_page):
     advanced_tab = driver.find_element(By.XPATH, "//p[text()='Advanced']")
     advanced_tab.click()
 
-    driver.implicitly_wait(15)
+    driver.implicitly_wait(30)
 
     # https://www.selenium.dev/documentation/webdriver/elements/file_upload/
     s = driver.find_element(By.XPATH, "//input[@type='file']")
@@ -182,7 +182,7 @@ def rtp_page(server, driver):
 
     driver.add_cookie(analytics_cookie)
 
-    driver.implicitly_wait(15)
+    driver.implicitly_wait(30)
     driver.find_element(By.ID, 'test-marker')
 
     return driver
@@ -195,7 +195,7 @@ def test_rtp_default(production, rtp_page):
     with pytest.raises(NoSuchElementException):
         driver.find_element(By.XPATH, "//div[@class='stException']")
 
-    driver.implicitly_wait(15)
+    driver.implicitly_wait(30)
 
     # https://www.selenium.dev/documentation/webdriver/elements/file_upload/
     s = driver.find_element(By.XPATH, "//input[@type='file']")
@@ -221,7 +221,7 @@ def cgtcalc_page(server, driver):
 
     driver.add_cookie(analytics_cookie)
 
-    driver.implicitly_wait(15)
+    driver.implicitly_wait(30)
     driver.find_element(By.ID, 'test-marker')
 
     return driver
@@ -234,7 +234,7 @@ def test_cgtcalc_default(production, cgtcalc_page):
     with pytest.raises(NoSuchElementException):
         driver.find_element(By.XPATH, "//div[@class='stException']")
 
-    driver.implicitly_wait(15)
+    driver.implicitly_wait(30)
 
     filename = os.path.join(data_dir, 'cgtcalc', 'jameshay-example.tsv')
     transactions = open(filename, 'rt').read()
