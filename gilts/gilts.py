@@ -393,7 +393,7 @@ class Issued:
 
         self.rpi_series = rpi_series
 
-        self.all = []
+        self._all = []
         for entry in entries:
             name = entry['INSTRUMENT_NAME']
             kwargs = {
@@ -432,11 +432,11 @@ class Issued:
                     _, next_coupon_date = gilt.prev_next_coupon_date(settlement_date)
                     assert gilt.ex_dividend_date(next_coupon_date) == current_xd_date
 
-            self.all.append(gilt)
+            self._all.append(gilt)
 
-        self.all.sort(key=operator.attrgetter('maturity'))
+        self._all.sort(key=operator.attrgetter('maturity'))
 
-        self.isin = {gilt.isin: gilt for gilt in self.all}
+        self.isin = {gilt.isin: gilt for gilt in self._all}
 
     @staticmethod
     def _download():
@@ -504,7 +504,7 @@ class Issued:
         return coupon
 
     def filter(self, index_linked:bool|None=None, settlement_date=None):
-        for g in self.all:
+        for g in self._all:
             # Per https://www.dmo.gov.uk/responsibilities/gilt-market/about-gilts/ :
             # "If an investor purchases a gilt for settlement on the final day
             # of the ex-dividend period, then they will be entitled to both the
