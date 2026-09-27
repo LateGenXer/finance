@@ -35,7 +35,7 @@ from tax.uk import TaxYear
 
 
 def shares_held_at(pool_updates: list[PoolUpdate], date: datetime.date) -> Decimal:
-    '''Return Section 104 pool shares on a given date (last update on or before date).'''
+    '''Return Section 104 pool shares at the end of a given date (last update on or before date).'''
     shares = Decimal(0)
     for update in pool_updates:
         if update.date > date:
@@ -75,14 +75,11 @@ def calculate(trades_streams: Iterable[TextIO], eri_stream: TextIO, rate_lookup:
         calculator.parse(trades_stream)
     result = calculator.calculate()
 
-    pool_updates: list[PoolUpdate] | None
-    security_map: dict[str, list[PoolUpdate]] = {}
-    for security, pool_updates in result.section104_tables.items():
-        try:
-            _, security = security.split(':')
-        except ValueError:
-            pass
-        security_map[security] = pool_updates
+    # Map bare TIDM/ISIN (without exchange prefix) to the CGT calculator security
+    security_map: dict[str, str] = {}
+    for key in result.section104_tables:
+        _, _, name = key.rpartition(':')
+        security_map[name] = key
 
     entries:list[ERI] = []
 
@@ -92,16 +89,28 @@ def calculate(trades_streams: Iterable[TextIO], eri_stream: TextIO, rate_lookup:
 
         tidm = row['TIDM']
         isin = row['ISIN']
-        entry.security = tidm or isin
 
         entry.report_end_date = datetime.datetime.strptime(row['ReportEndDate'], '%d/%m/%Y').date()
         entry.currency = row['Currency']
         entry.eri_per_share = Decimal(row['ERI'])
         entry.distribution_date = datetime.datetime.strptime(row['DistributionDate'], '%d/%m/%Y').date()
-        pool_updates = security_map.get(tidm) or security_map.get(isin)
-        if pool_updates is None:
+        security = security_map.get(tidm) or security_map.get(isin)
+        if security is None:
             continue
 
+        # Use the CGT calculator security, so that DIVIDEND lines match the trades
+        entry.security = security
+        pool_updates = result.section104_tables[security]
+
+        # ERI is due on the holding at the end of the reporting period
+        # (Offshore Funds (Tax) Regulations 2009, reg. 94(3)), i.e., including
+        # any trades on its last day.
+        #
+        # A disposal identified under the 30-day rule (TCGA 1992, s.106A) with
+        # an acquisition in the next reporting period is ignored, and the
+        # interest treated as still held at the end of the period (reg. 94(3A)).
+        # The Section 104 pool already reflects this, since such disposals are
+        # matched against the later acquisition rather than the pool.
         entry.shares = shares_held_at(pool_updates, entry.report_end_date)
         if not entry.shares:
             continue
@@ -142,7 +151,15 @@ def write_report(entries: list[ERI], stream: TextIO, dividends: bool = False) ->
 
     if dividends and entries:
         for entry in entries:
-            stream.write(f'DIVIDEND\t{entry.report_end_date:%d/%m/%Y}\t{entry.security}\t{entry.shares}\t{entry.eri_gbp}\n')
+            # cgtcalc checks a DIVIDEND against the holding at the start of its
+            # date (i.e., the ex-dividend date semantics), before any same-day
+            # trades, whereas ERI is due on the holding at the end of the
+            # reporting period (Offshore Funds (Tax) Regulations 2009, reg. 94(3)),
+            # after any trades on its last day.  Therefore date the DIVIDEND on
+            # the day after the reporting period end, which is effectively the
+            # ex-dividend date, so both agree on the holding.
+            ex_date = entry.report_end_date + datetime.timedelta(days=1)
+            stream.write(f'DIVIDEND\t{ex_date:%d/%m/%Y}\t{entry.security}\t{entry.shares}\t{entry.eri_gbp}\n')
 
 
 def main() -> None:

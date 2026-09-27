@@ -19,7 +19,7 @@ from decimal import Decimal
 
 import eri
 
-from cgtcalc import Calculator, PoolUpdate
+from cgtcalc import Calculator, PoolUpdate, Result
 
 
 def pool_update(date:datetime.date, pool_shares:int) -> PoolUpdate:
@@ -120,8 +120,8 @@ def test_calculate() -> None:
     # Securities not held, or not held on the report end date, are skipped;
     # entries are sorted by distribution date
     assert [(entry.security, entry.report_end_date, entry.shares, entry.rate, entry.eri_gbp) for entry in entries] == [
-        # 200 * 0.05 GBP, matched despite the exchange prefix
-        ('VUSA', datetime.date(2022, 6, 30), Decimal(200), Decimal(1), Decimal('10.00')),
+        # 200 * 0.05 GBP, matched despite the exchange prefix, which is preserved
+        ('LSE:VUSA', datetime.date(2022, 6, 30), Decimal(200), Decimal(1), Decimal('10.00')),
         # 100 * 0.10 / 1.25 USD
         ('VWRL', datetime.date(2022, 6, 30), Decimal(100), Decimal('1.25'), Decimal('8.00')),
         # 40 * 0.30 / 1.20 EUR, matched by ISIN
@@ -153,26 +153,73 @@ def test_write_report() -> None:
     assert 'DIVIDEND' not in out
 
 
+def dividend_lines(out:str) -> list[str]:
+    return [line for line in out.splitlines() if line.startswith('DIVIDEND')]
+
+
+def recalculate(trades:str, lines:list[str]) -> Result:
+    '''Feed DIVIDEND lines back into the CGT calculator, failing on any holding mismatch warning.'''
+    calculator = Calculator()
+    calculator.parse(io.StringIO(trades + '\n'.join(lines) + '\n'))
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        return calculator.calculate()
+
+
 def test_write_report_dividends() -> None:
     out = write_report(calculate(trades, eri_csv), dividends=True)
 
-    lines = [line for line in out.splitlines() if line.startswith('DIVIDEND')]
+    # DIVIDEND lines are dated the day after the reporting period end
+    lines = dividend_lines(out)
     assert lines == [
-        'DIVIDEND\t30/06/2022\tVUSA\t200\t10.00',
-        'DIVIDEND\t30/06/2022\tVWRL\t100\t8.00',
-        'DIVIDEND\t31/03/2023\tIE00B4L5Y983\t40\t10.00',
-        'DIVIDEND\t30/06/2023\tVWRL\t150\t24.00',
+        'DIVIDEND\t01/07/2022\tLSE:VUSA\t200\t10.00',
+        'DIVIDEND\t01/07/2022\tVWRL\t100\t8.00',
+        'DIVIDEND\t01/04/2023\tIE00B4L5Y983\t40\t10.00',
+        'DIVIDEND\t01/07/2023\tVWRL\t150\t24.00',
     ]
+
+    # But the report tables still show the actual reporting period end
+    assert '2022-06-30' in out
+    assert '2022-07-01' not in out
 
     # The DIVIDEND lines should be consistent with the trades when fed back
     # into the CGT calculator
-    calculator = Calculator()
-    calculator.parse(io.StringIO(trades.replace('LSE:', '') + '\n'.join(lines) + '\n'))
-    with warnings.catch_warnings():
-        warnings.simplefilter('error')
-        result = calculator.calculate()
+    result = recalculate(trades, lines)
     pool = result.section104_tables['VWRL']
     assert [update.delta_cost for update in pool if update.description.strip() == 'Notional distribution'] == [Decimal('8.00'), Decimal('24.00')]
+
+
+# Trades around the 30/06/2022 reporting period end
+@pytest.mark.parametrize("trades,shares", [
+    # Bought on the last day of the reporting period
+    pytest.param('BUY 30/06/2022 VWRL 100 80.00 5\n', 100, id='buy-last-day'),
+    pytest.param('BUY 10/01/2022 VWRL 100 80.00 5\nBUY 30/06/2022 VWRL 50 80.00 5\n', 150, id='buy-more-last-day'),
+    # Sold on the last day of the reporting period
+    pytest.param('BUY 10/01/2022 VWRL 100 80.00 5\nSELL 30/06/2022 VWRL 40 90.00 5\n', 60, id='sell-last-day'),
+    pytest.param('BUY 10/01/2022 VWRL 100 80.00 5\nSELL 30/06/2022 VWRL 100 90.00 5\n', 0, id='sell-all-last-day'),
+    # Traded on the first day of the next reporting period
+    pytest.param('BUY 10/01/2022 VWRL 100 80.00 5\nBUY 01/07/2022 VWRL 50 80.00 5\n', 100, id='buy-next-day'),
+    pytest.param('BUY 10/01/2022 VWRL 100 80.00 5\nSELL 01/07/2022 VWRL 40 90.00 5\n', 100, id='sell-next-day'),
+    # Disposal identified with an acquisition in the next reporting period under
+    # the 30-day rule is ignored (Offshore Funds (Tax) Regulations 2009, reg. 94(3A))
+    pytest.param('BUY 10/01/2022 VWRL 100 80.00 5\nSELL 30/06/2022 VWRL 100 90.00 5\nBUY 10/07/2022 VWRL 100 85.00 5\n', 100, id='bed-and-breakfast'),
+    pytest.param('BUY 10/01/2022 VWRL 100 80.00 5\nSELL 20/06/2022 VWRL 100 90.00 5\nBUY 10/07/2022 VWRL 40 85.00 5\n', 40, id='bed-and-breakfast-partial'),
+])
+def test_reporting_period_end(trades:str, shares:int) -> None:
+    eri_csv = '''\
+TIDM,ISIN,ReportEndDate,Currency,ERI,DistributionDate
+VWRL,IE00B3RBWM25,30/06/2022,GBP,0.10,31/12/2022
+'''
+    entries = calculate(trades, eri_csv)
+    assert [entry.shares for entry in entries] == ([Decimal(shares)] if shares else [])
+
+    lines = dividend_lines(write_report(entries, dividends=True))
+    if shares:
+        assert lines == [f'DIVIDEND\t01/07/2022\tVWRL\t{shares}\t{Decimal(shares) * Decimal("0.10"):.2f}']
+    else:
+        assert lines == []
+
+    recalculate(trades, lines)
 
 
 def test_write_report_no_matches() -> None:
@@ -210,7 +257,7 @@ VUSA,IE00B3XXRP09,30/06/2022,GBP,0.05,31/12/2022
         text=True)
 
     assert 'TAX YEAR 2022/2023' in out
-    assert 'DIVIDEND\t30/06/2022\tVUSA\t200\t10.00\n' in out
+    assert 'DIVIDEND\t01/07/2022\tLSE:VUSA\t200\t10.00\n' in out
 
     with pytest.raises(subprocess.CalledProcessError):
         subprocess.check_call(args=[
