@@ -28,6 +28,7 @@ from decimal import Decimal
 from cgtcalc import Calculator, PoolUpdate
 from data.hmrc import exchange_rates
 from report import TextReport
+from tax.uk import TaxYear
 
 
 def shares_held_at(pool_updates: list[PoolUpdate], date: datetime.date) -> Decimal:
@@ -84,7 +85,6 @@ def main() -> None:
             pass
         security_map[security] = pool_updates
 
-    total_eri = Decimal(0)
     entries:list[ERI] = []
 
     with open(args.eri_csv, newline='') as f:
@@ -112,18 +112,29 @@ def main() -> None:
             entry.eri_gbp = round(entry.shares * entry.eri_per_share / entry.rate, 2)
 
             entries.append(entry)
-            total_eri += entry.eri_gbp
+
+    entries.sort(key=lambda entry: (entry.distribution_date, entry.report_end_date, entry.security))
+
+    # ERI is treated as income on the distribution date
+    yearly_entries: dict[TaxYear, list[ERI]] = {}
+    for entry in entries:
+        tax_year = TaxYear.from_date(entry.distribution_date)
+        yearly_entries.setdefault(tax_year, []).append(entry)
 
     report = TextReport(sys.stdout)
     report.start('Excess Reportable Income')
 
     if not entries:
         report.write_paragraph('No matching securities found.')
-    else:
+    for tax_year in sorted(yearly_entries):
+        report.write_heading(f'Tax year {tax_year}')
+
+        year_entries = yearly_entries[tax_year]
+        total_eri = sum((entry.eri_gbp for entry in year_entries), Decimal(0))
         header = ['Security', 'Report End', 'Distribution', 'Shares', 'ERI/share', 'CCY', 'Rate', 'ERI (GBP)']
         footer = ['Total', '', '', '', '', '', '', total_eri]
-        rows:list[list] = [list(dataclasses.astuple(entry)) for entry in entries]
-        report.write_table(rows, header=header, footer=footer, just='lccrrrrr')
+        rows:list[list] = [list(dataclasses.astuple(entry)) for entry in year_entries]
+        report.write_table(rows, header=header, footer=footer, just='lccrrrrr', indent='  ')
 
     report.end()
 
