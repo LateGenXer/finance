@@ -90,9 +90,9 @@ class Calculator:
         for entry in csv.DictReader(stream):
             settlement_date = datetime.datetime.fromisoformat(entry['SettlementDate']).date()
             if not ukcalendar.is_business_day(settlement_date):
-                warnings.warn("{settlement_date} is not a business day")
+                warnings.warn(f"{settlement_date} is not a business day")
 
-            security = entry['Security']
+            security = entry['Security'].strip()
 
             if is_isin(security):
                 isin = security
@@ -113,6 +113,8 @@ class Calculator:
 
             if units > Decimal(0):
                 gilt_state.first_acquisition_date = min(gilt_state.first_acquisition_date, settlement_date)
+
+            assert not isinstance(gilt, gilts.IndexLinkedGilt) or gilt.is_fixed(settlement_date)
 
             expected_accrued_interest = round(abs(units) * Decimal(gilt.accrued_interest(settlement_date)) * Decimal('.01'), 2)
 
