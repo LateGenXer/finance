@@ -13,7 +13,6 @@ import datetime
 import email.utils
 import logging
 import os.path
-import re
 import requests
 import string
 import sys
@@ -93,7 +92,6 @@ def is_isin(ticker: str) -> bool:
 
 
 _headers = {
-    'authority': 'api.londonstockexchange.com',
     'accept': 'application/json',
     'origin': 'https://www.londonstockexchange.com',
     'referer': 'https://www.londonstockexchange.com/',
@@ -101,92 +99,129 @@ _headers = {
 }
 
 
-# Tradable Instrument Display Mnemonics (TIDM)
-_tidm_re = re.compile(r'^https://www\.londonstockexchange\.com/[^/]+/(?P<tidm>[^/]+)/.*$')
+_api = 'https://apidata.londonstockexchange.com'
 
 
 # https://requests.readthedocs.io/en/latest/user/advanced/#keep-alive
 _session = requests.Session()
 
 
+def _get(path:str, params:dict) -> dict:
+    r = _session.get(_api + path, params=params, headers=_headers, stream=False)
+    try:
+        obj = r.json()
+    except ValueError:
+        obj = {}
+    if not r.ok:
+        raise ValueError(obj.get('message', str(r.status_code)))
+    return obj['data']
+
+
+# https://www.londonstockexchange.com/live-markets/market-data-dashboard/price-explorer
+def _search(quick_filter_text:str, filter_model:dict|None=None) -> tuple[datetime.datetime, list[dict]]:
+    url = _api + '/search/v1/query'
+    page_size = 100
+    start_row = 0
+    content: list[dict] = []
+    while True:
+        payload = {
+            'type': 'instrument',
+            'group': False,
+            'tradingVenue': 'LSE',
+            'quickFilterText': quick_filter_text,
+            'startRow': start_row,
+            'endRow': start_row + page_size - 1,
+        }
+        if filter_model is not None:
+            payload['filterModel'] = filter_model
+        r = _session.post(url, headers=_headers, json=payload, stream=False)
+        assert r.ok
+        # This can create troubles with timezones
+        dt = email.utils.parsedate_to_datetime(r.headers['Date'])
+        obj = r.json()
+        data = obj.get('Data', [])
+        content.extend(item for item in data if item['type'] == 'instrument')
+        start_row += page_size
+        if not data or start_row >= obj['rowCount']:
+            return dt, content
+
+
 def lookup_tidm(isin:str) -> str:
     logger.info(f'Looking up TIDM of {isin}')
-    # https://www.londonstockexchange.com/live-markets/market-data-dashboard/price-explorer
-    url = f'https://api.londonstockexchange.com/api/gw/lse/search?worlds=quotes&q={isin}'
-    r = _session.get(url, headers=_headers, stream=False)
-    assert r.ok
-
-    obj = r.json()
-
-
-    instruments = obj['instruments']
+    _, instruments = _search(isin)
+    instruments = [instrument for instrument in instruments if instrument['isin'] == isin]
     if len(instruments) != 1:
         logger.warning(f'Found {len(instruments)} TIDMs for ISIN {isin}')
+    return instruments[0]['tidm']
 
-    mo = _tidm_re.match(instruments[0]['url'])
-    assert mo
-    tidm = mo.group('tidm')
 
-    return tidm
+def _parse_price(value:str|None) -> float|None:
+    if value is None or value in ('', '-'):
+        return None
+    return float(value.replace(',', ''))
+
+
+def _parse_date(value:str|None) -> datetime.date|None:
+    if value is None or value in ('', '-'):
+        return None
+    return datetime.datetime.strptime(value, '%d %B %Y').date()
 
 
 def get_instrument_data(tidm:str) -> dict:
     logger.info(f'Getting {tidm} instrument data')
-    url = f'https://api.londonstockexchange.com/api/gw/lse/instruments/alldata/{tidm}'
-    r = _session.get(url, headers=_headers, stream=False)
-    if not r.ok:
-        try:
-            obj = r.json()
-            message = obj['message']
-        except Exception:
-            message = str(r.status_code)
-        raise ValueError(message)
-    assert r.ok
-    obj = r.json()
-    return obj
+
+    instrument = _get('/nrdp/v1', {'tidm': tidm})
+    ric = _get('/rdp/v1/ric', {'tidm': tidm})['ric']
+    pricing = _get('/rdp/v1/pricing', {'ric': ric})
+
+    # Last close is formatted as "<price> on <date>"
+    lastclose, _, lastclosedate = pricing.get('LAST_CLOSE_LAST_CLOSE_DATE', '').partition(' on ')
+    if not lastclosedate:
+        lastclose = pricing.get('LAST_CLOSE')
+        lastclosedate = pricing.get('OFF_CLS_DT')
+    lastclosedate_ = _parse_date(lastclosedate)
+
+    return {
+        'tidm': instrument['tidm'],
+        'isin': instrument['isinCode'],
+        'ric': ric,
+        'name': instrument['instrumentName'],
+        'currency': instrument['currency'],
+        'lastprice': _parse_price(pricing.get('TRDPRC_1')),
+        'lastclose': _parse_price(lastclose),
+        'lastclosedate': None if lastclosedate_ is None else lastclosedate_.isoformat(),
+        'bid': _parse_price(pricing.get('BID')),
+        'offer': _parse_price(pricing.get('ASK')),
+        'midPrice': _parse_price(pricing.get('MID_PRICE')),
+    }
 
 
 def get_latest_gilt_prices() -> tuple[datetime.datetime, list]:
-    '''Get the latest gilt prices with a single request'''
+    '''Get the latest gilt prices'''
 
     logger.info('Getting gilt prices from LSE')
 
-    # https://www.londonstockexchange.com/live-markets/market-data-dashboard/price-explorer?issuers=TRIH&categories=BONDS
-    # https://www.londonstockexchange.com/live-markets/market-data-dashboard/price-explorer?issuers=TRIH&categories=BONDS&page=2
-    payload = {
-        "path": "live-markets/market-data-dashboard/price-explorer",
-        "parameters": "issuers%3DTRIH%26categories%3DBONDS",
-        "components": [
-            {
-                "componentId": "block_content%3A9524a5dd-7053-4f7a-ac75-71d12db796b4",
-                "parameters": "categories=BONDS&issuers=TRIH&size=128"
-            }
-        ]
-    }
-    headers = _headers.copy()
-    headers['content-type'] = 'application/json'
-    url ='https://api.londonstockexchange.com/api/v1/components/refresh'
-    r = _session.post(url, headers=headers, json=payload, stream=False)
-    assert r.ok
-    # This can create troubles with timezones
-    dt = email.utils.parsedate_to_datetime(r.headers['Date'])
-    obj = r.json()
-    for item in obj[0]['content']:
-        if item['name'] == 'priceexplorersearch':
-            value = item['value']
-            assert value['totalPages'] == 1
-            assert value['first'] is True
-            assert value['last'] is True
-            content = []
-            for subitem in value['content']:
-                maturity = datetime.datetime.fromisoformat(subitem['maturitydate']).date()
-                if dt.date() >= maturity:
-                    continue
-                if subitem['lastprice'] is None:
-                    continue
-                content.append(subitem)
-            return dt, content
-    raise ValueError  # pragma: no cover
+    # https://www.londonstockexchange.com/en/price-explorer?priceExplorer_searchTag=Gilts
+    # The searchTag filter alone merely ranks Gilts first, so also search for
+    # TRIH (HM Treasury's issuer code) which excludes STRIPS (UKTS).
+    filter_model = {'searchTag': {'filterType': 'set', 'values': ['Gilts']}}
+    dt, instruments = _search('TRIH', filter_model)
+    content: list[dict] = []
+    for instrument in instruments:
+        if instrument['issuerCode'] != 'TRIH' or 'Gilts' not in (instrument['searchTag'] or []):
+            continue
+        lastprice = _parse_price(instrument['price'])
+        if lastprice is None:
+            continue
+        content.append({
+            'isin': instrument['isin'],
+            'tidm': instrument['tidm'],
+            'ric': instrument['ric'],
+            'description': instrument['instrumentName'],
+            'currency': instrument['currency'],
+            'lastprice': lastprice,
+        })
+    return dt, content
 
 
 def main() -> None:
