@@ -55,6 +55,12 @@ jobs:
           cache-dependency-glob: "requirements**.txt"
       - run: uv venv
       - run: uv pip install -r requirements-dev.txt
+      # The CMI spreadsheet is immutable, so a fixed key suffices
+      - name: Cache CMI mortality spreadsheet
+        uses: actions/cache@v5
+        with:
+          path: data/Unisex%20mortality%20rates%20for%202026-2027%20illustrations%20v01%202025-10-17_0.xlsx
+          key: cmi-unisex-mortality-2026-2027-v01-2025-10-17
       - run: uv run .github/scripts/gh-pages.sh
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
