@@ -140,9 +140,12 @@ def _search(quick_filter_text:str, filter_model:dict|None=None) -> tuple[datetim
         dt = email.utils.parsedate_to_datetime(r.headers['Date'])
         obj = r.json()
         data = obj.get('Data', [])
-        content.extend(item for item in data if item['type'] == 'instrument')
+        instruments = [item for item in data if item['type'] == 'instrument']
+        content.extend(instruments)
         start_row += page_size
-        if not data or start_row >= obj['rowCount']:
+        # Results include news items after the instruments, which we don't
+        # need, and deep pages can trigger server errors, so stop early.
+        if len(instruments) < len(data) or not data or start_row >= obj['rowCount']:
             return dt, content
 
 
