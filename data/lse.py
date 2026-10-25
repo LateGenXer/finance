@@ -151,8 +151,19 @@ def _search(quick_filter_text:str, filter_model:dict|None=None) -> tuple[datetim
 
 def lookup_tidm(isin:str) -> str:
     logger.info(f'Looking up TIDM of {isin}')
-    _, instruments = _search(isin)
-    instruments = [instrument for instrument in instruments if instrument['isin'] == isin]
+    # Grouped search returns all listings of the instrument in a single
+    # unpaginated response, as done by the website's search box.
+    payload = {
+        'type': 'instrument',
+        'group': True,
+        'quickFilterText': isin,
+    }
+    r = _session.post(_api + '/search/v1/query', headers=_headers, json=payload, stream=False)
+    r.raise_for_status()
+    instruments = [
+        item for item in r.json().get('Data', [])
+        if item['type'] == 'instrument' and item['isin'] == isin and item['tradingVenue'] == 'LSE'
+    ]
     if len(instruments) != 1:
         logger.warning(f'Found {len(instruments)} TIDMs for ISIN {isin}')
     return instruments[0]['tidm']
