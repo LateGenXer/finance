@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 
 from download import download
+from environ import pages_url
 
 
 def read(sh: openpyxl.worksheet.worksheet.Worksheet, data:dict[float, float]) -> datetime.date:
@@ -137,7 +138,7 @@ class Curve:
 
 def YieldCurve(measure:str) -> Curve:
     assert measure in _measures
-    download('https://lategenxer.github.io/finance/boe-yield-curves.csv', _filename)
+    download(pages_url + 'boe-yield-curves.csv', _filename)
     column = f'{measure}_Spot'
     df = pd.read_csv(_filename, header=0, index_col=0, usecols=['Years', column])
     series = df[column]

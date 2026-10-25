@@ -20,6 +20,7 @@ from zoneinfo import ZoneInfo
 from pprint import pp
 
 from download import download
+from environ import pages_url
 
 import scipy.optimize as optimize  # type: ignore[import-untyped]
 
@@ -444,7 +445,7 @@ class Issued:
         # updated daily by .github/workflows/gh-pages.yml to avoid Captchas on
         # more frequent downloads.
         filename = os.path.join(os.path.dirname(__file__), 'dmo-D1A.xml')
-        download('https://lategenxer.github.io/finance/dmo-D1A.xml', filename)
+        download(pages_url + 'dmo-D1A.xml', filename)
         return list(Issued._parse_xml(filename))
 
     @staticmethod
@@ -598,7 +599,7 @@ class GiltPrices:
     @staticmethod
     def _download():
         filename = os.path.join(os.path.dirname(__file__), 'gilts-closing-prices.csv')
-        download('https://lategenxer.github.io/finance/gilts-closing-prices.csv', filename)
+        download(pages_url + 'gilts-closing-prices.csv', filename)
         return list(csv.DictReader(open(filename, 'rt')))
 
     def lookup_tidm(self, isin):

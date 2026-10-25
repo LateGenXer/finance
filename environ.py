@@ -13,6 +13,10 @@ ci: bool = os.environ.get('CI', 'false').lower() == 'true'
 production: bool = int(os.environ.get('PRODUCTION', '0')) != 0
 
 
+pages_url: str = os.environ.get('GH_PAGES_URL', 'https://lategenxer.github.io/finance/')
+assert pages_url.endswith('/')
+
+
 def get_version() -> str:
     try:
         version = subprocess.check_output([

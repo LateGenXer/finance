@@ -12,6 +12,7 @@ import logging
 import re
 
 from download import download
+from environ import pages_url
 
 
 
@@ -57,7 +58,7 @@ class RPI:
         assert self.series
         assert self.release_date >= self.last_date()
 
-    _url = 'https://lategenxer.github.io/finance/rpi-series.csv'
+    _url = pages_url + 'rpi-series.csv'
     _filename = os.path.join(os.path.dirname(__file__), 'rpi-series.csv')
 
     @classmethod
