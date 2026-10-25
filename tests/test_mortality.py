@@ -33,6 +33,10 @@ def test_mortality_max_age(cmi_table:mortality.Table) -> None:
     assert cmi_table.mortality(2024, 999) == 1.0
 
 
+def test_mortality_max_year(cmi_table:mortality.Table) -> None:
+    assert cmi_table.mortality(9999, 60) == cmi_table.mortality(cmi_table.max_year, 60)
+
+
 def test_life_expectancy(cmi_table:mortality.Table) -> None:
     mp = mortality.get_ons_table('period', 'male')
     fp = mortality.get_ons_table('period', 'female')

@@ -158,7 +158,7 @@ def get_cmi_table() -> Table:
             assert len(row) == len(header_cells)
             values = row_values(row)
             assert values[0] == min_age + len(data)
-            data.append(values[1 : num_year])
+            data.append(values[1 : num_year + 1])
 
         assert len(data) == num_age
 
