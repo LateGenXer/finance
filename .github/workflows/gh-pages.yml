@@ -21,6 +21,7 @@ on:
       - download.py
       - data/lse.py
       - data/boe.py
+      - data/mortality.py
 
   # Manually
   workflow_dispatch:

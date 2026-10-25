@@ -122,51 +122,70 @@ def get_ons_table(basis:str, gender:str) -> Table:
 
 
 # https://www.actuaries.org.uk/learn-and-develop/continuous-mortality-investigation/other-cmi-outputs/unisex-rates-0
+#url = "https://www.actuaries.org.uk/system/files/field/document/Unisex%20mortality%20rates%20for%202026-2027%20illustrations%20v01%202025-10-17_0.xlsx"
+cmi_url = 'https://web.archive.org/web/20260517234707if_/https://www.actuaries.org.uk/system/files/field/document/Unisex%20mortality%20rates%20for%202026-2027%20illustrations%20v01%202025-10-17_0.xlsx'
+cmi_basis = 'cohort'
+cmi_gender = 'unisex'
+cmi_min_year = 2026
+cmi_max_year = cmi_min_year + 100
+cmi_min_age = 20
+cmi_max_age = 120
+cmi_npy = f'mortality_{cmi_basis}_{cmi_gender}_{cmi_min_year}.npy'
+
+
+# Parse the CMI unisex mortality rates from the original spreadsheet
+def parse_cmi_table() -> np.ndarray:
+    filename = os.path.join(data_dir, posixpath.basename(cmi_url))
+
+    num_year = cmi_max_year - cmi_min_year + 1
+    num_age = cmi_max_age - cmi_min_age + 1
+
+    download(cmi_url, filename, ttl=sys.maxsize, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+    wb = openpyxl.load_workbook(filename, read_only=True, data_only=True)
+    sheet_name = f'{cmi_min_year}-{(cmi_min_year + 1) % 100:02d}'
+    sh = wb[sheet_name]
+
+    header_cells, = sh.iter_rows(min_row=4, max_row=4)
+    header_values = row_values(header_cells)
+    assert header_values[0] == '[x]'
+    assert header_values[1 : num_year + 1] == [year for year in range(cmi_min_year, cmi_max_year + 1)]
+
+    data: list[list[float]] = []
+    for row in sh.iter_rows(min_row=5, max_row=5 + num_age - 1):
+        assert len(row) == len(header_cells)
+        values = row_values(row)
+        assert values[0] == cmi_min_age + len(data)
+        data.append(values[1 : num_year + 1])
+
+    assert len(data) == num_age
+
+    return np.array(data, dtype=np.float32)
+
+
 def get_cmi_table() -> Table:
-    #url = "https://www.actuaries.org.uk/system/files/field/document/Unisex%20mortality%20rates%20for%202026-2027%20illustrations%20v01%202025-10-17_0.xlsx"
-    url = 'https://web.archive.org/web/20260517234707if_/https://www.actuaries.org.uk/system/files/field/document/Unisex%20mortality%20rates%20for%202026-2027%20illustrations%20v01%202025-10-17_0.xlsx'
-    filename = os.path.join(data_dir, posixpath.basename(url))
-    basis = 'cohort'
-    gender = 'unisex'
-
-    min_year = 2026
-    max_year = min_year + 100
-    num_year = max_year - min_year + 1
-    min_age = 20
-    max_age = 120
-    num_age = max_age - min_age + 1
-
-    npy = os.path.join(data_dir, f'mortality_{basis}_{gender}_{min_year}.npy')
+    npy = os.path.join(data_dir, cmi_npy)
     try:
         if "PYTEST_CURRENT_TEST" in os.environ:
             raise FileNotFoundError
         stream = open(npy, 'rb')
     except FileNotFoundError:
-        download(url, filename, ttl=sys.maxsize, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-
-        wb = openpyxl.load_workbook(filename, read_only=True, data_only=True)
-        sheet_name = f'{min_year}-{(min_year + 1) % 100:02d}'
-        sh = wb[sheet_name]
-
-        header_cells, = sh.iter_rows(min_row=4, max_row=4)
-        header_values = row_values(header_cells)
-        assert header_values[0] == '[x]'
-        assert header_values[1 : num_year + 1] == [year for year in range(min_year, max_year + 1)]
-
-        data: list[list[float]] = []
-        for row in sh.iter_rows(min_row=5, max_row=5 + num_age - 1):
-            assert len(row) == len(header_cells)
-            values = row_values(row)
-            assert values[0] == min_age + len(data)
-            data.append(values[1 : num_year + 1])
-
-        assert len(data) == num_age
-
-        array = np.array(data, dtype=np.float32)
+        array = parse_cmi_table()
         save_npy(npy, array)
     else:
         array = np.load(stream)
 
-    table = Table(min_year=min_year, max_year=max_year, min_age=min_age, max_age=max_age, array=array)
+    table = Table(min_year=cmi_min_year, max_year=cmi_max_year, min_age=cmi_min_age, max_age=cmi_max_age, array=array)
 
     return table
+
+
+# Generate the NPY files published to GitHub Pages by .github/scripts/gh-pages.sh
+def main() -> None:
+    dst_dir = sys.argv[1] if len(sys.argv) > 1 else data_dir
+    array = parse_cmi_table()
+    save_npy(os.path.join(dst_dir, cmi_npy), array)
+
+
+if __name__ == '__main__':
+    main()
