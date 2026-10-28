@@ -146,13 +146,12 @@ if not index_linked:
 
     # https://www.amundietf.co.uk/en/professional/products/fixed-income/amundi-smart-overnight-return-ucits-etf-gbp-hedged-acc/lu1230136894
     # https://www.gov.uk/tax-on-dividends#how-much-tax-you-pay
-    # https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html#taxation-of-income-from-assets
     if not production:
         dividend_tax = {
-            0.00: 0.0875 + .02,
-            0.20: 0.0875 + .02,
-            0.40: 0.3375 + .02,
-            0.45: 0.3975,
+            0.00: 0.1075,
+            0.20: 0.1075,
+            0.40: 0.3575,
+            0.45: 0.3935,
         }[marginal_income_tax]
         data.append(('GBP MMF - Dividend', '', '', sonia_rate, sonia_rate * (1 - dividend_tax), 1.5/12.0))
 
@@ -216,8 +215,8 @@ for g in issued.filter(index_linked=index_linked, settlement_date=settlement_dat
         d, v = cf[i]
         tax_rate = marginal_income_tax
         if d >= datetime.date(2027, 4, 6):
-            # https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html#taxation-of-income-from-assets
-            tax_rate += .02
+            # https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html#personal-taxation
+            tax_rate += .04
         net_interest = qt*v - qt*(v - accrued_interest)*tax_rate
         if index_linked:
             net_interest /= g.index_ratio(d)

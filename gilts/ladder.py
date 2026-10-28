@@ -253,9 +253,9 @@ class BondLadder:
             elif ev.kind == EventKind.TAX_YEAR_END:
                 assert tax_due is None
                 marginal_income_tax = self.marginal_income_tax
-                # https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html#taxation-of-income-from-assets
+                # https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html#personal-taxation
                 if ev.date >= datetime.date(2027, 4, 6):
-                    marginal_income_tax += .02
+                    marginal_income_tax += .04
                 tax_due = accrued_income * marginal_income_tax
                 accrued_income = 0
                 continue
