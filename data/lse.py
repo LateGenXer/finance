@@ -185,25 +185,34 @@ def get_instrument_data(tidm:str) -> dict:
     logger.info(f'Getting {tidm} instrument data')
 
     instrument = _get('/nrdp/v1', {'tidm': tidm})
+    assert instrument['tidm'] == tidm
+
     ric = _get('/rdp/v1/ric', {'tidm': tidm})['ric']
     pricing = _get('/rdp/v1/pricing', {'ric': ric})
 
     # Last close is formatted as "<price> on <date>"
-    lastclose, _, lastclosedate = pricing.get('LAST_CLOSE_LAST_CLOSE_DATE', '').partition(' on ')
-    if not lastclosedate:
-        lastclose = pricing.get('LAST_CLOSE')
-        lastclosedate = pricing.get('OFF_CLS_DT')
-    lastclosedate_ = _parse_date(lastclosedate)
+    lastclose_s, _, lastclosedate_s = pricing.get('LAST_CLOSE_LAST_CLOSE_DATE', '').partition(' on ')
+    if not lastclosedate_s:
+        lastclose_s = pricing.get('LAST_CLOSE')
+        lastclosedate_s = pricing.get('OFF_CLS_DT')
+    lastclose = _parse_price(lastclose_s)
+    lastclosedate = _parse_date(lastclosedate_s)
+
+    # TRDPRC_1 can be empty when market is closed, or for instruments with low
+    # trading volume
+    lastprice = _parse_price(pricing.get('TRDPRC_1'))
+    if lastprice is None:
+        lastprice = lastclose
 
     return {
-        'tidm': instrument['tidm'],
+        'tidm': tidm,
         'isin': instrument['isinCode'],
         'ric': ric,
         'name': instrument['instrumentName'],
         'currency': instrument['currency'],
-        'lastprice': _parse_price(pricing.get('TRDPRC_1')),
-        'lastclose': _parse_price(lastclose),
-        'lastclosedate': None if lastclosedate_ is None else lastclosedate_.isoformat(),
+        'lastprice': lastprice,
+        'lastclose': lastclose,
+        'lastclosedate': None if lastclosedate is None else lastclosedate.isoformat(),
         'bid': _parse_price(pricing.get('BID')),
         'offer': _parse_price(pricing.get('ASK')),
         'midPrice': _parse_price(pricing.get('MID_PRICE')),

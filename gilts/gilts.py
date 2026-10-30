@@ -585,11 +585,8 @@ class GiltPrices:
                 assert data['currency'] == 'GBP'
                 price = data[kind]
                 if price is None:
-                    # Gilts with low trading volume
-                    price = data['lastprice']
-                    if price is None:
-                        # Gilts after last ex-dividend
-                        continue
+                    # Gilts after last ex-dividend
+                    continue
                 prices.add_price(dt, isin, tidm, price)
             except:
                 pp(data, stream=sys.stderr)
