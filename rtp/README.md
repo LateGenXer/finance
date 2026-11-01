@@ -19,6 +19,7 @@ I initially wrote this for my own personal use, after running against limitation
 
 ## Recent changes
 
+* Allow to enter initial unrealized gains in GIAs.
 * Update for Autumn Budget 2025 changes.
 * Rudimentary Defined Benefit Pension Scheme support.
 * Reflect frozen ISA allowance until 2030.
@@ -44,7 +45,8 @@ I initially wrote this for my own personal use, after running against limitation
 This tool makes the following simplifying assumptions:
 * all current tax rates stay constant;
 * all tax thresholds and allowances will follow inflation;
-* that the CGT allowances are fully used on gains from GIA, while still avoiding the [_bed & breakfast rule_](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg13350).
+* that the CGT allowances are fully used on gains from GIA, while still avoiding the [_bed & breakfast rule_](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg13350);
+* that the initial GIA holdings and each year's GIA purchases can be sold independently, rather than being pooled at average cost as per [_Section 104_](https://www.gov.uk/government/publications/shares-and-capital-gains-tax-hs284-self-assessment-helpsheet/hs284-shares-and-capital-gains-tax-2024).  This understates CGT if they are all the same fund.
 * The tool enforces a fixed income in _real_ terms (that is, growing with inflation) until both retirees reach 100 year of age.
 
 ## Limitations

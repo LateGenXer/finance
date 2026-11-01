@@ -241,16 +241,27 @@ class DCP:
         return tfc
 
 
+@dataclasses.dataclass
+class GIALot:
+    value: Any
+    cost_ratio: float  # cost / value, before discounting by `age` years of growth
+    age: int
+
+
 class GIA:
 
-    def __init__(self, prob, balance, growth_rate, inflation_rate):
+    def __init__(self, prob, balance, gains, growth_rate, inflation_rate):
         self.prob = prob
 
-        self.assets = [balance]
+        # Lots, most recent first
+        self.lots = [GIALot(balance, 1.0 - gains / balance if balance else 1.0, 1)]
 
         self.growth_rate = growth_rate
         self.inflation_rate = inflation_rate
         self.growth_rate_real = inflation_ajusted_return(self.growth_rate, self.inflation_rate)
+
+    def deposit(self, amount):
+        self.lots.append(GIALot(amount, 1.0, 1))
 
     def flow(self, inflation_adjusted=False):
         global uid
@@ -259,19 +270,21 @@ class GIA:
         gains = 0
 
         purchase = lp.LpVariable(f'gia_purchase_{uid}', 0)
-        self.assets.insert(0, purchase)
+        self.lots.insert(0, GIALot(purchase, 1.0, 0))
 
         growth_rate = self.growth_rate_real if inflation_adjusted else self.growth_rate
 
-        for yr in range(1, len(self.assets)):
-            proceeds = lp.LpVariable(f'gia_proceeds_{uid}_{yr}', 0)
-            self.assets[yr] = self.assets[yr] - proceeds
-            self.prob += self.assets[yr] >= 0
+        for n in range(1, len(self.lots)):
+            lot = self.lots[n]
+            proceeds = lp.LpVariable(f'gia_proceeds_{uid}_{n}', 0)
+            lot.value = lot.value - proceeds
+            self.prob += lot.value >= 0
             total = total + proceeds
-            gains = gains + proceeds * (1.0 - (1.0 + growth_rate) ** -yr)
+            gains = gains + proceeds * (1.0 - lot.cost_ratio * (1.0 + growth_rate) ** -lot.age)
 
-        for yr in range(0, len(self.assets)):
-            self.assets[yr] *= (1.0 + self.growth_rate_real) * (1.0 - eps)
+        for lot in self.lots:
+            lot.value *= (1.0 + self.growth_rate_real) * (1.0 - eps)
+            lot.age += 1
 
         uid += 1
 
@@ -280,8 +293,8 @@ class GIA:
 
     def value(self):
         total = 0
-        for balance in self.assets:
-            total = total + balance
+        for lot in self.lots:
+            total = total + lot.value
         return total
 
 
@@ -342,6 +355,7 @@ def model(
         isa,
         isa_growth_rate,
         gia,
+        gia_gains,
         gia_growth_rate,
         misc_contrib,
         marginal_income_tax_1,
@@ -372,6 +386,9 @@ def model(
     income_ratio_1 = float(1    ) / float(N)
     income_ratio_2 = float(N - 1) / float(N)
     assert income_ratio_1 + income_ratio_2 == 1.0
+
+    if gia_gains > gia:
+        raise ValueError(f"GIA unrealized gains ({gia_gains:,.0f}) must not exceed GIA value ({gia:,.0f})")
 
     result = Result()
 
@@ -418,7 +435,6 @@ def model(
         sipp_1 = sipp_1 + ls_sipp_gross_1
         sipp_2 = sipp_2 + ls_sipp_gross_2
         isa    = isa    + ls_isa
-        gia    = gia    + ls_gia * (1 - eps)
 
     nmpa_1 = UK.nmpa(dob_1)
     nmpa_2 = UK.nmpa(dob_2)
@@ -429,7 +445,9 @@ def model(
     sipp_1 = DCP(prob=prob, uf=sipp_1, df=sipp_df_1, growth_rate_real = sipp_growth_rate_real_1, inflation_rate=inflation_rate, lsa=lsa_1, nmpa=nmpa_1)
     sipp_2 = DCP(prob=prob, uf=sipp_2, df=sipp_df_2, growth_rate_real = sipp_growth_rate_real_2, inflation_rate=inflation_rate, lsa=lsa_2, nmpa=nmpa_2)
 
-    gia = GIA(prob=prob, balance=gia, growth_rate=gia_growth_rate, inflation_rate=inflation_rate)
+    gia = GIA(prob=prob, balance=gia, gains=gia_gains, growth_rate=gia_growth_rate, inflation_rate=inflation_rate)
+    if lump_sum:
+        gia.deposit(ls_gia * (1 - eps))
 
     states = {}
 

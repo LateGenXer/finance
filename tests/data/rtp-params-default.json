@@ -9,6 +9,7 @@
   "dob_2": 1980,
   "end_age": 100,
   "gia": 0,
+  "gia_gains": 0,
   "gia_growth_rate": 5.5,
   "inflation_rate": 2.5,
   "isa": 250000,

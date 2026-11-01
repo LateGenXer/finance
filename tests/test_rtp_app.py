@@ -48,6 +48,16 @@ def test_lump_sum(at, submit):
     assert not at.exception
 
 
+def test_gia_gains_error(at, submit):
+    assert len(at.error) == 0
+    at.number_input(key="gia").set_value(1000)
+    at.number_input(key="gia_gains").set_value(2000)
+    submit.click()
+    at.run()
+    assert not at.exception
+    assert len(at.error) == 1
+
+
 def test_error(at, submit):
     assert len(at.error) == 0
     joint = at.checkbox(key="joint")

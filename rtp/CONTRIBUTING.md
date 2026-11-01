@@ -41,7 +41,7 @@ Equality constraints are:
   - outgoings include:
     - account top-ups
     - income tax (pensions)
-    - capital gain tax (growth in GIA)
+    - capital gain tax (initial unrealized gains and growth in GIA)
     - net retirement income (post-retirement)
 
 Inequality constraints are:

@@ -57,6 +57,7 @@ default_state = {
     "lsa_ratio_2": 100.0,
     "isa": 250000,
     "gia": 0,
+    "gia_gains": 0,
     "misc_contrib": 0,
     "inflation_rate": 2.5,
     "isa_growth_rate": 5.5,
@@ -192,6 +193,7 @@ Payments are assumed to increase in line with inflation.
             st.number_input('Retirement income (0 for maximum):', min_value=0, step=1000, key='retirement_income_net', help='Go to https://www.retirementlivingstandards.org.uk/ for guidance.')
             st.number_input('ISAs value:', min_value=0, step=1, key='isa')
             st.number_input('GIAs value:', min_value=0, step=1, key='gia')
+            st.number_input('GIAs unrealized gains:', min_value=0, step=1, key='gia_gains', help="Current market value minus acquisition cost, across all GIAs.  Must not exceed the GIAs value.")
             st.number_input('ISAs/GIAs yearly savings:', min_value=0, step=1, key='misc_contrib', help="Until retirement.  The optimization will automatically maximize the ISA allowance.")
 
     # Advanced

@@ -42,7 +42,8 @@ def test_model(joint, sipp_extra_contrib, retirement_country, retirement_income_
         "db_payments_2": [],
         "db_ages_2": [],
         "isa": 250000,
-        "gia": 0,
+        "gia": 100000,
+        "gia_gains": 25000,
         "misc_contrib": 0,
         "inflation_rate": 2.5e-2,
         "isa_growth_rate": 5.5e-2,
@@ -61,6 +62,90 @@ def test_model(joint, sipp_extra_contrib, retirement_country, retirement_income_
     }
 
     model.run(params)
+
+
+def gia_params(**kwargs):
+    present_year = datetime.date.today().year
+    params = {
+        "joint": False,
+        "dob_1": present_year - 70,
+        "dob_2": present_year - 70,
+        "state_pension_years_1": 0,
+        "state_pension_years_2": 0,
+        "marginal_income_tax_1": 0.2,
+        "marginal_income_tax_2": 0.2,
+        "sipp_1": 0,
+        "sipp_2": 0,
+        "sipp_df_1": 0,
+        "sipp_df_2": 0,
+        "lsa_ratio_1": 1.0,
+        "lsa_ratio_2": 1.0,
+        "sipp_contrib_1": 0,
+        "sipp_contrib_2": 0,
+        "sipp_extra_contrib": False,
+        "db_payments_1": [],
+        "db_ages_1": [],
+        "db_payments_2": [],
+        "db_ages_2": [],
+        "isa": 0,
+        "gia": 100000,
+        "gia_gains": 0,
+        "misc_contrib": 0,
+        "inflation_rate": 2.5e-2,
+        "isa_growth_rate": 5.5e-2,
+        "gia_growth_rate": 5.5e-2,
+        "sipp_growth_rate_1": 5.5e-2,
+        "sipp_growth_rate_2": 5.5e-2,
+        "present_year": present_year,
+        "country": "UK",
+        "retirement_income_net": 0,
+        "retirement_year": present_year,
+        "lump_sum": 0,
+        "aa_1": 0,
+        "aa_2": 0,
+        "marriage_allowance": False,
+        "end_age": 71,  # Single year
+    }
+    params.update(kwargs)
+    return params
+
+
+# Gain fraction realized when selling from the initial GIA lot in the first year
+def initial_gain_ratio(gia, gia_gains, growth_rate=5.5e-2):
+    return 1.0 - (1.0 - gia_gains / gia) / (1.0 + growth_rate)
+
+
+def test_gia_no_gains():
+    result = model.model(**gia_params())
+    cg = 100000 * initial_gain_ratio(100000, 0)
+    assert result.data[0].cg == pytest.approx(cg, abs=1e-2)
+    assert result.data[0].cgt == pytest.approx((cg - uk.cgt_allowance) * uk.cgt_rates[0], abs=1e-2)
+
+
+def test_gia_gains():
+    result = model.model(**gia_params(gia_gains=40000))
+    cg = 100000 * initial_gain_ratio(100000, 40000)
+    assert result.data[0].cg == pytest.approx(cg, abs=1e-2)
+    assert result.data[0].cgt == pytest.approx((cg - uk.cgt_allowance) * uk.cgt_rates[0], abs=1e-2)
+
+
+def test_gia_gains_lump_sum():
+    # Lump sum goes into a separate lot, with no gains of its own
+    result = model.model(**gia_params(gia_gains=100000, lump_sum=50000))
+    assert result.ls_gia > 0
+    cg = 100000 + result.ls_gia * (1 - model.eps) * initial_gain_ratio(100000, 0)
+    assert result.data[0].cg == pytest.approx(cg, abs=1e-2)
+
+
+def test_gia_gains_excessive():
+    with pytest.raises(ValueError):
+        model.model(**gia_params(gia_gains=100001))
+
+
+def test_gia_gains_reduce_income():
+    low = model.model(**gia_params(end_age=75, gia=500000, gia_gains=100000))
+    high = model.model(**gia_params(end_age=75, gia=500000, gia_gains=400000))
+    assert high.retirement_income_net < low.retirement_income_net
 
 
 @pytest.mark.parametrize("income,income_tax,cg,cgt,ma", [
