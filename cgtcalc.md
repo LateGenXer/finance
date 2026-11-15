@@ -30,8 +30,19 @@ and equalisation payments is handled by adjusting Section 104 pool cost accordin
 
 ## Usage
 
-```bash
-python cgtcalc.py trades.txt
+```text
+usage: cgtcalc.py [-h] [-y TAX_YEAR] [--rounding | --no-rounding] [--format {text,html,pdf}] FILENAME [FILENAME ...]
+
+positional arguments:
+  FILENAME              file with input trades
+
+options:
+  -h, --help            show this help message and exit
+  -y TAX_YEAR, --tax-year TAX_YEAR
+                        tax year in XXXX/YYYY, XX/YY, YYYY, or YY format
+  --rounding, --no-rounding
+                        (dis)enable rounding to whole pounds
+  --format {text,html,pdf}
 ```
 
 ### Format
