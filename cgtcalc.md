@@ -45,7 +45,7 @@ options:
   --format {text,html,pdf}
 ```
 
-### Format
+## Format
 
 cgtcalc.py's input format is compatible both with
 [CGTCalculator](https://www.cgtcalculator.com/instructions.htm#tradeformat) and
@@ -80,9 +80,9 @@ Notes:
 
 Empty lines or lines starting with `#` are ignored.
 
-### Example
+## Examples
 
-#### HMRC HS284 Example 3
+### HMRC HS284 Example 3
 
 This is [Example 3 from Shares Self Assessment helpsheet HS284](https://www.gov.uk/government/publications/shares-and-capital-gains-tax-hs284-self-assessment-helpsheet).
 
@@ -136,7 +136,7 @@ LOBSTER
   2024-02-01  Sold 400 shares                          400  -1675          400       1674
 ```
 
-#### Vanguard UK Reporting Fund FAQ guide example
+### Vanguard UK Reporting Fund FAQ guide example
 
 This is the [Excess Reportable Income example calculation from Vanguard UK Reporting Fund FAQ guide](https://fund-docs.vanguard.com/uk-reporting-fund-faq.pdf#page=8).
 
@@ -179,12 +179,12 @@ IE00B3X1LS57
   2017-03-29  Sold 100 shares                          100  -22925            0          0
 ```
 
-### Notional distributions and equalisation
+## Notional distributions and equalisation
 
 Funds (OEICs, unit trusts, and offshore reporting funds such as ETFs domiciled in Ireland or Luxembourg) held outside tax wrappers need two extra kinds of entries, besides `BUY`/`SELL`, to get gains right.
 The figures for these are found in the fund's annual _Consolidated Tax Certificate_ (CTC) provided by your broker/platform, or in the fund's distribution/reporting tables.
 
-#### `DIVIDEND` — notional distributions
+### Notional distributions (`DIVIDEND`)
 
 A notional distribution is income which you are taxed on, but which was never paid out to you as cash, namely:
 
@@ -203,7 +203,7 @@ Things to keep in mind:
 * Dividends from _income_ units/shares, which are actually paid out to you as cash, must _not_ be entered, as they don't affect the value of your shares.
 * The _holding_ field is the number of shares you held at the ex-dividend date. It's merely used as a self-consistency check (a warning is shown if it doesn't match the holding implied by your `BUY`/`SELL` entries).
 
-##### Which date to use
+#### Which date to use
 
 `DIVIDEND` entries must be dated on the _ex-dividend date_, that is, the first day on which newly bought shares are no longer entitled to the distribution, and not on the distribution/payment date.
 The cost uplift must go to the shares that were taxed on the income, namely the shares held just before the ex-dividend date.
@@ -222,7 +222,7 @@ For ERI of offshore reporting funds the rules are more explicit, but also more c
 Since the cost of a Section 104 holding is averaged across all its shares, when the cost is added only matters for disposals made in between, and regulation 99(5) makes those see the ERI as if it had been added earlier.
 Therefore, entering ERI on the day after the end of the reporting period gives the same gains as the legislation, whereas entering it on the fund distribution date gives wrong results if you sold shares in between: any shares sold would miss their share of the ERI, and if you sold all your shares it would wrongly be added to the cost of any shares bought afterwards, or cause an error otherwise.
 
-#### `CAPRETURN` — equalisation payments
+### Equalisation payments (`CAPRETURN`)
 
 When you buy fund shares part way through a distribution period, the price you pay already includes income which the fund accrued since the start of the period, but before you bought them (shares bought during the period are known as _Group 2_ shares, as opposed to _Group 1_ shares which were held since the start of the period.)
 At the next distribution, Group 2 shares receive the same distribution as Group 1 shares, but part of it, the _equalisation_, is not income: it is merely a refund of part of the purchase price you paid.
@@ -238,7 +238,7 @@ Things to keep in mind:
 * The _group2-holding_ field is the number of shares bought during this distribution period (and still held at the ex-dividend date). Like _holding_ above, it is merely used as a self-consistency check.
 * As equalisation is a return of part of the price initially paid for the new units, [it is deducted from that price when computing the gain on their eventual disposal](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57705); cgtcalc.py does so by deducting it from the Section 104 holding cost, which is where the price paid for the new units normally ends up.
 
-#### When both notional distributions and equalisation apply
+### When both notional distributions and equalisation apply
 
 When you buy _accumulation_ units/shares part way through a distribution period, both of the above rules apply at once.
 Your Group 2 shares get the same distribution per share as Group 1 shares, all of which is reinvested in the fund, but only part of it is income, the remainder being equalisation:
@@ -304,7 +304,7 @@ DIVIDEND   30/12/2016  IE00B3X1LS57  100  14.69
 CAPRETURN  30/12/2016  IE00B3X1LS57  100  16.71
 ```
 
-#### Summary
+### Summary
 
 | Holding | `DIVIDEND` | `CAPRETURN` |
 | ------- | ---------- | ----------- |
