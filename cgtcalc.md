@@ -63,7 +63,7 @@ Notes:
 1. _tax_ fields of `BUY`/`SELL` transactions are optional, are supported for CGTCalculator compatibility, and will be added to the expenses
 2. notional distribution is, for example, reinvested dividends in accumulation class of UK Authorized Investments Funds, or Excess Reportable Income in Offshore Funds
 3. _holding_ and _group2-holding_ fields are used for consistency check  and have no bearing on calculated gains/losses.
-4. To ensure notional dividends and equalization payments are assigned to the right disposals, it is imperative that the _ex-dividend-date_ is used for these transactions, and not the distribution date.
+4. To ensure notional dividends and equalization payments are assigned to the right disposals, it is imperative that the _ex-dividend-date_ is used for these transactions, and not the distribution date.  For Excess Reportable Income use the day after the end of the reporting period, and not the fund distribution date.  See [Which date to use](#which-date-to-use) below.
 5. For example, _10_ for a 10-for-1 stock split, _0.1_ for a 1-for-10 reverse stock split; for [CGTCalculator compatibiliy](https://www.cgtcalculator.com/instructions.htm#restructuring).
 6. Unlike the _price_ field of `BUY`/`SELL` transactions, which is the price _per share_, the _total-income_ and _total-equalisation_ fields of `DIVIDEND`/`CAPRETURN` transactions are the _total_ amounts in pounds across your whole holding, and _not_ the per share rates.  See [Notional distributions and equalisation](#notional-distributions-and-equalisation) below.
 
@@ -191,6 +191,25 @@ Things to keep in mind:
 * ERI is a notional distribution too, therefore it must be entered as a `DIVIDEND` (not `CAPRETURN`).
 * Dividends from _income_ units/shares, which are actually paid out to you as cash, must _not_ be entered, as they don't affect the value of your shares.
 * The _holding_ field is the number of shares you held at the ex-dividend date. It's merely used as a self-consistency check (a warning is shown if it doesn't match the holding implied by your `BUY`/`SELL` entries).
+
+##### Which date to use
+
+`DIVIDEND` entries must be dated on the _ex-dividend date_, that is, the first day on which newly bought shares are no longer entitled to the distribution, and not on the distribution/payment date.
+The cost uplift must go to the shares that were taxed on the income, namely the shares held just before the ex-dividend date.
+`DIVIDEND` entries are processed before any `BUY`/`SELL` entries on the same date, so shares sold on the ex-dividend date still get the uplift, whereas shares bought on that date don't.
+
+For accumulation units/shares the ex-dividend date is usually the day after the end of the distribution period.
+[HMRC](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg57707) doesn't give an explicit date for the cost addition, but ties it to the date _"the unit holder became entitled to the notional distribution"_.
+
+For ERI of offshore reporting funds the rules are more explicit, but also more convoluted:
+
+* ERI is charged to participants _"holding an interest in the fund at the end of the reporting period"_ ([regulation 94(3)](https://www.legislation.gov.uk/uksi/2009/3001/regulation/94) of the [Offshore Funds (Tax) Regulations 2009](https://www.legislation.gov.uk/uksi/2009/3001));
+* it's treated as distributed on the _fund distribution date_, which is six months after the end of the reporting period ([regulation 94(4)](https://www.legislation.gov.uk/uksi/2009/3001/regulation/94)), and this is the date that determines the tax year in which you pay Income Tax on it;
+* for CGT purposes, it's treated as acquisition expenditure incurred on the fund distribution date ([regulation 99(2) and 99(4)](https://www.legislation.gov.uk/uksi/2009/3001/regulation/99));
+* however, if you dispose of shares before the fund distribution date, the ERI _"is treated as received immediately before that disposal"_ ([regulation 99(5)](https://www.legislation.gov.uk/uksi/2009/3001/regulation/99)).
+
+Since the cost of a Section 104 holding is averaged across all its shares, when the cost is added only matters for disposals made in between, and regulation 99(5) makes those see the ERI as if it had been added earlier.
+Therefore, entering ERI on the day after the end of the reporting period gives the same gains as the legislation, whereas entering it on the fund distribution date gives wrong results if you sold shares in between: any shares sold would miss their share of the ERI, and if you sold all your shares it would wrongly be added to the cost of any shares bought afterwards, or cause an error otherwise.
 
 #### `CAPRETURN` — equalisation payments
 
