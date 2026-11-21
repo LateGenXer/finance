@@ -120,7 +120,11 @@ if not advanced:
         shift = shift_month
         amount = st.session_state.year_amount / 12
         count = st.session_state.year_count * 12
-    s = schedule(count, amount, shift, start_date)
+    if start_date is None:
+        # Default to a year/month from today, as determined by the frequency
+        s = schedule(count, amount, shift, today, start=1)
+    else:
+        s = schedule(count, amount, shift, start_date)
 else:
     # To convert to a string based IO:
     assert schedule_file is not None

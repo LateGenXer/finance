@@ -554,6 +554,28 @@ def test_il_estimated_redemption(issued, entry):
     raise AssertionError(f'{name} not found')
 
 
+def test_issued_filter_settlement_date(issued):
+    # Gilts can't be bought for settlement after their final ex-dividend date
+    settlement_date = datetime.date(2030, 1, 1)
+    all_gilts = list(issued.filter())
+    filtered = list(issued.filter(settlement_date=settlement_date))
+    assert filtered == [g for g in all_gilts if settlement_date <= g.ex_dividend_date(g.maturity)]
+    assert 0 < len(filtered) < len(all_gilts)
+
+
+def test_issued_filter_redemption_fixed(issued):
+    # An index-linked gilt whose redemption RPI is already known is
+    # effectively conventional
+    g = IndexLinkedGilt(name=None, isin='0'*12, coupon=1.0,
+                        maturity=datetime.date(2024, 3, 1), issue_date=datetime.date(2000, 3, 1),
+                        base_rpi=100.0, rpi_series=issued.rpi_series)
+    assert g.lag == 8
+    assert g.is_redemption_fixed()
+    issued._all.append(g)
+    assert g in issued.filter(index_linked=False)
+    assert g not in issued.filter(index_linked=True)
+
+
 def test_issued_latest():
     rpi_series = RPI()
     Issued(rpi_series=rpi_series)
@@ -585,8 +607,8 @@ def test_bond_ladder(issued, prices, filename):
     today = datetime.date.fromisoformat(params['today'])
     assert today == prices.get_prices_date().date()
 
-    start = datetime.date.fromisoformat(params['start'])
-    s = schedule(params['count'], params['amount'], ladder_shifts[params['shift']], start=start)
+    # Start a year/month from today, like the Gilt Ladder page's default
+    s = schedule(params['count'], params['amount'], ladder_shifts[params['shift']], today, start=1)
 
     bl = BondLadder(issued=issued, prices=prices, schedule=s)
     bl.index_linked = params['index_linked']

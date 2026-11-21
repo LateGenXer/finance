@@ -4,7 +4,6 @@
     "count": 120,
     "amount": 1000,
     "shift": "month",
-    "start": "2024-01-01",
     "index_linked": true,
     "marginal_income_tax": 0.45,
     "interest_rate": 0.04,

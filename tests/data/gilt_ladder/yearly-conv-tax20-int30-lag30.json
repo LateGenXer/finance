@@ -4,7 +4,6 @@
     "count": 50,
     "amount": 10000,
     "shift": "year",
-    "start": "2024-12-01",
     "index_linked": false,
     "marginal_income_tax": 0.2,
     "interest_rate": 0.03,

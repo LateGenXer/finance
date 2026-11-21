@@ -23,12 +23,6 @@ import os
 import random
 import sys
 
-from typing import Callable
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-
-from ukcalendar import shift_month, shift_year
-
 
 N = 8
 
@@ -54,17 +48,15 @@ def main() -> None:
     outdir = os.path.dirname(os.path.abspath(__file__))
     for i in range(N):
         shift = cols['shift'][i]
-        shift_fn: Callable[[datetime.date, int], datetime.date]
         if shift == 'year':
-            count, amount, shift_fn = 50, 10000, shift_year
+            count, amount = 50, 10000
         else:
-            count, amount, shift_fn = 120, 1000, shift_month
+            count, amount = 120, 1000
         params = {
             'today': today.isoformat(),
             'count': count,
             'amount': amount,
             'shift': shift,
-            'start': shift_fn(today, 1).isoformat(),
             'index_linked': cols['index_linked'][i],
             'marginal_income_tax': cols['marginal_income_tax'][i],
             'interest_rate': cols['interest_rate'][i],

@@ -23,7 +23,7 @@ import lp
 from typing import Any
 
 from xirr import xirr
-from ukcalendar import next_business_day, shift_month, shift_year
+from ukcalendar import next_business_day, shift_month
 from .gilts import Gilt, IndexLinkedGilt, Issued, GiltPrices
 from data.rpi import RPI
 
@@ -32,17 +32,11 @@ from data.rpi import RPI
 EventKind = enum.IntEnum("EventKind", ['CASH_FLOW', 'CONSUMPTION', 'TAX_YEAR_END', 'TAX_PAYMENT'])
 
 
-def schedule(count, amount=10000, shift=shift_year, start=None):
+def schedule(count, amount, shift, start_date, start=0):
     result = []
-    if start is None:
-        start = datetime.datetime.now(datetime.timezone.utc).date()
-        for i in range(count):
-            d = shift(start, 1 + i)
-            result.append((d, amount))
-    else:
-        for i in range(count):
-            d = shift(start, i)
-            result.append((d, amount))
+    for i in range(start, start + count):
+        d = shift(start_date, i)
+        result.append((d, amount))
     return result
 
 

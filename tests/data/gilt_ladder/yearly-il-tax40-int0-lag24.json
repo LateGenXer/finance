@@ -1,0 +1,114 @@
+{
+  "params": {
+    "today": "2023-12-01",
+    "count": 50,
+    "amount": 10000,
+    "shift": "year",
+    "index_linked": true,
+    "marginal_income_tax": 0.4,
+    "interest_rate": 0.0,
+    "lag": 24
+  },
+  "expected": {
+    "cost": 397497.943216,
+    "cash": 0.0,
+    "buy": [
+      {
+        "TIDM": "T24I",
+        "Quantity": 23.300554
+      },
+      {
+        "TIDM": "TR26",
+        "Quantity": 130.914089
+      },
+      {
+        "TIDM": "T27",
+        "Quantity": 48.194734
+      },
+      {
+        "TIDM": "T28",
+        "Quantity": 71.108993
+      },
+      {
+        "TIDM": "T29",
+        "Quantity": 60.931102
+      },
+      {
+        "TIDM": "TR31",
+        "Quantity": 151.704545
+      },
+      {
+        "TIDM": "T32",
+        "Quantity": 54.71656
+      },
+      {
+        "TIDM": "T33",
+        "Quantity": 94.94212
+      },
+      {
+        "TIDM": "TRTQ",
+        "Quantity": 60.778264
+      },
+      {
+        "TIDM": "TG36",
+        "Quantity": 206.211463
+      },
+      {
+        "TIDM": "TG39",
+        "Quantity": 155.279289
+      },
+      {
+        "TIDM": "T41",
+        "Quantity": 147.733444
+      },
+      {
+        "TIDM": "T42A",
+        "Quantity": 54.661297
+      },
+      {
+        "TIDM": "T44",
+        "Quantity": 127.862739
+      },
+      {
+        "TIDM": "TR46",
+        "Quantity": 135.964804
+      },
+      {
+        "TIDM": "TG48",
+        "Quantity": 220.200735
+      },
+      {
+        "TIDM": "TG51",
+        "Quantity": 155.677929
+      },
+      {
+        "TIDM": "TG52",
+        "Quantity": 130.553191
+      },
+      {
+        "TIDM": "TR56",
+        "Quantity": 221.047087
+      },
+      {
+        "TIDM": "T58",
+        "Quantity": 279.388774
+      },
+      {
+        "TIDM": "T62",
+        "Quantity": 191.593519
+      },
+      {
+        "TIDM": "TR65",
+        "Quantity": 212.731113
+      },
+      {
+        "TIDM": "T68",
+        "Quantity": 349.749705
+      },
+      {
+        "TIDM": "TG73",
+        "Quantity": 166.814265
+      }
+    ]
+  }
+}
