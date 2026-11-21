@@ -19,9 +19,10 @@ def test_get_ons_table(basis:str, gender:str) -> None:
     assert isinstance(table, mortality.Table)
 
 
-def test_parse_cmi_table() -> None:
-    array = mortality.parse_cmi_table()
-    assert array.shape == (mortality.cmi_max_age - mortality.cmi_min_age + 1, mortality.cmi_max_year - mortality.cmi_min_year + 1)
+@pytest.mark.parametrize('edition', mortality.cmi_editions, ids=lambda edition: str(edition.min_year))
+def test_parse_cmi_table(edition:mortality.CmiEdition) -> None:
+    array = edition.parse()
+    assert array.shape == (edition.max_age - edition.min_age + 1, edition.max_year - edition.min_year + 1)
 
 
 def test_get_cmi_table() -> None:

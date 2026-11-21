@@ -27,12 +27,15 @@ jobs:
         cache-dependency-glob: "requirements**.txt"
     - run: uv venv
     - run: uv pip install -r requirements-dev.txt
-    # The CMI spreadsheet is immutable, so a fixed key suffices
-    - name: Cache CMI mortality spreadsheet
+    # The CMI spreadsheets are immutable, so a fixed key suffices.  Keep in
+    # sync with cmi_editions in data/mortality.py
+    - name: Cache CMI mortality spreadsheets
       uses: actions/cache@v6
       with:
-        path: data/Unisex%20mortality%20rates%20for%202026-2027%20illustrations%20v01%202025-10-17_0.xlsx
-        key: cmi-unisex-mortality-2026-2027-v01-2025-10-17
+        path: |
+          data/Unisex%20mortality%20rates%20for%202026-2027%20illustrations%20v01%202025-10-17_0.xlsx
+          data/Unisex%20mortality%20rates%20for%202027-2028%20illustrations%20v01%202026-10-14.xlsx
+        key: cmi-unisex-mortality-2026-2027-v01-2025-10-17-2027-2028-v01-2026-10-14
     - run: uv run pre-commit run --show-diff-on-failure --color always --all-files --hook-stage pre-commit
     - run: uv run pytest -n auto --cov=. --junitxml=junit.xml -o junit_family=legacy
     - run: uv run coverage xml
