@@ -1,0 +1,59 @@
+{
+  "params": {
+    "today": "2023-12-01",
+    "count": 120,
+    "amount": 1000,
+    "shift": "month",
+    "start": "2024-01-01",
+    "index_linked": true,
+    "marginal_income_tax": 0.0,
+    "interest_rate": 0.0,
+    "lag": 18
+  },
+  "expected": {
+    "cost": 118495.386848,
+    "cash": 1002.46627,
+    "buy": [
+      {
+        "TIDM": "TR24",
+        "Quantity": 22.384921
+      },
+      {
+        "TIDM": "T24I",
+        "Quantity": 38.06998
+      },
+      {
+        "TIDM": "TR26",
+        "Quantity": 128.447984
+      },
+      {
+        "TIDM": "T27",
+        "Quantity": 57.190557
+      },
+      {
+        "TIDM": "T28",
+        "Quantity": 48.057726
+      },
+      {
+        "TIDM": "T29",
+        "Quantity": 77.262155
+      },
+      {
+        "TIDM": "T30I",
+        "Quantity": 55.766439
+      },
+      {
+        "TIDM": "TR31",
+        "Quantity": 84.795632
+      },
+      {
+        "TIDM": "T32",
+        "Quantity": 80.40341
+      },
+      {
+        "TIDM": "T33",
+        "Quantity": 59.786306
+      }
+    ]
+  }
+}

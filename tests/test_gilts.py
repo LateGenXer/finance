@@ -8,6 +8,7 @@
 import copy
 import csv
 import datetime
+import json
 import logging
 import math
 import operator
@@ -558,23 +559,41 @@ def test_issued_latest():
     Issued(rpi_series=rpi_series)
 
 
-@pytest.mark.parametrize("lag", [0, 24])
-@pytest.mark.parametrize("interest_rate", [0.0, 0.02])
-@pytest.mark.parametrize("marginal_income_tax", [0.0, 0.40])
-@pytest.mark.parametrize("index_linked", [False, True])
-@pytest.mark.parametrize("count,amount,shift", [
-    (50   , 10000, shift_year ),
-    (10*12,  1000, shift_month),
-])
-#@pytest.mark.parametrize("count,amount,shift,index_linked,marginal_income_tax,interest_rate,lag", [(10, 10000, shift_year, True, 0.40, 0.25, 0)])
-def test_bond_ladder(issued, prices, count, amount, shift, index_linked, marginal_income_tax, interest_rate, lag):
-    s = schedule(count, amount, shift)
+ladder_shifts = {
+    'year': shift_year,
+    'month': shift_month,
+}
+
+
+def collect_ladder_filenames() -> list:
+    filenames = []
+    for filename in sorted(glob(os.path.join(data_dir, 'gilt_ladder', '*.json'))):
+        name, _ = os.path.splitext(os.path.basename(filename))
+        filenames.append(pytest.param(filename, id=name))
+    return filenames
+
+
+# Parameters and expected results live in tests/data/gilt_ladder/*.json.  The
+# parameter combinations were chosen by Latin sampling rather than a full
+# cartesian product.  Delete the "expected" key to regenerate it.
+@pytest.mark.parametrize('filename', collect_ladder_filenames())
+def test_bond_ladder(issued, prices, filename):
+    with open(filename, 'rt') as istream:
+        case = json.load(istream)
+    params = case['params']
+
+    today = datetime.date.fromisoformat(params['today'])
+    assert today == prices.get_prices_date().date()
+
+    start = datetime.date.fromisoformat(params['start'])
+    s = schedule(params['count'], params['amount'], ladder_shifts[params['shift']], start=start)
+
     bl = BondLadder(issued=issued, prices=prices, schedule=s)
-    bl.index_linked = index_linked
-    bl.marginal_income_tax = marginal_income_tax
-    bl.interest_rate = interest_rate
-    bl.lag = lag
-    bl.today = prices.get_prices_date().date()
+    bl.index_linked = params['index_linked']
+    bl.marginal_income_tax = params['marginal_income_tax']
+    bl.interest_rate = params['interest_rate']
+    bl.lag = params['lag']
+    bl.today = today
     bl.solve()
     bl.print()
 
@@ -598,6 +617,37 @@ def test_bond_ladder(issued, prices, count, amount, shift, index_linked, margina
     incoming = df['In'].loc[income_loc].sum()
     income = df['Tax. Inc.'].loc[income_loc].sum()
     assert income <= incoming + .005
+
+    buy_df = bl.buy_df
+    assert buy_df is not None
+    buy: list[tuple[str, float]] = []
+    for row in buy_df.itertuples():
+        if row.Instrument in ('Cash', 'Total'):
+            continue
+        quantity = float(cast(float, row.Quantity))
+        if quantity > 0.005:
+            buy.append((str(row.TIDM), quantity))
+    cash, = buy_df['Cost'].loc[buy_df['Instrument'] == 'Cash']
+    cash = float(cash)
+
+    try:
+        expected = case['expected']
+    except KeyError:
+        case['expected'] = {
+            'cost': round(bl.cost, 6),
+            'cash': round(cash, 6),
+            'buy': [{'TIDM': tidm, 'Quantity': round(quantity, 6)} for tidm, quantity in buy],
+        }
+        with open(filename, 'wt') as ostream:
+            json.dump(case, ostream, indent=2)
+            ostream.write('\n')
+        pytest.skip('expected results generated')
+
+    assert [tidm for tidm, _ in buy] == [b['TIDM'] for b in expected['buy']]
+    for (tidm, quantity), expected_b in zip(buy, expected['buy'], strict=True):
+        assert quantity == approx(expected_b['Quantity'], rel=1e-6, abs=0.01), tidm
+    assert cash == approx(expected['cash'], rel=1e-6, abs=0.01)
+    assert bl.cost == approx(expected['cost'], rel=1e-6, abs=0.01)
 
 
 def test_ladder_main():

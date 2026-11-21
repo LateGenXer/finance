@@ -1,0 +1,143 @@
+{
+  "params": {
+    "today": "2023-12-01",
+    "count": 50,
+    "amount": 10000,
+    "shift": "year",
+    "start": "2024-12-01",
+    "index_linked": true,
+    "marginal_income_tax": 0.2,
+    "interest_rate": 0.01,
+    "lag": 0
+  },
+  "expected": {
+    "cost": 394994.89116,
+    "cash": 0.0,
+    "buy": [
+      {
+        "TIDM": "T24I",
+        "Quantity": 43.931537
+      },
+      {
+        "TIDM": "TR26",
+        "Quantity": 59.762534
+      },
+      {
+        "TIDM": "T27",
+        "Quantity": 44.341471
+      },
+      {
+        "TIDM": "T28",
+        "Quantity": 65.383379
+      },
+      {
+        "TIDM": "T29",
+        "Quantity": 113.374253
+      },
+      {
+        "TIDM": "TR31",
+        "Quantity": 68.853457
+      },
+      {
+        "TIDM": "T32",
+        "Quantity": 50.652535
+      },
+      {
+        "TIDM": "T33",
+        "Quantity": 87.846156
+      },
+      {
+        "TIDM": "TRTQ",
+        "Quantity": 54.412675
+      },
+      {
+        "TIDM": "T2IL",
+        "Quantity": 44.76126
+      },
+      {
+        "TIDM": "TG36",
+        "Quantity": 62.990758
+      },
+      {
+        "TIDM": "TR37",
+        "Quantity": 100.10674
+      },
+      {
+        "TIDM": "TG39",
+        "Quantity": 74.231028
+      },
+      {
+        "TIDM": "TR40",
+        "Quantity": 54.355799
+      },
+      {
+        "TIDM": "T41",
+        "Quantity": 69.888232
+      },
+      {
+        "TIDM": "T42A",
+        "Quantity": 107.211642
+      },
+      {
+        "TIDM": "T44",
+        "Quantity": 61.64785
+      },
+      {
+        "TIDM": "TR45",
+        "Quantity": 92.872766
+      },
+      {
+        "TIDM": "TR46",
+        "Quantity": 65.934864
+      },
+      {
+        "TIDM": "T47",
+        "Quantity": 52.463387
+      },
+      {
+        "TIDM": "TG48",
+        "Quantity": 141.967789
+      },
+      {
+        "TIDM": "TR50",
+        "Quantity": 55.1575
+      },
+      {
+        "TIDM": "TG51",
+        "Quantity": 76.167173
+      },
+      {
+        "TIDM": "TG52",
+        "Quantity": 193.333286
+      },
+      {
+        "TIDM": "TR8F",
+        "Quantity": 49.432029
+      },
+      {
+        "TIDM": "TR56",
+        "Quantity": 139.144021
+      },
+      {
+        "TIDM": "T58",
+        "Quantity": 279.932374
+      },
+      {
+        "TIDM": "T62",
+        "Quantity": 192.933263
+      },
+      {
+        "TIDM": "TR65",
+        "Quantity": 210.651389
+      },
+      {
+        "TIDM": "T68",
+        "Quantity": 351.15441
+      },
+      {
+        "TIDM": "TG73",
+        "Quantity": 83.165655
+      }
+    ]
+  }
+}

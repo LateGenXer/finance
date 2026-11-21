@@ -1,0 +1,83 @@
+{
+  "params": {
+    "today": "2023-12-01",
+    "count": 50,
+    "amount": 10000,
+    "shift": "year",
+    "start": "2024-12-01",
+    "index_linked": false,
+    "marginal_income_tax": 0.4,
+    "interest_rate": 0.005,
+    "lag": 24
+  },
+  "expected": {
+    "cost": 227733.158092,
+    "cash": 0.0,
+    "buy": [
+      {
+        "TIDM": "TN25",
+        "Quantity": 70.456057
+      },
+      {
+        "TIDM": "T26",
+        "Quantity": 77.719423
+      },
+      {
+        "TIDM": "T26A",
+        "Quantity": 81.822435
+      },
+      {
+        "TIDM": "TN28",
+        "Quantity": 83.363487
+      },
+      {
+        "TIDM": "TG29",
+        "Quantity": 84.517094
+      },
+      {
+        "TIDM": "TR29",
+        "Quantity": 83.618537
+      },
+      {
+        "TIDM": "TG30",
+        "Quantity": 84.216181
+      },
+      {
+        "TIDM": "TG31",
+        "Quantity": 168.374684
+      },
+      {
+        "TIDM": "TG33",
+        "Quantity": 84.682493
+      },
+      {
+        "TIDM": "TG35",
+        "Quantity": 261.414645
+      },
+      {
+        "TIDM": "TR39",
+        "Quantity": 270.544149
+      },
+      {
+        "TIDM": "TG41",
+        "Quantity": 362.984107
+      },
+      {
+        "TIDM": "TG46",
+        "Quantity": 375.528721
+      },
+      {
+        "TIDM": "TG50",
+        "Quantity": 1057.466178
+      },
+      {
+        "TIDM": "TG61",
+        "Quantity": 1390.564436
+      },
+      {
+        "TIDM": "TR73",
+        "Quantity": 99.978233
+      }
+    ]
+  }
+}
