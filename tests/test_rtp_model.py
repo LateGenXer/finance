@@ -90,9 +90,9 @@ FIX = 10000   # fixed retirement income, maximize end net worth
 @pytest.mark.parametrize("household,country,retirement_income_net,lump_sum,sipp_extra_contrib,expected", [
     pytest.param(SINGLE, 'UK', MAX,    0, False, dict(retirement_income_net=85205.10, net_worth_end=0), id="single-UK-max"),
     pytest.param(JOINT,  'PT', MAX, 1000, True,  dict(retirement_income_net=89990.58, net_worth_end=0), id="joint-PT-max-ls-extra"),
-    pytest.param(MA,     'JP', FIX,    0, True,  dict(net_worth_end=5853515), id="ma-JP-fix-extra"),
+    pytest.param(MA,     'UK', FIX,    0, True,  dict(net_worth_end=6372321), id="ma-UK-fix-extra"),
     pytest.param(SINGLE, 'JP', FIX, 1000, True,  dict(net_worth_end=5017391), id="single-JP-fix-ls-extra"),
-    pytest.param(JOINT,  'UK', FIX,    0, False, dict(net_worth_end=6352109), id="joint-UK-fix"),
+    pytest.param(JOINT,  'JP', FIX,    0, False, dict(net_worth_end=5844179), id="joint-JP-fix"),
     pytest.param(MA,     'PT', MAX, 1000, False, dict(retirement_income_net=89990.57, net_worth_end=0), id="ma-PT-max-ls"),
 ])
 def test_model(household, country, retirement_income_net, lump_sum, sipp_extra_contrib, expected):
@@ -104,7 +104,9 @@ def test_model(household, country, retirement_income_net, lump_sum, sipp_extra_c
 
 @pytest.mark.parametrize("country,currency", [('UK', None), ('PT', 'EUR'), ('JP', 'JPY')])
 def test_run(capsys, country, currency):
-    params = model_params(country=country, retirement_income_net=MAX, lump_sum=1000, sipp_extra_contrib=False, **JOINT)
+    # Exercise the output with and without lump sum allocation
+    lump_sum = 0 if country == 'UK' else 1000
+    params = model_params(country=country, retirement_income_net=MAX, lump_sum=lump_sum, sipp_extra_contrib=False, **JOINT)
     if country == 'UK':
         params['exchange_rates'] = {}
     model.run(params)
@@ -112,6 +114,7 @@ def test_run(capsys, country, currency):
     assert 'Retirement net income' in out
     if currency is not None:
         assert currency in out
+    assert ('Lump sump allocation' in out) == bool(lump_sum)
 
 
 def test_missing_exchange_rates():
@@ -218,6 +221,33 @@ def test_gia_gains_reduce_income():
     low = model.model(**gia_params(end_age=75, gia=500000, gia_gains=100000))
     high = model.model(**gia_params(end_age=75, gia=500000, gia_gains=400000))
     assert high.retirement_income_net < low.retirement_income_net
+
+
+@pytest.mark.parametrize("joint", [False, True])
+def test_db_pension(joint):
+    db = {
+        'db_payments_1': [10000], 'db_ages_1': [72],
+        'db_payments_2': [5000], 'db_ages_2': [73],
+    }
+    without = model.model(**gia_params(joint=joint, end_age=80))
+    with_db = model.model(**gia_params(joint=joint, end_age=80, **db))
+    assert with_db.retirement_income_net > without.retirement_income_net
+
+
+def test_sipp_extra_contrib_over_75():
+    # No extra SIPP contributions are allowed from age 75
+    params = gia_params(sipp_1=100000, sipp_contrib_1=1000, sipp_extra_contrib=True, end_age=77)
+    result = model.model(**params)
+    assert len(result.data) == 7
+    for row in result.data:
+        if row.year - params['dob_1'] >= 75:
+            assert row.contrib_1 == 0
+
+
+def test_verbosity(monkeypatch, capsys):
+    monkeypatch.setattr(model, 'verbosity', 2)
+    model.model(**gia_params(end_age=72))
+    assert capsys.readouterr().out
 
 
 @pytest.mark.parametrize("income,income_tax,cg,cgt,ma", [

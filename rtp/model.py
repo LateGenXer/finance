@@ -120,16 +120,6 @@ def income_tax_lp(prob, gross_income, income_tax_bands, factor=1.0):
     return tax
 
 
-def uk_cgt_lp(prob, cg, cgt_rate, cgt_allowance):
-    global uid
-    cg_00 = lp.LpVariable(f'cgt_{uid}_00', 0, cgt_allowance)
-    cg_xx = lp.LpVariable(f'cgt_{uid}_xx', 0)
-    uid += 1
-    prob += cg_00 + cg_xx == cg
-    tax = cg_xx * cgt_rate
-    return tax
-
-
 def uk_tax_lp(prob, gross_income, cg, itt:UK.IncomeTaxThresholds, marriage_allowance:int=0):
     assert not isinstance(marriage_allowance, bool)
     global uid
