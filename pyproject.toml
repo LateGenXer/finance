@@ -21,6 +21,9 @@ filterwarnings = [
 ]
 
 [tool.coverage.run]
+# Measure Python subprocesses (e.g., tests running scripts' main()), which
+# pytest-cov no longer does itself from version 7 onwards.
+patch = ["subprocess"]
 omit = [
     "tests/*",
 ]

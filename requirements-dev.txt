@@ -1,5 +1,5 @@
 -r requirements.txt
-coverage ~= 7.4
+coverage ~= 7.10
 pulp ~= 3.0
 pytest ~= 9.0.3
 pytest-xdist ~= 3.5
