@@ -435,6 +435,19 @@ il_cash_flows = [
 ]
 
 
+@pytest.mark.parametrize("name,coupon", [
+    ("4% Treasury Gilt 2060", 4.0),
+    ("0 1/8% Treasury Gilt 2026", 0.125),
+    ("1 1/2% Treasury Gilt 2026", 1.5),
+    ("1 3/4% Treasury Gilt 2037", 1.75),
+    ("0⅝% Treasury Gilt 2035", 0.625),
+    ("½% Treasury Gilt 2061", 0.5),
+    ("1/2% Treasury Gilt 2061", 0.5),
+])
+def test_parse_coupon(name, coupon):
+    assert Issued._parse_coupon(name) == coupon
+
+
 @pytest.mark.parametrize("issue_date,maturity,redemption_fixed", [
     # 3m
     ("2005-09-22", "2013-12-01", "2013-09-01"),
