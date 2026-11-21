@@ -86,9 +86,7 @@ def is_isin(ticker: str) -> bool:
             n += c
     ck = luhn(n)
 
-    assert ticker[11] == ck
-
-    return True
+    return ticker[11] == ck
 
 
 _headers = {

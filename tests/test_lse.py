@@ -88,6 +88,8 @@ def test_main() -> None:
     '1B0007980591',  # non-alpha country code
     'GB00079805_1',  # non-alphanumeric NSIN
     'GB000798059X',  # non-digit check digit
+    'GB0007980592',  # wrong check digit
+    'GB00BBJNQY22',  # wrong check digit
 ])
 def test_is_isin_invalid(isin:str) -> None:
     assert not lse.is_isin(isin)
