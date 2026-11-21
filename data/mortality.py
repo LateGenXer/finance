@@ -196,7 +196,7 @@ cmi_editions = [
 ]
 # The edition used by the app.  Only switch to the newest edition once GitHub
 # Pages has been updated with it.
-cmi_edition = cmi_editions[-2]
+cmi_edition = cmi_editions[-1]
 
 
 def get_cmi_table() -> Table:
