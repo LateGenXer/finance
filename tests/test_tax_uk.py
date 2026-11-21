@@ -87,13 +87,13 @@ def test_str_to_tax_year(s:str, eyc:typing.ContextManager) -> None:
         assert TaxYear.from_string(s) == ey
 
 
-# Boundaries of the rough approximation in state_pension_age
 @pytest.mark.parametrize("dob,age", [
     (1955, 66),
-    (1962, 66),
-    (1963, 67),
-    (1976, 67),
-    (1977, 68),
+    (1960, 66),
+    (1961, 67),
+    (1962, 67),
+    (1977, 67),
+    (1978, 68),
     (1990, 68),
 ])
 def test_state_pension_age(dob:int, age:int) -> None:

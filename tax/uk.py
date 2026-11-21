@@ -48,11 +48,21 @@ def nmpa(dob:int) -> int:
 
 
 # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/310231/spa-timetable.pdf
-# XXX rough approximation
+#
+# State pension age is:
+# - 66 for those born before 6 April 1960;
+# - 66 years and 1-11 months for those born 6 April 1960 - 5 March 1961;
+# - 67 for those born 6 March 1961 - 5 April 1977;
+# - 67 years and 1-11 months for those born 6 April 1977 - 5 April 1978;
+# - 68 for those born after 5 April 1978.
+#
+# Only the year of birth is known, so assume a mid-year birthday (1 June), and
+# return the age in whose year the state pension starts.  E.g., for those
+# born 1 June 1960 it starts in August 2026, aged 66 and 2 months.
 def state_pension_age(dob:int) -> int:
-    if dob + 66 <= 2028:
+    if dob < 1961:
         return 66
-    elif dob + 67 < 2044:
+    elif dob < 1978:
         return 67
     else:
         return 68
