@@ -29,3 +29,21 @@ def test_exchange_rates(year:int, month:int, currency:str, rate:Decimal) -> None
 def test_exchange_rate(currency:str) -> None:
     rate = data.hmrc.exchange_rate(currency)
     assert rate > Decimal(0)
+
+
+def test_current_exchange_rates() -> None:
+    rates = data.hmrc.current_exchange_rates()
+    assert {'EUR', 'JPY', 'USD'} <= rates.keys()
+
+    # Filtering by currency, from any iterable
+    filtered = data.hmrc.current_exchange_rates(currency for currency in ['EUR', 'JPY'])
+    assert filtered == {'EUR': rates['EUR'], 'JPY': rates['JPY']}
+
+    assert data.hmrc.current_exchange_rates([]) == {}
+
+    with pytest.raises(KeyError):
+        data.hmrc.current_exchange_rates(['XXX'])
+
+    # Filtering must not modify the cached rates
+    assert data.hmrc.current_exchange_rates() == rates
+    assert len(rates) > 2

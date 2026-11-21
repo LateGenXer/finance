@@ -9,11 +9,11 @@
 import dataclasses
 import sys
 
+from collections.abc import Mapping
+from decimal import Decimal
 from typing import Any
 
 import lp
-
-from data import hmrc
 
 import tax.uk as UK
 import tax.pt as PT
@@ -367,6 +367,7 @@ def model(
         aa_2,
         marriage_allowance:bool,
         end_age,
+        exchange_rates:Mapping[str, Decimal | float] = dict(),
     ):
 
     if joint:
@@ -409,9 +410,9 @@ def model(
     assert sipp_contrib_2 <= UK.aa
 
     if country == 'PT':
-        gbpeur = float(hmrc.exchange_rate('EUR'))
+        gbpeur = float(exchange_rates['EUR'])
     if country == 'JP':
-        gbpjpy = float(hmrc.exchange_rate('JPY'))
+        gbpjpy = float(exchange_rates['JPY'])
 
     prob = lp.LpProblem("Retirement")
 
@@ -873,10 +874,10 @@ def run(params):
 
     country=params['country']
     if country == 'PT':
-        gbpeur = float(hmrc.exchange_rate('EUR'))
+        gbpeur = float(params['exchange_rates']['EUR'])
         print(f"Retirement net income: {result.retirement_income_net*gbpeur:10,.0f} EUR")
     if country == 'JP':
-        gbpjpy = float(hmrc.exchange_rate('JPY'))
+        gbpjpy = float(params['exchange_rates']['JPY'])
         print(f"Retirement net income: {result.retirement_income_net*gbpjpy:10,.0f} JPY")
 
     print(f"End net worth:         {result.net_worth_end:10,.0f}")

@@ -1,4 +1,8 @@
+from decimal import Decimal
+
 import pytest
+
+import data.hmrc
 
 try:
     from streamlit.testing.v1 import AppTest
@@ -69,3 +73,17 @@ def test_error(at, submit):
     assert not at.exception
     assert len(at.error) == 1
 
+
+
+@pytest.mark.parametrize("country", ['PT', 'JP'])
+def test_country(at, submit, monkeypatch, country):
+    # Avoid live exchange rate fetches
+    exchange_rates = {'EUR': Decimal('1.15'), 'JPY': Decimal('190.0')}
+    def current_exchange_rates(currencies=None):
+        return {currency: exchange_rates[currency] for currency in currencies or exchange_rates}
+    monkeypatch.setattr(data.hmrc, 'current_exchange_rates', current_exchange_rates)
+    at.selectbox(key="retirement_country").set_value(country)
+    submit.click()
+    at.run()
+    assert not at.exception
+    assert len(at.error) == 0

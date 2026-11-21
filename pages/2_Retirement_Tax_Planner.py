@@ -15,6 +15,7 @@ import pandas as pd
 
 from tax.uk import aa, uiaa
 from rtp.model import model, column_headers, dataframe
+from data import hmrc
 
 import common
 
@@ -316,6 +317,7 @@ for key, xform in state_xforms.items():
 
 params['present_year'] = datetime.date.today().year
 params['country'] = params.pop('retirement_country')
+params['exchange_rates'] = hmrc.current_exchange_rates(('EUR', 'JPY')) if params['country'] != 'UK' else {}
 
 if devel:
     with st.expander("Parameters"):

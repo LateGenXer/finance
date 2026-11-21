@@ -11,6 +11,8 @@ import functools
 
 import xml.etree.ElementTree
 
+from collections.abc import Iterable
+
 import requests
 
 from decimal import Decimal
@@ -47,7 +49,13 @@ def exchange_rates(year:int, month:int) -> dict[str, Decimal]:
     return rates
 
 
-def exchange_rate(currency:str) -> Decimal:
+def current_exchange_rates(currencies:Iterable[str] | None = None) -> dict[str, Decimal]:
     today = datetime.datetime.now(datetime.timezone.utc).date()
     rates = exchange_rates(today.year, today.month)
-    return rates[currency]
+    if currencies is None:
+        return rates
+    return {currency: rates[currency] for currency in currencies}
+
+
+def exchange_rate(currency:str) -> Decimal:
+    return current_exchange_rates()[currency]

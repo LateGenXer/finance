@@ -1,26 +1,36 @@
-import datetime
+import json
+import os
+
+from decimal import Decimal
 
 import pytest
 
 from tax import uk
 from rtp import model
 
+import data.hmrc
+
 import test_tax_uk
 
 import lp
 
 
-@pytest.mark.parametrize('lump_sum', [pytest.param(0, id=""), pytest.param(1000, id="lump_sum")])
-@pytest.mark.parametrize('retirement_income_net', [pytest.param(0, id="max_income"), pytest.param(10000, id="fix_income")])
-@pytest.mark.parametrize('retirement_country', ['UK', 'PT', 'JP'])
-@pytest.mark.parametrize('sipp_extra_contrib', [pytest.param(False, id=""), pytest.param(True, id="sipp_extra_contrib")])
-@pytest.mark.parametrize('joint,marriage_allowance', [
-    pytest.param(False, False, id="single"),
-    pytest.param(True, False, id="joint"),
-    pytest.param(True, True, id="marriage_allowance"),
-])
-def test_model(joint, sipp_extra_contrib, retirement_country, retirement_income_net, lump_sum, marriage_allowance):
-    params = {
+# Fixed inputs, so that results don't depend on the current date or live data
+present_year = 2026
+exchange_rates = {'EUR': Decimal('1.15'), 'JPY': Decimal('190.0')}
+
+
+@pytest.fixture(autouse=True)
+def no_live_exchange_rates(monkeypatch):
+    def fail(*args, **kwargs):
+        raise AssertionError("unexpected live exchange rate fetch")
+    monkeypatch.setattr(data.hmrc, 'exchange_rates', fail)
+    monkeypatch.setattr(data.hmrc, 'current_exchange_rates', fail)
+    monkeypatch.setattr(data.hmrc, 'exchange_rate', fail)
+
+
+def model_params(joint, marriage_allowance, country, retirement_income_net, lump_sum, sipp_extra_contrib):
+    return {
         "joint": joint,
         "dob_1": 1980,
         "dob_2": 1981,
@@ -50,8 +60,8 @@ def test_model(joint, sipp_extra_contrib, retirement_country, retirement_income_
         "gia_growth_rate": 5.5e-2,
         "sipp_growth_rate_1": 5.5e-2,
         "sipp_growth_rate_2": 5.5e-2,
-        'present_year': datetime.date.today().year,
-        "country": retirement_country,
+        "present_year": present_year,
+        "country": country,
         "retirement_income_net": retirement_income_net,
         "retirement_year": 2045,
         "lump_sum": lump_sum,
@@ -59,13 +69,75 @@ def test_model(joint, sipp_extra_contrib, retirement_country, retirement_income_
         "aa_2": uk.uiaa,
         "marriage_allowance": marriage_allowance,
         "end_age": 100,
+        "exchange_rates": exchange_rates,
     }
 
+
+SINGLE = dict(joint=False, marriage_allowance=False)
+JOINT = dict(joint=True, marriage_allowance=False)
+MA = dict(joint=True, marriage_allowance=True)
+
+MAX = 0       # maximize retirement income
+FIX = 10000   # fixed retirement income, maximize end net worth
+
+
+# Only figures that are the LP objective are pinned (retirement income when
+# maximizing income, end net worth otherwise); other figures such as total tax
+# are not unique among optimal solutions and differ between LP solvers.
+#
+# Latin-sampled combinations: each household type and country appears twice,
+# each binary factor three times.
+@pytest.mark.parametrize("household,country,retirement_income_net,lump_sum,sipp_extra_contrib,expected", [
+    pytest.param(SINGLE, 'UK', MAX,    0, False, dict(retirement_income_net=85205.10, net_worth_end=0), id="single-UK-max"),
+    pytest.param(JOINT,  'PT', MAX, 1000, True,  dict(retirement_income_net=89990.58, net_worth_end=0), id="joint-PT-max-ls-extra"),
+    pytest.param(MA,     'JP', FIX,    0, True,  dict(net_worth_end=5853515), id="ma-JP-fix-extra"),
+    pytest.param(SINGLE, 'JP', FIX, 1000, True,  dict(net_worth_end=5017391), id="single-JP-fix-ls-extra"),
+    pytest.param(JOINT,  'UK', FIX,    0, False, dict(net_worth_end=6352109), id="joint-UK-fix"),
+    pytest.param(MA,     'PT', MAX, 1000, False, dict(retirement_income_net=89990.57, net_worth_end=0), id="ma-PT-max-ls"),
+])
+def test_model(household, country, retirement_income_net, lump_sum, sipp_extra_contrib, expected):
+    params = model_params(country=country, retirement_income_net=retirement_income_net, lump_sum=lump_sum, sipp_extra_contrib=sipp_extra_contrib, **household)
+    result = model.model(**params)
+    actual = {name: getattr(result, name) for name in expected}
+    assert actual == pytest.approx(expected, rel=1e-6, abs=1)
+
+
+@pytest.mark.parametrize("country,currency", [('UK', None), ('PT', 'EUR'), ('JP', 'JPY')])
+def test_run(capsys, country, currency):
+    params = model_params(country=country, retirement_income_net=MAX, lump_sum=1000, sipp_extra_contrib=False, **JOINT)
+    if country == 'UK':
+        params['exchange_rates'] = {}
     model.run(params)
+    out = capsys.readouterr().out
+    assert 'Retirement net income' in out
+    if currency is not None:
+        assert currency in out
+
+
+def test_missing_exchange_rates():
+    params = model_params(country='JP', retirement_income_net=MAX, lump_sum=0, sipp_extra_contrib=False, **SINGLE)
+    del params['exchange_rates']
+    with pytest.raises(KeyError):
+        model.model(**params)
+
+
+def test_default_params():
+    # Default parameters presented by the Streamlit app
+    with open(os.path.join(os.path.dirname(__file__), 'data', 'rtp-params-default.json'), 'rt') as f:
+        params = json.load(f)
+    del params['version']
+    for key in ('inflation_rate', 'isa_growth_rate', 'gia_growth_rate', 'sipp_growth_rate_1', 'sipp_growth_rate_2', 'lsa_ratio_1', 'lsa_ratio_2'):
+        params[key] = params[key] / 100.0
+    for key in ('db_payments_1', 'db_payments_2', 'db_ages_1', 'db_ages_2'):
+        assert params[key] == ''
+        params[key] = []
+    params['country'] = params.pop('retirement_country')
+    params['present_year'] = present_year
+    result = model.model(**params)
+    assert result.retirement_income_net == pytest.approx(77656.13, rel=1e-6, abs=1)
 
 
 def gia_params(**kwargs):
-    present_year = datetime.date.today().year
     params = {
         "joint": False,
         "dob_1": present_year - 70,
