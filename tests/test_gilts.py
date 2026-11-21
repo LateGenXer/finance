@@ -608,3 +608,11 @@ def test_ladder_main():
     ]
     output = subprocess.check_output(cmd, text=True)
     assert output
+
+
+def test_cash_flows_after_last_ex_dividend():
+    maturity = datetime.date(2024, 1, 31)
+    g = Gilt(name=None, isin='0'*12, coupon=1.0, maturity=maturity, issue_date=datetime.date(2010, 1, 31))
+    xd_date = Gilt.ex_dividend_date(maturity)
+    assert g.cash_flows(xd_date)
+    assert g.cash_flows(next_business_day(xd_date)) == []

@@ -20,7 +20,7 @@ from decimal import Decimal
 from glob import glob
 
 from tax.uk import TaxYear
-from accrued_income import Calculator, TextReport, footnote_mark
+from accrued_income import Calculator, TextReport, footnote_mark, main, showwarning
 
 
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
@@ -148,3 +148,29 @@ def test_main() -> None:
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
     )
+
+
+@pytest.mark.parametrize('tax_year', ['2023/24', '2024/25'])
+def test_main_tax_year(monkeypatch, capsys, tax_year:str) -> None:
+    filename = os.path.join(data_dir, 'accrued_income', 'example.csv')
+    monkeypatch.setattr(sys, 'argv', ['accrued_income.py', '--tax-year', tax_year, filename])
+    main()
+    output = capsys.readouterr().out
+    assert output
+
+
+def test_default_tax_year_end() -> None:
+    calculator = Calculator()
+    today = datetime.datetime.now(datetime.timezone.utc).date()
+    assert calculator.tax_year_end.month == 4
+    assert calculator.tax_year_end.day == 5
+    assert 0 < (calculator.tax_year_end - today).days <= 366 + 31
+
+
+def test_showwarning(capsys) -> None:
+    stream = io.StringIO()
+    showwarning('Something odd', UserWarning, __file__, 1, file=stream)
+    assert stream.getvalue() == 'warning: UserWarning: Something odd\n'
+
+    showwarning('Something odd', UserWarning, __file__, 1)
+    assert capsys.readouterr().err == 'warning: UserWarning: Something odd\n'

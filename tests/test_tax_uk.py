@@ -11,7 +11,7 @@ import pytest
 
 from contextlib import nullcontext
 
-from tax.uk import IncomeTaxThresholds, cgt_allowance, cgt_rates, tax, TaxYear
+from tax.uk import IncomeTaxThresholds, cgt_allowance, cgt_rates, tax, TaxYear, state_pension_age
 
 
 income_tax_threshold_20 = IncomeTaxThresholds.income_tax_threshold_20
@@ -85,3 +85,16 @@ str_to_tax_year_params = [
 def test_str_to_tax_year(s:str, eyc:typing.ContextManager) -> None:
     with eyc as ey:
         assert TaxYear.from_string(s) == ey
+
+
+# Boundaries of the rough approximation in state_pension_age
+@pytest.mark.parametrize("dob,age", [
+    (1955, 66),
+    (1962, 66),
+    (1963, 67),
+    (1976, 67),
+    (1977, 68),
+    (1990, 68),
+])
+def test_state_pension_age(dob:int, age:int) -> None:
+    assert state_pension_age(dob) == age

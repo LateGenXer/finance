@@ -5,6 +5,9 @@
 #
 
 
+import sys
+
+import numpy as np
 import pytest
 
 from pytest import approx
@@ -71,3 +74,11 @@ def test_life_expectancy(cmi_table:mortality.Table) -> None:
 
     assert le_mc < le_uc
     assert le_fc < le_uc
+
+
+def test_main(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(sys, 'argv', ['mortality.py', str(tmp_path)])
+    mortality.main()
+    for edition in mortality.cmi_editions:
+        array = np.load(tmp_path / edition.npy)
+        assert array.shape == (edition.max_age - edition.min_age + 1, edition.max_year - edition.min_year + 1)

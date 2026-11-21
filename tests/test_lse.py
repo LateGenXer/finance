@@ -82,3 +82,12 @@ def test_main() -> None:
             if entry['tidm'] == 'TR68' and entry['isin'] == 'GB00BBJNQY21':
                 found = True
     assert found
+
+
+@pytest.mark.parametrize('isin', [
+    '1B0007980591',  # non-alpha country code
+    'GB00079805_1',  # non-alphanumeric NSIN
+    'GB000798059X',  # non-digit check digit
+])
+def test_is_isin_invalid(isin:str) -> None:
+    assert not lse.is_isin(isin)

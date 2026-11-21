@@ -403,3 +403,21 @@ def test_main() -> None:
         ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL)
+
+
+# cgtcalculator's R restructuring with factor >= 1 is equivalent to SPLIT
+@pytest.mark.parametrize('restructuring,equivalent', [
+    ('R 01/02/2019 FOO 2', 'SPLIT 01/02/2019 FOO 2'),
+    ('R 01/02/2019 FOO 0.5', 'UNSPLIT 01/02/2019 FOO 2'),
+])
+def test_restructuring(restructuring:str, equivalent:str) -> None:
+    def calculate(line:str) -> str:
+        istream = io.StringIO(f'SELL 01/04/2019 FOO 10 6 0\n{line}\nBUY 01/01/2019 FOO 20 10 0\n')
+        calculator = Calculator()
+        calculator.parse(istream)
+        result = calculator.calculate()
+        stream = io.StringIO()
+        result.write(TextReport(stream))
+        return stream.getvalue()
+
+    assert calculate(restructuring) == calculate(equivalent)
