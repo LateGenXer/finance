@@ -97,8 +97,6 @@ def main() -> None:
     dates:set[datetime.date] = set()
 
     # https://www.dmo.gov.uk/publications/gilt-market/formulae-and-examples/
-    # XXX Merge https://www.api.gov.uk/gds/bank-holidays/ too
-    #     `curl -s https://www.gov.uk/bank-holidays.json | jq -r '.["england-and-wales"].events[].date'`
     url = 'https://www.dmo.gov.uk/media/3lgd2zqc/ukbankholidays-nov23a.xls'
     filename = os.path.basename(url)
     download(url, filename, ttl=24*3600, content_type='application/vnd.ms-excel')
