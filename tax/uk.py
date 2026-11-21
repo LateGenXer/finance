@@ -37,13 +37,28 @@ state_pension_full = 241.30 * weeks_per_year
 
 # https://www.gov.uk/government/publications/increasing-normal-minimum-pension-age/increasing-normal-minimum-pension-age
 # https://adviser.royallondon.com/technical-central/pensions/benefit-options/increase-in-normal-minimum-pension-age-in-2028/
+#
+# NMPA rises from 55 to 57 on 6 April 2028:
+# - those born before 6 April 1971 turn 57 before then, so are unaffected;
+# - those born 6 April 1971 - 5 April 1973 may access their pensions from 55
+#   until 6 April 2028, but then lose access until 57 (except for pensions
+#   already in payment);
+# - those born after 5 April 1973 can only access their pensions from 57.
+#
+# Only the year of birth is known, so assume a mid-year birthday (1 June).
+# Those born in 1971 then only lose access between 6 April and 1 June 2028,
+# so treat them as unaffected.  A single age can't model the access window of
+# those born in 1972, so conservatively return 57 for them.
+#
+# Protected pension ages are not modelled.
 def nmpa(dob:int) -> int:
-    if dob + 55 <= 2028:
+    if dob < 1972:
         return 55
-    elif dob + 57 < 2044:
+    elif dob < 1987:
         return 57
     else:
-        # XXX: Not set in stone
+        # XXX: Not set in stone; assumes NMPA stays 10 years below state
+        # pension age, rising to 58 in 2044.
         return 58
 
 

@@ -11,7 +11,7 @@ import pytest
 
 from contextlib import nullcontext
 
-from tax.uk import IncomeTaxThresholds, cgt_allowance, cgt_rates, tax, TaxYear, state_pension_age
+from tax.uk import IncomeTaxThresholds, cgt_allowance, cgt_rates, tax, TaxYear, nmpa, state_pension_age
 
 
 income_tax_threshold_20 = IncomeTaxThresholds.income_tax_threshold_20
@@ -98,3 +98,16 @@ def test_str_to_tax_year(s:str, eyc:typing.ContextManager) -> None:
 ])
 def test_state_pension_age(dob:int, age:int) -> None:
     assert state_pension_age(dob) == age
+
+
+@pytest.mark.parametrize("dob,age", [
+    (1960, 55),
+    (1971, 55),
+    (1972, 57),
+    (1973, 57),
+    (1986, 57),
+    (1987, 58),
+    (2000, 58),
+])
+def test_nmpa(dob:int, age:int) -> None:
+    assert nmpa(dob) == age
