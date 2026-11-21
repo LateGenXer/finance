@@ -44,6 +44,15 @@ def test_escalation_fixed() -> None:
     assert escalation(10) == pytest.approx(1.03**10)
 
 
+def test_escalation_deferred() -> None:
+    escalation = annuities.escalation_deferred(5)(annuities.escalation_fixed(.03))
+    assert escalation(0) == 0.0
+    assert escalation(4) == 0.0
+    assert escalation(5) == 1.0
+    assert escalation(6) == pytest.approx(1.03)
+    assert escalation(15) == pytest.approx(1.03**10)
+
+
 def test_present_value_escalation(yield_curve, table):
     pv_level = annuities.present_value(66, yield_curve, table)
     pv_fixed = annuities.present_value(66, yield_curve, table, escalation=annuities.escalation_fixed(.03))

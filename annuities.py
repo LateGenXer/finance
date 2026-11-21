@@ -27,6 +27,7 @@ def escalation_deferred(delay):
     def decorate(fn):
         def escalation(years):
             return 0.0 if years < delay else fn(years - delay)
+        return escalation
     return decorate
 
 
