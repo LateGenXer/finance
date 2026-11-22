@@ -93,6 +93,17 @@ def get_latest_gilt_offer_prices():
     return GiltPrices.from_latest(kind='offer')
 
 
+def warn_unpriced_gilts(gilts, prices):
+    '''Warn about gilts that are left out for lack of a price.'''
+    unpriced = [g for g in gilts if prices.lookup(g.isin) is None]
+    if not unpriced:
+        return
+    msg = 'The following gilts are not included, as there is no price for them yet (newly issued gilts only get a closing price at the end of the next business day):'
+    for g in unpriced:
+        msg += f'\n- {g.name} ({g.isin})'
+    st.warning(msg, icon="⚠️")
+
+
 def plot_yield_curve(df, yTitle, ySeries='Yield', cSeries='TIDM', ois=None):
     import altair as alt
 

@@ -254,6 +254,8 @@ if index_linked is not False:
 
 st.divider()
 
+common.warn_unpriced_gilts((g for g in issued.filter(index_linked=index_linked, settlement_date=settlement_date) if g.maturity <= maturity_limit), prices)
+
 rows = [
     (instrument, tidm, url, gross_yield*100.0, net_yield*100.0, net_yield*100.0/(1.0 - marginal_income_tax), maturity_)
     for instrument, tidm, url, gross_yield, net_yield, maturity_ in data

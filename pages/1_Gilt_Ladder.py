@@ -225,6 +225,8 @@ with tab1:
 
     st.info(msg, icon="ℹ️")
 
+    common.warn_unpriced_gilts(issued.filter(index_linked, next_business_day(today)), prices)
+
     df = bl.buy_df
     assert df is not None
 
