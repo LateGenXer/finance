@@ -47,7 +47,7 @@ options:
 
 ## Format
 
-cgtcalc.py's input format is compatible both with
+cgtcalc.py's input format is largely compatible with both
 [CGTCalculator](https://www.cgtcalculator.com/instructions.htm#tradeformat) and
 [cgtcalc](https://github.com/mattjgalloway/cgtcalc?tab=readme-ov-file#input-data) formats.
 
@@ -340,5 +340,18 @@ CAPRETURN  30/12/2016  IE00B3X1LS57  100  16.71
 
 ## Alternatives
 
-* [CGTCalculator](https://www.cgtcalculator.com/instructions.htm#tradeformat)
-* [cgtcalc](https://github.com/mattjgalloway/cgtcalc)
+| | cgtcalc.py | [CGTCalculator](https://www.cgtcalculator.com/) | [CGT Visualiser](https://cgtvisualiser.co.uk/) | [cgtcalc](https://github.com/mattjgalloway/cgtcalc) |
+| - | :-: | :-: | :-: | :-: |
+| Interface | Web, CLI | Web | Web, CLI | CLI |
+| Open source | ✔ | ✘ | ✔ | ✔ |
+| Data stays on your machine | ✔ (CLI) | ✘ | ✔ | ✔ |
+| Same-day / 30-day / Section 104 matching | ✔ | ✔ | ✔ | ✔ |
+| Restructurings | ✔ | ✔ | ✔ | ✔ |
+| Disposals before 6 April 2008 | ✘ | ✔ | ✘ | ✘ |
+| Notional distributions (accumulation dividends, ERI) | ✔ | ✘ | ✘ | ✔ |
+| Equalisation payments | ✔ | ✘ | ✘ | ✔ |
+| Spouse transfers | ✘ | ✔ | ✘ | ✔ |
+| Foreign currency conversion | ✘ | ✘ | ✔ | ✘ |
+| Input formats | Text (largely CGTCalculator and cgtcalc compatible) | Text, broker converters | Broker CSV exports (Schwab, IBKR, Trading 212, Freetrade, Revolut, etc.), generic CSV | Text |
+| Output formats | Text, HTML, PDF | On-screen | On-screen, PDF, JSON, CSV | Text, PDF |
+| 2024/25 rate change adjustment | ✔ | ? | ✔ | ? |
