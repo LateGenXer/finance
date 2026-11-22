@@ -42,7 +42,12 @@ def main():
             lastclosedate = datetime.datetime.strptime(entry['Close of Business Date'], '%d/%m/%Y').date()
             isin = entry['ISIN']
             price = entry['Clean Price']
-            tidm = tidms[isin]
+            try:
+                tidm = tidms[isin]
+            except KeyError:
+                # Newly issued gilt not yet in tidm.csv
+                sys.stderr.write(f'warning: no TIDM for {isin}; skipping\n')
+                continue
 
             tr = [lastclosedate, isin, tidm, price]
             w.writerow(tr)
