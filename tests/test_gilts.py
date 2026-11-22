@@ -701,3 +701,42 @@ def test_cash_flows_after_last_ex_dividend():
     xd_date = Gilt.ex_dividend_date(maturity)
     assert g.cash_flows(xd_date)
     assert g.cash_flows(next_business_day(xd_date)) == []
+
+
+def _solve_ladder(issued, prices):
+    today = prices.get_prices_date().date()
+    s = schedule(5, 10000, shift_year, today, start=1)
+    bl = BondLadder(issued=issued, prices=prices, schedule=s)
+    bl.today = today
+    bl.solve()
+    assert bl.buy_df is not None
+    return bl
+
+
+# Newly issued gilts lack both TIDM and price until their first LSE close,
+# whereas gilts that didn't trade lack just the price on live prices.
+# See https://github.com/LateGenXer/finance/issues/45
+@pytest.mark.parametrize('missing', ['tidm', 'price'])
+def test_missing_price(caplog, issued, prices, missing):
+    bl = _solve_ladder(issued, prices)
+    bought = bl.buy_df.loc[bl.buy_df['Quantity'] > 0.005, 'TIDM']
+    tidm = str(bought.iloc[0])
+    isin, = [isin for isin, tidm_ in prices.tidms.items() if tidm_ == tidm]
+    assert prices.lookup(isin) == (tidm, prices.get_price(tidm))
+
+    if missing == 'tidm':
+        del prices.tidms[isin]
+    del prices.prices[tidm]
+
+    with caplog.at_level(logging.WARNING, logger=logger.name):
+        assert prices.lookup(isin) is None
+        assert isin in caplog.text
+
+        bl = _solve_ladder(issued, prices)
+        assert tidm not in bl.buy_df['TIDM'].values
+        assert bl.cost > 0
+
+        for index_linked in [False, True]:
+            df = yield_curve(issued, prices, index_linked)
+            assert len(df)
+            assert tidm not in df['TIDM'].values
