@@ -605,6 +605,23 @@ class GiltPrices:
     def lookup_tidm(self, isin):
         return self.tidms[isin]
 
+    def lookup(self, isin:str) -> tuple[str, float] | None:
+        '''Return the (TIDM, clean price) tuple for the given ISIN, or None if
+        there is no price for it.
+
+        This happens, for example, with newly issued gilts until their first LSE
+        close (which can take until the end of the next business day when issued
+        on a Friday), or with gilts that have not traded when using latest
+        prices.
+        '''
+        try:
+            tidm = self.tidms[isin]
+            price = self.prices[tidm]
+        except KeyError:
+            logger.warning(f'No price for {isin}')
+            return None
+        return tidm, price
+
     def get_price(self, tidm):
         return self.prices[tidm]
 
@@ -616,9 +633,10 @@ def yield_curve(issued, prices, index_linked=False):
     settlement_date = next_business_day(issued.close_date)
     data = []
     for g in issued.filter(index_linked, settlement_date):
-        isin = g.isin
-        tidm = prices.lookup_tidm(isin)
-        clean_price = prices.get_price(tidm)
+        found = prices.lookup(g.isin)
+        if found is None:
+            continue
+        tidm, clean_price = found
         dirty_price = g.dirty_price(clean_price, settlement_date)
 
         ytm = g.ytm(dirty_price, settlement_date)

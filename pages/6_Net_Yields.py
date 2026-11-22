@@ -194,9 +194,10 @@ for g in issued.filter(index_linked=index_linked, settlement_date=settlement_dat
     if g.maturity > maturity_limit:
         continue
 
-    isin = g.isin
-    tidm = prices.lookup_tidm(isin)
-    clean_price = prices.get_price(tidm)
+    found = prices.lookup(g.isin)
+    if found is None:
+        continue
+    tidm, clean_price = found
     accrued_interest = g.accrued_interest(settlement_date)
     dirty_price = g.dirty_price(clean_price, settlement_date)
 

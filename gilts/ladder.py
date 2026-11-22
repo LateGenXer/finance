@@ -140,9 +140,10 @@ class BondLadder:
             # XXX handle this better
             if maturity > shift_month(last_consuption, self.lag):
                 continue
-            isin = g.isin
-            tidm = self.prices.lookup_tidm(isin)
-            clean_price = self.prices.get_price(tidm)
+            found = self.prices.lookup(g.isin)
+            if found is None:
+                continue
+            tidm, clean_price = found
 
             accrued_interest = g.accrued_interest(settlement_date)
             dirty_price = g.dirty_price(clean_price, settlement_date)
