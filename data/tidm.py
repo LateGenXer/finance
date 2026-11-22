@@ -34,7 +34,9 @@ def main() -> None:
 
     tidms = load()
 
-    _, content = lse.get_latest_gilt_prices()
+    # Include unpriced gilts, so that newly issued gilts are picked up before
+    # their first close.
+    _, content = lse.get_latest_gilt_prices(skip_unpriced=False)
     for item in content:
         isin = item['isin']
         tidm = item['tidm']

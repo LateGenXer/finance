@@ -217,8 +217,13 @@ def get_instrument_data(tidm:str) -> dict:
     }
 
 
-def get_latest_gilt_prices() -> tuple[datetime.datetime, list]:
-    '''Get the latest gilt prices'''
+def get_latest_gilt_prices(skip_unpriced:bool=True) -> tuple[datetime.datetime, list]:
+    '''Get the latest gilt prices.
+
+    Gilts without price (e.g., newly issued gilts before their first close) are
+    skipped, unless skip_unpriced is false, in which case they are returned with
+    a None price.
+    '''
 
     logger.info('Getting gilt prices from LSE')
 
@@ -232,7 +237,7 @@ def get_latest_gilt_prices() -> tuple[datetime.datetime, list]:
         if instrument['issuerCode'] != 'TRIH' or 'Gilts' not in (instrument['searchTag'] or []):
             continue
         lastprice = _parse_price(instrument['price'])
-        if lastprice is None:
+        if lastprice is None and skip_unpriced:
             continue
         content.append({
             'isin': instrument['isin'],
