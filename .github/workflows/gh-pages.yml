@@ -43,7 +43,7 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment-retry-1.outputs.page_url || steps.deployment-retry-2.outputs.page_url || steps.deployment-retry-3.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -69,6 +69,35 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           path: '_site'
+      # deploy-pages looks up the artifact by name in the artifact service, whose
+      # listing can lag behind the upload by seconds or more, failing with "No
+      # artifacts named github-pages were found".  It has no retry of its own, and
+      # re-running the job fails because it uploads a second artifact, so retry
+      # just the deployment, with growing delays.
+      # See https://github.com/actions/deploy-pages/issues/451 .
+      # TODO: Drop the retries once https://github.com/actions/deploy-pages/pull/455
+      # is released.
       - name: Deploy to GitHub Pages
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      - if: steps.deployment.outcome == 'failure'
+        run: sleep 10
+      - name: Deploy to GitHub Pages (retry 1)
+        id: deployment-retry-1
+        if: steps.deployment.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      - if: steps.deployment-retry-1.outcome == 'failure'
+        run: sleep 30
+      - name: Deploy to GitHub Pages (retry 2)
+        id: deployment-retry-2
+        if: steps.deployment-retry-1.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      - if: steps.deployment-retry-2.outcome == 'failure'
+        run: sleep 60
+      - name: Deploy to GitHub Pages (retry 3)
+        id: deployment-retry-3
+        if: steps.deployment-retry-2.outcome == 'failure'
         uses: actions/deploy-pages@v5
